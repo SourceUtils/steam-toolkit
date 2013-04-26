@@ -3,6 +3,7 @@ package com.timepath.steam.io.test;
 import com.timepath.FileUtils;
 import com.timepath.io.ViewableData;
 import com.timepath.plaf.x.filechooser.BaseFileChooser;
+import com.timepath.plaf.x.filechooser.BaseFileChooser.ExtensionFilter;
 import com.timepath.plaf.x.filechooser.NativeFileChooser;
 import com.timepath.steam.SteamUtils;
 import com.timepath.steam.io.Archive;
@@ -262,7 +263,7 @@ public class ArchiveTest extends javax.swing.JFrame {
 
     private void open(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_open
         try {
-            File[] fs = new NativeFileChooser().setParent(this).setTitle("Open archive").setMultiSelectionEnabled(true).setDirectory(SteamUtils.getSteamApps()).choose();
+            File[] fs = new NativeFileChooser().setParent(this).setTitle("Open archive").setMultiSelectionEnabled(true).addFilter(new ExtensionFilter("GCF files", ".gcf")).addFilter(new ExtensionFilter("VPK files", "_dir.vpk")).setDirectory(SteamUtils.getSteamApps()).choose();
             if(fs == null) {
                 return;
             }

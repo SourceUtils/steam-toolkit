@@ -1,5 +1,6 @@
 package com.timepath.steam.io;
 
+import com.timepath.swing.TreeUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -10,13 +11,13 @@ import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
- * Loads _dir.vpk files
- * https://developer.valvesoftware.com/wiki/VPK_File_Format
+ * Loads _dir.vpk files https://developer.valvesoftware.com/wiki/VPK_File_Format
  *
  * @author timepath
  */
@@ -35,9 +36,7 @@ public class VPK implements Archive {
         }
         b.get(new byte[e.preloadBytes]);
     }
-
     private DefaultMutableTreeNode es;
-
     private String name;
 
     public InputStream get(int index) {
@@ -46,7 +45,6 @@ public class VPK implements Archive {
 
     public VPK() {
     }
-
     private static int expectedHeader = 0x55AA1234;
 
     public VPK load(File file) {
@@ -125,13 +123,11 @@ public class VPK implements Archive {
 //        LOG.info(Arrays.toString(baos.toByteArray()) + "");
         return Charset.forName("UTF-8").decode(ByteBuffer.wrap(baos.toByteArray())).toString();
     }
-
     private VPKDirectoryEntry[] entries;
 
     /**
-     * If a file contains preload data, the preload data immediately follows the above
-     * structure.
-     * The entire size of a file is PreloadBytes + EntryLength.
+     * If a file contains preload data, the preload data immediately follows the
+     * above structure. The entire size of a file is PreloadBytes + EntryLength.
      */
     static class VPKDirectoryEntry implements DirectoryEntry {
 
@@ -139,31 +135,27 @@ public class VPK implements Archive {
          * A 32bit CRC of the file's data.
          */
         int CRC;
-
         /**
          * The number of bytes contained in the index file.
          */
         short preloadBytes;
-
         /**
          * A zero based index of the archive this file's data is contained in.
          * If 0x7fff, the data follows the directory.
          */
         short archiveIndex;
-
         /**
-         * If ArchiveIndex is 0x7fff, the offset of the file data relative to the end of the
-         * directory (see the header for more details).
-         * Otherwise, the offset of the data from the start of the specified archive.
+         * If ArchiveIndex is 0x7fff, the offset of the file data relative to
+         * the end of the directory (see the header for more details).
+         * Otherwise, the offset of the data from the start of the specified
+         * archive.
          */
         int entryOffset;
-
         /**
-         * If zero, the entire file is stored in the preload data.
-         * Otherwise, the number of bytes stored starting at EntryOffset.
+         * If zero, the entire file is stored in the preload data. Otherwise,
+         * the number of bytes stored starting at EntryOffset.
          */
         int entryLength;
-
         static int terminator = 0xffff; // short
 
         public int getItemSize() {
@@ -210,7 +202,6 @@ public class VPK implements Archive {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
     }
-
     private static final Logger LOG = Logger.getLogger(VPK.class.getName());
 
     public ArrayList<DirectoryEntry> find(String search) {
@@ -223,7 +214,7 @@ public class VPK implements Archive {
     }
 
     public void analyze(DefaultMutableTreeNode top, boolean leaves) {
-        top.add(es);
+        TreeUtils.moveChildren(es, top);
     }
 
     @Override
@@ -244,7 +235,7 @@ public class VPK implements Archive {
         int cd = 0;
         int cn = 0;
         // If the file data is stored in the same file as the directory, its offset is (sizeof(header) + TreeLength)
-        es = new DefaultMutableTreeNode("root");
+        es = new DefaultMutableTreeNode();
         for(;;) {
             String extension = readString(b);
             if(extension.length() == 0) {
@@ -259,22 +250,14 @@ public class VPK implements Archive {
                     break;
                 }
                 cd++;
-                DefaultMutableTreeNode p = new DefaultMutableTreeNode(path);
-                if(!path.equals(" ")) {
-                    es.add(p);
-                }
+                DefaultMutableTreeNode p = addPath(path);
                 for(;;) {
                     String filename = readString(b);
                     if(filename.length() == 0) {
                         break;
                     }
                     cn++;
-                    if(path.equals(" ")) {
-                        LOG.log(Level.FINE, "{0} has no extension", filename);
-                        es.add(new DefaultMutableTreeNode(filename));
-                    } else {
-                        p.add(new DefaultMutableTreeNode(filename + "." + extension));
-                    }
+                    p.add(new DefaultMutableTreeNode(filename + "." + extension));
                     ReadFileInformationAndPreloadData(b);
                 }
             }
@@ -282,5 +265,32 @@ public class VPK implements Archive {
         LOG.info("fCount: " + cf);
         LOG.info("dCount: " + cd);
         LOG.info("nCount: " + cn);
+    }
+
+    private DefaultMutableTreeNode addPath(String path) {
+        DefaultMutableTreeNode last = es;
+//        LOG.log(Level.INFO, "Path: {0}", path);
+        String[] components = path.split("/");
+        for(String part : components) {
+            DefaultMutableTreeNode p = null;
+            if(part.equals(" ")) {
+                p = last;
+            } else {
+                Enumeration e = es.children();
+                while(e.hasMoreElements()) {
+                    DefaultMutableTreeNode node = ((DefaultMutableTreeNode) e.nextElement());
+                    if(node.getUserObject().toString().equalsIgnoreCase(part)) {
+                        p = node;
+                        break;
+                    }
+                }
+            }
+            if(p == null && last != p) {
+                p = new DefaultMutableTreeNode(part);
+                last.add(p);
+            }
+            last = p;
+        }
+        return last;
     }
 }
