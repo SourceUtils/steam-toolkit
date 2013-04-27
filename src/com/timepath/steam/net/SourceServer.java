@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.charset.Charset;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,12 +23,6 @@ public class SourceServer extends Server {
 
     public SourceServer(String hostname, int port) {
         super(hostname, port);
-    }
-
-    private String getString(ByteBuffer buf) {
-        ByteBuffer cloned = DataUtils.getTextBuffer(buf.duplicate(), true);
-        buf.position(buf.position() + cloned.limit() - cloned.position());
-        return Charset.forName("UTF-8").decode(cloned).toString();
     }
 
     public void getInfo(ServerListener l) throws IOException {
@@ -59,16 +52,16 @@ public class SourceServer extends Server {
         byte protocol = buf.get();
         l.inform("Protocol: " + protocol);
 
-        String name = getString(buf);
+        String name = DataUtils.getString(buf);
         l.inform("Name: '" + name + "'");
 
-        String map = getString(buf);
+        String map = DataUtils.getString(buf);
         l.inform("Map: '" + map + "'");
 
-        String gamedir = getString(buf);
+        String gamedir = DataUtils.getString(buf);
         l.inform("Gamedir: '" + gamedir + "'");
 
-        String game = getString(buf);
+        String game = DataUtils.getString(buf);
         l.inform("Game: '" + game + "'");
 
         short appID = buf.getShort();
@@ -95,7 +88,7 @@ public class SourceServer extends Server {
         boolean secure = (buf.get() == 1);
         l.inform("VAC: '" + secure + "'");
 
-        String version = getString(buf);
+        String version = DataUtils.getString(buf);
         l.inform("Version: '" + version + "'");
 
         byte edf = buf.get();
@@ -122,11 +115,11 @@ public class SourceServer extends Server {
         if(edfSTV) {
             short stvPort = buf.getShort();
             l.inform("STV Port: '" + port + "'");
-            String stvName = getString(buf);
+            String stvName = DataUtils.getString(buf);
             l.inform("STV Name: '" + stvName + "'");
         }
         if(edfTags) {
-            String tags = getString(buf);
+            String tags = DataUtils.getString(buf);
             l.inform("Tags: '" + tags + "'");
         }
         if(edfGameID) {
@@ -219,8 +212,8 @@ public class SourceServer extends Server {
             if(ruleBuf.remaining() == 0) {
                 break;
             }
-            String key = getString(ruleBuf);
-            String value = getString(ruleBuf);
+            String key = DataUtils.getString(ruleBuf);
+            String value = DataUtils.getString(ruleBuf);
             l.inform("[" + ruleIndex + "/" + ruleCount + "] " + "'" + key + "' = '" + value + "'");
         }
 

@@ -3,19 +3,18 @@ package com.timepath.steam.io;
 import com.timepath.DataUtils;
 import com.timepath.DateUtils;
 import com.timepath.Utils;
+import com.timepath.io.Savable;
+import com.timepath.steam.io.util.BlobNode;
 import com.timepath.swing.TreeUtils;
-import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Calendar;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.xml.bind.DatatypeConverter;
 
 /**
  *
@@ -26,15 +25,18 @@ import javax.xml.bind.DatatypeConverter;
  *
  * @author timepath
  */
-public class Blob {
+public class Blob implements Savable {
 
     private static final Logger LOG = Logger.getLogger(Blob.class.getName());
+    
+    private BlobNode root;
 
-    public static void analyze(File f, DefaultMutableTreeNode root) throws IOException {
-        BlobNode bn = new BlobNode("root");
-        ByteBuffer buf = DataUtils.mapFile(f);
-        parsePayload(buf, bn, false);
-        TreeUtils.moveChildren(bn, root);
+    public BlobNode getRoot() {
+        return root;
+    }
+    
+    public Blob() {
+        root = new BlobNode("Blob");
     }
 
     private static void parsePayload(ByteBuffer parentbuf, BlobNode parent, boolean rawData) {
@@ -116,16 +118,16 @@ public class Blob {
                         nextup = parent;
                     }
                     if(child.getMeta() == 1 && payloadLength == 4) {
-                        parent.dataType = childPayload.getInt();//parent.add(new BlobNode("Payload type: " + parent.dataType));
+                        parent.setDataType(childPayload.getInt());//parent.add(new BlobNode("Payload type: " + parent.dataType));
                     } else {
-                        int dataType = parent.dataType;
+                        int dataType = parent.getDataType();
                         if(dataType != -1) {
                             switch(dataType) {
                                 case 0: // Text
-                                    String str = DataUtils.getText(childPayload, true);
+                                    String str = DataUtils.getString(childPayload);
                                     String date = DateUtils.parse(str);
                                     if(date != null) {
-                                        str += " Date: " + date;
+                                        str = "Date: " + date;
                                     }
                                     LOG.log(Level.FINE, "String: {0}", str);
                                     parent.add(new BlobNode("String: " + str));
@@ -184,7 +186,7 @@ public class Blob {
      *
      * @return the originalBufffer decompressed
      */
-    private static ByteBuffer decompress(ByteBuffer originalBuffer) {
+    private ByteBuffer decompress(ByteBuffer originalBuffer) {
         LOG.log(Level.INFO, "Inflating a compressed binary section, initial length (including header) is {0}", originalBuffer.remaining());
         int headerSkip = 2;
         Inflater inflater = new Inflater(true);
@@ -225,52 +227,25 @@ public class Blob {
         return newBuf;
     }
 
-    @SuppressWarnings("serial")
-    private static class BlobNode extends DefaultMutableTreeNode {
-
-        BlobNode(Object obj) {
-            this.setUserObject(obj);
-        }
-
-        BlobNode(String name, Object obj) {
-            this.name = name;
-            this.setUserObject(obj);
-        }
-
-        private String name;
-
-        private int dataType = -1;
-
-        @Override
-        public String toString() {
-            Object o = this.getUserObject();
-            if(o == null) {
-                return "unnamed";
-            } else if(o instanceof String) {
-                return (String) o;
-            } else {
-                return (name != null ? name : o.getClass().getSimpleName()) + ": " + o;
-            }
-        }
-
-        BlobNode() {
-        }
-
-        private int meta;
-
-        public boolean isMeta() {
-            return meta != 0;
-        }
-
-        public int getMeta() {
-            return meta;
-        }
-
-        public void setMeta(int meta) {
-            this.meta = meta;
+    @Override
+    public void readExternal(InputStream in) {
+        try {
+            byte[] buf = new byte[in.available()];
+            readExternal(ByteBuffer.wrap(buf));
+        } catch(IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
         }
     }
 
-    private Blob() {
+    @Override
+    public void readExternal(ByteBuffer buf) {
+        buf.order(ByteOrder.LITTLE_ENDIAN);
+        parsePayload(buf, root, false);
     }
+
+    @Override
+    public void writeExternal(OutputStream out) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
 }

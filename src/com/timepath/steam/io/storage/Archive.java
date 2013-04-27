@@ -1,4 +1,4 @@
-package com.timepath.steam.io;
+package com.timepath.steam.io.storage;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +12,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
  */
 public interface Archive {
 
-    public Archive load(File f);
+    public Archive loadArchive(File f);
 
     public InputStream get(int index);
     

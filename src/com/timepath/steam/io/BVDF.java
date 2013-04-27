@@ -1,24 +1,24 @@
 package com.timepath.steam.io;
 
 import com.timepath.DataUtils;
+import com.timepath.DateUtils;
 import com.timepath.Utils;
+import com.timepath.io.Savable;
 import com.timepath.swing.TreeUtils;
 import java.awt.Color;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.Charset;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
- * See also:
+ *
  * https://github.com/harvimt/steam_launcher/blob/master/binvdf.py
  * https://github.com/barneygale/bvdf/blob/master/bvdf.py
  * https://github.com/DHager/hl2parse
@@ -26,140 +26,148 @@ import javax.swing.tree.DefaultMutableTreeNode;
  * http://cs.rin.ru/forum/viewtopic.php?f=20&t=62438&hilit=packageinfo
  * http://media.steampowered.com/steamcommunity/public/images/apps/[appID]/[sha].[ext]
  * http://cdr.xpaw.ru/app/5/#section_info
+ * http://hlssmod.net/he_code/public/tier1/KeyValues.h
+ * http://hpmod.googlecode.com/svn/trunk/tier1/KeyValues.cpp
  *
  * @author timepath
  */
-public class BVDF {
+public class BVDF implements Savable {
 
-    public static void analyze(File f, DefaultMutableTreeNode root) throws IOException {
-        DataNode dn = new DataNode("root");
-        ByteBuffer buf = DataUtils.mapFile(f);
-        parse(buf, dn);
-        TreeUtils.moveChildren(dn, root);
+    private static final Logger LOG = Logger.getLogger(BVDF.class.getName());
+    
+    private static int binaryFailurePosition, binaryFailureByte;
+    
+    private DataNode root;
+
+    public DataNode getRoot() {
+        return root;
     }
 
-    private static void parse(ByteBuffer buf, DataNode dn) throws IOException {
-        int magic = buf.getInt();
+    public BVDF() {
+        root = new DataNode("BVDF");
+    }
 
-        if(magic == 0x07564426) {
-            //<editor-fold defaultstate="collapsed" desc="AppInfo">
-            int universe = buf.getInt();
-            dn.add(new DataNode("universe", Universe.getName(universe)));
-            for(;;) {
-                int appID = buf.getInt();
-                if(appID == 0) {
-                    break;
-                }
-                DataNode c = new DataNode("#" + appID);
-                dn.add(c);
-
-                int size = buf.getInt(); // skip this many bytes to reach the next entry
-//                c.add(new DataNode("size", size));
-
-                int appPosition = buf.position();
-
-                ByteBuffer entrySlice = DataUtils.getSlice(buf, size);
-
-                int appInfoState = entrySlice.getInt();
-                c.add(new DataNode("state", AppInfoState.getName(appInfoState)));
-
-                long lastUpdated = entrySlice.getInt();
-                DateFormat df = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
-                df.setTimeZone(TimeZone.getTimeZone("GMT"));
-                String formattedDate = df.format(new Date(lastUpdated * 1000));
-                DataNode lu = new DataNode("lastUpdated", lastUpdated);
-                DataNode dateNode = new DataNode("lastUpdated", formattedDate);
-                c.add(dateNode);
-//                lu.add(dateNode);
-//                c.add(lu);
-
-                long token = entrySlice.getLong();
-                c.add(new DataNode("token", token));
-
-                byte[] sha = new byte[20];
-                entrySlice.get(sha);
-                c.add(new DataNode("sha", Arrays.toString(sha)));
-
-                int changeNumber = entrySlice.getInt();
-                c.add(new DataNode("changeNumber", changeNumber));
-
-                DataNode sections = new DataNode("Sections");
-                c.add(sections);
-                for(;;) {
-                    byte section = entrySlice.get();
-                    if(section == 0) {
-                        break;
-                    }
-                    DataNode sectionNode = new DataNode(Section.get(section));
-                    sections.add(sectionNode);
-                    int sectionPosition = entrySlice.position();
-                    DataNode binarySlice = parseBinaryData(entrySlice);
-                    if(binarySlice != null) {
-                        TreeUtils.moveChildren(binarySlice, sectionNode);
-//                        c.removeFromParent(); // TEMP
-                    } else {
-                        Object[] vars = new Object[]{appID, Integer.toHexString(binaryFailureByte), Section.get(section), appPosition + sectionPosition, appPosition + binaryFailurePosition};
-                        LOG.log(Level.WARNING, "app: {0} byte: {1}, sec: {2}, secoff: {3} totaloff: {4}", vars);
-                        break;
-                    }
-                }
-            }
-            //</editor-fold>
-        } else if(magic == 0x06565527) {
-            //<editor-fold defaultstate="collapsed" desc="PackageInfo">
-            int universe = buf.getInt();
-            dn.add(new DataNode("universe", Universe.getName(universe)));
-            for(;;) {
-                int appID = buf.getInt();
-                if(appID == 0xFFFFFFFF || appID == -1) { // same thing
-                    break;
-                }
-                DataNode c = new DataNode("#", appID);
-                dn.add(c);
-
-                byte[] sha = new byte[20];
-                buf.get(sha);
-                c.add(new DataNode("sha", Arrays.toString(sha)));
-
-                int changeNumber = buf.getInt();
-                c.add(new DataNode("changeNumber", changeNumber));
-
-                DataNode bin = new DataNode();
-                bin.name = "Binary Data";
-                TreeUtils.moveChildren(parseBinaryData(buf), bin);
-                c.add(bin);
-            }
-            //</editor-fold>
-        } else {
-            //<editor-fold defaultstate="collapsed" desc="Generic .bin">
-            buf.position(0);
-            DataNode bvdf = parseBinaryData(buf);
-            if(bvdf != null) {
-                TreeUtils.moveChildren(bvdf, dn);
-            } else {
-                Object[] vars = new Object[]{Integer.toHexString(binaryFailureByte), binaryFailurePosition};
-                LOG.log(Level.WARNING, "err: {0}, off: {1}", vars);
-            }
-            //</editor-fold>
+    @Override
+    public void readExternal(InputStream in) {
+        try {
+            byte[] buf = new byte[in.available()];
+            readExternal(ByteBuffer.wrap(buf));
+        } catch(IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
         }
     }
 
-    private static int binaryFailurePosition, binaryFailureByte;
+    @Override
+    public void readExternal(ByteBuffer buf) {
+        buf.order(ByteOrder.LITTLE_ENDIAN);
+        int magic = buf.getInt();
+        switch(magic) {
+            case 0x07564426:
+                //<editor-fold defaultstate="collapsed" desc="AppInfo">
+                int appUniverse = buf.getInt();
+                root.add(new DataNode("universe", Universe.getName(appUniverse)));
+                for(;;) {
+                    int appID = buf.getInt();
+                    if(appID == 0) {
+                        break;
+                    }
+                    DataNode c = new DataNode(appID);
+                    root.add(c);
 
-    private static int KEYVALUES_TOKEN_SIZE = 1024;
+                    int size = buf.getInt(); // skip this many bytes to reach the next entry
+//                    c.add(new DataNode("size", size));
 
-    /**
-     *
-     * http://hlssmod.net/he_code/public/tier1/KeyValues.h
-     * http://hpmod.googlecode.com/svn/trunk/tier1/KeyValues.cpp
-     *
-     * @param buffer
-     * @param dn
-     * @param end
-     * @param timesEndSeen
-     *
-     * @return
-     */
+                    int appPosition = buf.position();
+
+                    ByteBuffer entrySlice = DataUtils.getSlice(buf, size);
+
+                    int appInfoState = entrySlice.getInt();
+                    c.add(new DataNode("state", AppInfoState.getName(appInfoState)));
+
+                    long lastUpdated = entrySlice.getInt();
+                    String formattedDate = DateUtils.parse(lastUpdated);
+                    DataNode dateNode = new DataNode("lastUpdated", formattedDate);
+                    c.add(dateNode);
+
+                    long token = entrySlice.getLong();
+                    c.add(new DataNode("token", token));
+
+                    byte[] sha = new byte[20];
+                    entrySlice.get(sha);
+                    c.add(new DataNode("sha", Arrays.toString(sha)));
+
+                    int changeNumber = entrySlice.getInt();
+                    c.add(new DataNode("changeNumber", changeNumber));
+
+                    DataNode sections = new DataNode("Sections");
+                    c.add(sections);
+                    for(;;) {
+                        byte section = entrySlice.get();
+                        if(section == 0) {
+                            break;
+                        }
+                        DataNode sectionNode = new DataNode(Section.get(section));
+                        sections.add(sectionNode);
+                        int sectionPosition = entrySlice.position();
+                        DataNode binarySlice = parseBinaryData(entrySlice);
+                        if(binarySlice != null) {
+                            TreeUtils.moveChildren(binarySlice, sectionNode);
+//                        c.removeFromParent(); // TEMP
+                        } else {
+                            Object[] vars = new Object[] {appID, Integer.toHexString(binaryFailureByte), Section.get(section), appPosition + sectionPosition, appPosition + binaryFailurePosition};
+                            LOG.log(Level.WARNING, "app: {0} byte: {1}, sec: {2}, secoff: {3} totaloff: {4}", vars);
+                            break;
+                        }
+                    }
+                }
+                //</editor-fold>
+                break;
+            case 0x06565527:
+                //<editor-fold defaultstate="collapsed" desc="PackageInfo">
+                int packageUniverse = buf.getInt();
+                root.add(new DataNode("universe", Universe.getName(packageUniverse)));
+                for(;;) {
+                    int appID = buf.getInt();
+                    if(appID == 0xFFFFFFFF || appID == -1) { // same thing
+                        break;
+                    }
+                    DataNode c = new DataNode("#", appID);
+                    root.add(c);
+
+                    byte[] sha = new byte[20];
+                    buf.get(sha);
+                    c.add(new DataNode("sha", Arrays.toString(sha)));
+
+                    int changeNumber = buf.getInt();
+                    c.add(new DataNode("changeNumber", changeNumber));
+
+                    DataNode bin = new DataNode();
+                    bin.name = "Binary Data";
+                    TreeUtils.moveChildren(parseBinaryData(buf), bin);
+                    c.add(bin);
+                }
+                //</editor-fold>
+                break;
+            default:
+                //<editor-fold defaultstate="collapsed" desc="Generic .bin">
+                buf.position(0);
+                DataNode bvdf = parseBinaryData(buf);
+                if(bvdf != null) {
+                    TreeUtils.moveChildren(bvdf, root);
+                } else {
+                    Object[] vars = new Object[] {Integer.toHexString(binaryFailureByte), binaryFailurePosition};
+                    LOG.log(Level.WARNING, "err: {0}, off: {1}", vars);
+                }
+                //</editor-fold>
+                break;
+        }
+    }
+
+    @Override
+    public void writeExternal(OutputStream out) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
     private static DataNode parseBinaryData(ByteBuffer buffer) {
         DataNode parent = new DataNode();
         parent.name = "<joiner>";
@@ -210,7 +218,7 @@ public class BVDF {
                     dat.value = (intValue);
                     LOG.log(Level.FINE, "Int value: {0}", intValue);
                     break;
-                    
+
                 case TYPE_UINT64:
                     long longValue = buffer.getLong();
                     dat.value = (longValue);
@@ -245,21 +253,20 @@ public class BVDF {
         }
         return parent;
     }
-    
+
     private static String getString(ByteBuffer buffer) {
         int originalPosition = buffer.position();
-        int size = KEYVALUES_TOKEN_SIZE - 1;
-        size = buffer.remaining(); // Source's buffer isn't big enough for some CDR entries
-        ByteBuffer textBuffer = DataUtils.getTextBuffer(DataUtils.getSafeSlice(buffer, size), true);
+        int size = buffer.remaining(); // Source's buffer isn't big enough for some CDR entries
+        ByteBuffer textBuffer = DataUtils.getTextBuffer(DataUtils.getSafeSlice(buffer, size), true)[0];
         int length = textBuffer.remaining();
         buffer.position(originalPosition + length);
         textBuffer.limit(length - 1);
         String token = Charset.forName("UTF-8").decode(textBuffer.duplicate()).toString();
-        LOG.log(Level.FINER, "Token {0} = {1}", new Object[]{token, Utils.hex(token.getBytes())});
+        LOG.log(Level.FINER, "Token {0} = {1}", new Object[] {token, Utils.hex(token.getBytes())});
         return token;
     }
 
-    private static class DataNode extends DefaultMutableTreeNode {
+    public static class DataNode extends DefaultMutableTreeNode {
 
         DataNode(Object obj) {
             this.value = obj;
@@ -269,11 +276,8 @@ public class BVDF {
             this.name = name;
             this.value = obj;
         }
-
         private String name;
-
         private Object value;
-
         private ValueType type;
 
         @Override
@@ -301,7 +305,6 @@ public class BVDF {
         Universe(int i) {
             this.id = i;
         }
-
         private int id;
 
         public int ID() {
@@ -327,7 +330,6 @@ public class BVDF {
         AppInfoState(int i) {
             this.id = i;
         }
-
         private int id;
 
         public int ID() {
@@ -341,7 +343,7 @@ public class BVDF {
                     return search[s].name();
                 }
             }
-            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[]{AppInfoState.class.getSimpleName(), i});
+            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] {AppInfoState.class.getSimpleName(), i});
             return "UNKNOWN (" + i + ")";
         }
     }
@@ -373,7 +375,6 @@ public class BVDF {
         Section(int i) {
             this.id = i;
         }
-
         private int id;
 
         public int ID() {
@@ -417,7 +418,6 @@ public class BVDF {
         SteamAppState(int i) {
             this.id = i;
         }
-
         private int id;
 
         public int ID() {
@@ -446,7 +446,6 @@ public class BVDF {
         AppInfoSectionPropagationType(int i) {
             this.id = i;
         }
-
         private int id;
 
         public int ID() {
@@ -478,7 +477,6 @@ public class BVDF {
         ValueType(int i) {
             this.id = i;
         }
-
         private int id;
 
         public int ID() {
@@ -504,9 +502,4 @@ public class BVDF {
         }
     };
     //</editor-fold>
-
-    private static final Logger LOG = Logger.getLogger(BVDF.class.getName());
-
-    private BVDF() {
-    }
 }

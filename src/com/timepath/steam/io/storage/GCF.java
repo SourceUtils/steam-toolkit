@@ -1,4 +1,4 @@
-package com.timepath.steam.io;
+package com.timepath.steam.io.storage;
 
 import com.timepath.DataUtils;
 import com.timepath.EnumFlagUtils;
@@ -278,7 +278,7 @@ public class GCF implements Archive, ViewableData {
         return file.getName();
     }
 
-    public GCF load(File f) {
+    public GCF loadArchive(File f) {
         try {
             return new GCF(f);
         } catch(IOException e) {

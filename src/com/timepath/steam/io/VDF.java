@@ -1,10 +1,14 @@
 package com.timepath.steam.io;
 
+import com.timepath.io.Savable;
 import com.timepath.steam.io.util.VDFNode;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,60 +28,30 @@ import javax.swing.tree.DefaultMutableTreeNode;
  *
  * @author timepath
  */
-public class VDF {
+public class VDF implements Savable {
 
     private static final Logger LOG = Logger.getLogger(VDF.class.getName());
+    protected VDFNode root;
+    private Level logLevel = Level.FINE;
+
+    public void setLogLevel(Level logLevel) {
+        this.logLevel = logLevel;
+    }
+
+    public VDFNode getRoot() {
+        return root;
+    }
 
     public VDF() {
+        root = new VDFNode("VDF");
     }
-
-    public static boolean isBinary(File f) {
-        try {
-            RandomAccessFile rf = new RandomAccessFile(f, "r");
-            rf.seek(2);
-            return (rf.read() == 0x56);
-        } catch(FileNotFoundException ex) {
-            Logger.getLogger(VDF.class.getName()).log(Level.SEVERE, null, ex);
-        } catch(IOException ex) {
-            Logger.getLogger(VDF.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return false;
-    }
-
-    public static void analyze(final File file, final DefaultMutableTreeNode top) {
-        if(file.isDirectory()) {
-            return;
-        }
-
-        Scanner s = null;
-        try {
-            RandomAccessFile rf = new RandomAccessFile(file.getPath(), "r");
-            s = new Scanner(rf.getChannel());
-            processAnalyze(s, top, file);
-        } catch(StackOverflowError ex) {
-            LOG.log(Level.WARNING, "{0} is too deep (Stack overflowed)", file);
-        } catch(FileNotFoundException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-        } finally {
-            if(s != null) {
-                s.close();
-            }
-        }
-    }
-    
-    public static VDFNode load(File f) {
-        VDFNode vn = new VDFNode();
-        analyze(f, vn);
-        return vn;
-    }
-
     private static final Pattern quoteRegex = Pattern.compile("[^\\s\"']+|\"([^\"]*)\"");
-
     private static final Pattern platformRegex = Pattern.compile("(?:\\[(!)?\\$)(.*)(?:\\])");
 
-    protected static void processAnalyze(Scanner scanner, DefaultMutableTreeNode parent, File file) {
+    protected void processAnalyze(Scanner scanner, DefaultMutableTreeNode parent, int lineNum) {
         while(scanner.hasNext()) {
             String line = scanner.nextLine().trim();
+            lineNum++;
             if(line.length() == 0) {
                 continue;
             }
@@ -101,13 +75,13 @@ public class VDF {
             }
             if(matchList.isEmpty()) {
                 if(comment != null && comment.trim().length() > 0) {
-                    LOG.log(Level.FINE, "Carrying extra: [{0}]", comment);
+                    LOG.log(logLevel, "Carrying extra: [{0}]", comment);
                     parent.add(new DefaultMutableTreeNode(comment));
                 }
                 continue;
             }
             String[] args = matchList.toArray(new String[0]);
-            LOG.log(Level.FINE, "{0}:{1}", new Object[]{args.length, Arrays.toString(args)});
+            LOG.log(logLevel, "{0}:{1}", new Object[] {args.length, Arrays.toString(args)});
 
             String val = null;
             if(args.length >= 2) {
@@ -120,7 +94,7 @@ public class VDF {
                         val = null;
                     }
                 } else if(args.length > 2) {
-                    LOG.log(Level.WARNING, "More than 2 args on {0}: {1}", new Object[]{line, Arrays.toString(args)});
+                    LOG.log(Level.WARNING, "More than 2 args on line {0}({1}): {2}", new Object[] {lineNum, line, Arrays.toString(args)});
                 }
             }
 
@@ -133,19 +107,61 @@ public class VDF {
 //                if(obj instanceof Element) {
 //                    ((Element)e).validate(); // TODO: Thread safety. oops
 //                }
-                LOG.log(Level.FINE, "Leaving {0}", obj);
+                LOG.log(logLevel, "Leaving {0}", obj);
                 break; // TODO: /tf/scripts/HudAnimations_tf.txt
             } else if(val == null) { // very good assumption
                 val = "{";
             }
 
             VDFNode p = new VDFNode(args[0], val);
-            p.setFile(file);
+//            p.setFile(file);
             parent.add(p);
             if(val.equals("{")) { // make new sub
-                LOG.log(Level.FINE, "Stepping into {0}", p);
-                processAnalyze(scanner, p, file);
+                LOG.log(logLevel, "Stepping into {0}", p);
+                processAnalyze(scanner, p, lineNum);
             }
         }
+    }
+
+    @Override
+    public void readExternal(InputStream in) {
+        readExternal(in, "UTF-8");
+    }
+
+    public void readExternal(InputStream in, String encoding) {
+        Scanner s = null;
+        try {
+            s = new Scanner(in, encoding);
+            processAnalyze(s, root, 0);
+        } catch(StackOverflowError ex) {
+            LOG.log(Level.WARNING, "Too deep (Stack overflowed)");
+        } finally {
+            if(s != null) {
+                s.close();
+            }
+        }
+    }
+
+    @Override
+    public void readExternal(ByteBuffer buf) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void writeExternal(OutputStream out) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    public static boolean isBinary(File f) {
+        try {
+            RandomAccessFile rf = new RandomAccessFile(f, "r");
+            rf.seek(rf.length() - 1);
+            return (rf.read() == 0x08);
+        } catch(FileNotFoundException ex) {
+            Logger.getLogger(VDF.class.getName()).log(Level.SEVERE, null, ex);
+        } catch(IOException ex) {
+            Logger.getLogger(VDF.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
     }
 }

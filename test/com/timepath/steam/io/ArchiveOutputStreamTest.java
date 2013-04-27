@@ -1,8 +1,8 @@
-package com.timepath.steam.io.test;
+package com.timepath.steam.io;
 
 import com.timepath.steam.SteamUtils;
-import com.timepath.steam.io.GCF;
-import com.timepath.steam.io.GCF.GCFDirectoryEntry;
+import com.timepath.steam.io.storage.GCF;
+import com.timepath.steam.io.storage.GCF.GCFDirectoryEntry;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;

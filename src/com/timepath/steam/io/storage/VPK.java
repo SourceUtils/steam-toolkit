@@ -1,4 +1,4 @@
-package com.timepath.steam.io;
+package com.timepath.steam.io.storage;
 
 import com.timepath.swing.TreeUtils;
 import java.io.ByteArrayOutputStream;
@@ -47,7 +47,7 @@ public class VPK implements Archive {
     }
     private static int expectedHeader = 0x55AA1234;
 
-    public VPK load(File file) {
+    public VPK loadArchive(File file) {
         this.name = file.getName();
         try {
             RandomAccessFile rf = new RandomAccessFile(file, "r");

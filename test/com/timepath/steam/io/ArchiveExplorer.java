@@ -1,4 +1,4 @@
-package com.timepath.steam.io.test;
+package com.timepath.steam.io;
 
 import com.timepath.FileUtils;
 import com.timepath.io.ViewableData;
@@ -6,10 +6,10 @@ import com.timepath.plaf.x.filechooser.BaseFileChooser;
 import com.timepath.plaf.x.filechooser.BaseFileChooser.ExtensionFilter;
 import com.timepath.plaf.x.filechooser.NativeFileChooser;
 import com.timepath.steam.SteamUtils;
-import com.timepath.steam.io.Archive;
-import com.timepath.steam.io.Archive.DirectoryEntry;
-import com.timepath.steam.io.GCF;
-import com.timepath.steam.io.VPK;
+import com.timepath.steam.io.storage.Archive;
+import com.timepath.steam.io.storage.Archive.DirectoryEntry;
+import com.timepath.steam.io.storage.GCF;
+import com.timepath.steam.io.storage.VPK;
 import com.timepath.swing.DirectoryTreeCellRenderer;
 import java.awt.Component;
 import java.io.File;
@@ -37,7 +37,7 @@ import javax.swing.tree.TreeSelectionModel;
  * @author timepath
  */
 @SuppressWarnings("serial")
-public class ArchiveTest extends javax.swing.JFrame {
+public class ArchiveExplorer extends javax.swing.JFrame {
 
     private ArrayList<Archive> gcfs = new ArrayList<Archive>();
 
@@ -48,7 +48,7 @@ public class ArchiveTest extends javax.swing.JFrame {
     /**
      * Creates new form GCFTest
      */
-    public ArchiveTest() {
+    public ArchiveExplorer() {
         initComponents();
         jTree1.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         jTree1.setCellRenderer(new DirectoryTreeCellRenderer());
@@ -96,9 +96,9 @@ public class ArchiveTest extends javax.swing.JFrame {
         String ext = FileUtils.extension(f);
         Archive a;
         if(ext.equals("gcf")) {
-            a = new GCF().load(f);
+            a = new GCF().loadArchive(f);
         } else if(ext.equals("vpk")) {
-            a = new VPK().load(f);
+            a = new VPK().loadArchive(f);
         } else {
             LOG.log(Level.WARNING, "Unrecognised archive: {0}", f);
             return;
@@ -277,7 +277,7 @@ public class ArchiveTest extends javax.swing.JFrame {
                 load(f);
             }
         } catch(IOException ex) {
-            Logger.getLogger(ArchiveTest.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ArchiveExplorer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_open
 
@@ -314,12 +314,12 @@ public class ArchiveTest extends javax.swing.JFrame {
                 try {
                     e.extract(out);
                 } catch(IOException ex) {
-                    Logger.getLogger(ArchiveTest.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(ArchiveExplorer.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
             LOG.info("Done");
         } catch(IOException ex) {
-            Logger.getLogger(ArchiveTest.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ArchiveExplorer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jPopupMenuItem1ActionPerformed
 
@@ -439,7 +439,7 @@ public class ArchiveTest extends javax.swing.JFrame {
     public static void main(String... args) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new ArchiveTest().setVisible(true);
+                new ArchiveExplorer().setVisible(true);
             }
         });
     }
@@ -461,6 +461,6 @@ public class ArchiveTest extends javax.swing.JFrame {
     private javax.swing.JTree jTree1;
     // End of variables declaration//GEN-END:variables
 
-    private static final Logger LOG = Logger.getLogger(ArchiveTest.class.getName());
+    private static final Logger LOG = Logger.getLogger(ArchiveExplorer.class.getName());
 
 }
