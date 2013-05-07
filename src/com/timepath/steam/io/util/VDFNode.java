@@ -95,6 +95,10 @@ public class VDFNode extends DefaultMutableTreeNode {
     }
 
     public void setFile(String name) { // todo: case insensitivity
+        if(name == null) {
+            this.fileName = null;
+            return;
+        }
         if(name.contains(".")) {
             this.fileName = name.split("\\.")[0];
         } else {

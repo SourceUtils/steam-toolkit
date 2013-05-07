@@ -1,5 +1,7 @@
 package com.timepath.steam.io.storage;
 
+import com.timepath.steam.io.storage.util.Archive;
+import com.timepath.steam.io.storage.util.DirectoryEntry;
 import com.timepath.DataUtils;
 import com.timepath.EnumFlagUtils;
 import com.timepath.EnumFlags;

@@ -12,6 +12,7 @@ import com.timepath.steam.net.ServerListener;
 import com.timepath.steam.net.SourceServer;
 import java.awt.Dimension;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,7 +49,9 @@ public class ServerTest {
                 @Override
                 protected Void doInBackground() throws Exception {
                     SteamID user = SteamUtils.getUser();
-                    VDFNode v = VDF.load(new File(SteamUtils.getSteam(), "userdata/" + user.getUID().split(":")[2] + "/7/remote/serverbrowser_hist.vdf")).get("Filters");
+                    VDF vdf = new VDF();
+                    vdf.readExternal(new FileInputStream(new File(SteamUtils.getSteam(), "userdata/" + user.getUID().split(":")[2] + "/7/remote/serverbrowser_hist.vdf")));
+                    VDFNode v = vdf.getRoot().get("Filters");
                     VDFNode favorites = v.get("Favorites");
                     VDFNode history = v.get("History");
                     long lastPlayed = 0;

@@ -6,10 +6,11 @@ import com.timepath.plaf.x.filechooser.BaseFileChooser;
 import com.timepath.plaf.x.filechooser.BaseFileChooser.ExtensionFilter;
 import com.timepath.plaf.x.filechooser.NativeFileChooser;
 import com.timepath.steam.SteamUtils;
-import com.timepath.steam.io.storage.Archive;
-import com.timepath.steam.io.storage.Archive.DirectoryEntry;
+import com.timepath.steam.io.storage.ACF;
 import com.timepath.steam.io.storage.GCF;
 import com.timepath.steam.io.storage.VPK;
+import com.timepath.steam.io.storage.util.Archive;
+import com.timepath.steam.io.storage.util.DirectoryEntry;
 import com.timepath.swing.DirectoryTreeCellRenderer;
 import java.awt.Component;
 import java.io.File;
@@ -39,10 +40,8 @@ import javax.swing.tree.TreeSelectionModel;
 @SuppressWarnings("serial")
 public class ArchiveExplorer extends javax.swing.JFrame {
 
-    private ArrayList<Archive> gcfs = new ArrayList<Archive>();
-
+    private ArrayList<Archive> archives = new ArrayList<Archive>();
     private final DefaultTreeModel tree;
-
     private final DefaultTableModel table;
 
     /**
@@ -91,7 +90,7 @@ public class ArchiveExplorer extends javax.swing.JFrame {
             return null;
         }
     }
-    
+
     public void load(File f) {
         String ext = FileUtils.extension(f);
         Archive a;
@@ -107,13 +106,16 @@ public class ArchiveExplorer extends javax.swing.JFrame {
             LOG.log(Level.WARNING, "Unable to load {0}", f);
             return;
         }
-        gcfs.add(a);
-        //        ((DefaultMutableTreeNode) tree.getRoot()).removeAllChildren();
-        DefaultMutableTreeNode gcf = new DefaultMutableTreeNode(a);
+        addArchive(a);
+    }
+
+    private void addArchive(Archive a) {
+        archives.add(a);
+        DefaultMutableTreeNode node = new DefaultMutableTreeNode(a);
         DefaultMutableTreeNode direct = new DefaultMutableTreeNode(a.getRoot());
-        tree.insertNodeInto(direct, gcf, 0);
+        tree.insertNodeInto(direct, node, 0);
         a.analyze(direct, false);
-        tree.insertNodeInto(gcf, (MutableTreeNode) tree.getRoot(), tree.getChildCount(tree.getRoot()));
+        tree.insertNodeInto(node, (MutableTreeNode) tree.getRoot(), tree.getChildCount(tree.getRoot()));
         tree.reload();
     }
 
@@ -141,6 +143,7 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
+        jMenuItem2 = new javax.swing.JMenuItem();
 
         jPopupMenuItem1.setText("Extract");
         jPopupMenuItem1.setEnabled(false);
@@ -254,6 +257,15 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         });
         jMenu1.add(jMenuItem1);
 
+        jMenuItem2.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_M, java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItem2.setText("Mount");
+        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem2ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem2);
+
         jMenuBar1.add(jMenu1);
 
         setJMenuBar(jMenuBar1);
@@ -322,7 +334,6 @@ public class ArchiveExplorer extends javax.swing.JFrame {
             Logger.getLogger(ArchiveExplorer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jPopupMenuItem1ActionPerformed
-
     private Archive selectedArchive;
 
     private void jTree1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTree1MouseClicked
@@ -404,17 +415,21 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(this, message, title, JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jPopupMenuItem2ActionPerformed
 
+    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+        addArchive(new ACF().loadArchive(440));
+    }//GEN-LAST:event_jMenuItem2ActionPerformed
+
     private void search() {
         jTree1.setSelectionPath(null);
         ArrayList<DirectoryEntry> children = new ArrayList<DirectoryEntry>();
-        for(Archive a : gcfs) {
+        for(Archive a : archives) {
             children.addAll(a.find(jTextField1.getText()));
         }
         table.setRowCount(0);
         for(int i = 0; i < children.size(); i++) {
             DirectoryEntry c = children.get(i);
             if(!c.isDirectory()) {
-                table.addRow(new Object[]{c, c.getItemSize(), c.getAttributes(), c.getPath(), FileUtils.extension(c.getName()), c.getArchive(), c.isComplete()});
+                table.addRow(new Object[] {c, c.getItemSize(), c.getAttributes(), c.getPath(), FileUtils.extension(c.getName()), c.getArchive(), c.isComplete()});
             }
         }
     }
@@ -428,7 +443,7 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         for(int i = 0; i < children.length; i++) {
             DirectoryEntry c = children[i];
             if(!c.isDirectory()) {
-                table.addRow(new Object[]{c, c.getItemSize(), c.getAttributes(), c.getPath(), FileUtils.extension(c.getName()), c.getArchive(), c.isComplete()});
+                table.addRow(new Object[] {c, c.getItemSize(), c.getAttributes(), c.getPath(), FileUtils.extension(c.getName()), c.getArchive(), c.isComplete()});
             }
         }
     }
@@ -448,6 +463,7 @@ public class ArchiveExplorer extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPopupMenu jPopupMenu1;
@@ -460,7 +476,5 @@ public class ArchiveExplorer extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTree jTree1;
     // End of variables declaration//GEN-END:variables
-
     private static final Logger LOG = Logger.getLogger(ArchiveExplorer.class.getName());
-
 }
