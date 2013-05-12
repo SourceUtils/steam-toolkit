@@ -32,7 +32,7 @@ public class VDF implements Savable {
 
     private static final Logger LOG = Logger.getLogger(VDF.class.getName());
     protected VDFNode root;
-    private Level logLevel = Level.FINE;
+    private Level logLevel = Level.FINER; // ALL == disabled
 
     public void setLogLevel(Level logLevel) {
         this.logLevel = logLevel;
