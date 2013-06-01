@@ -57,7 +57,20 @@ public class SteamUtils {
                 if(str == null) {
                     str = System.getenv("PROGRAMFILES");
                 }
-                return new File(str, "Steam");
+                File f = new File(str, "Steam");
+                if(f.exists()) {
+                    return f;
+                }
+                String sourcesdk = System.getenv("sourcesdk");
+                if(sourcesdk != null) {
+                    sourcesdk = sourcesdk.toLowerCase();
+                    String scan = "steam";
+                    int idx = sourcesdk.indexOf(scan);
+                    if(idx != -1) {
+                        return new File(sourcesdk.substring(0, idx + scan.length()));
+                    }
+                }
+                return null;
             case OSX:
                 return new File("~/Library/Application Support/Steam");
             case Linux:
