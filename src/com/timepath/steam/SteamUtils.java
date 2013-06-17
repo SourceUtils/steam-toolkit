@@ -65,7 +65,6 @@ public class SteamUtils {
             case Windows:
                 String reg = null;
                 try {
-                    // http://www.steamgifts.com/forum/f6c3t/if-you-cant-run-steam-solution
                     reg = WinRegistry.readString(WinRegistry.HKEY_CURRENT_USER, "Software\\Valve\\Steam", "SteamPath");
                 } catch (Exception ex) {
                     LOG.log(Level.WARNING, "Windows registry read failed", ex);
@@ -99,7 +98,7 @@ public class SteamUtils {
                     VDF v = new VDF();
                     try {
                         v.readExternal(new FileInputStream(macReg));
-                        String installPath = v.getRoot().get("HKLM").get("Software").get("Valve").get("Steam").get("InstallPath").getValue();
+                        String installPath = v.getRoot().get("Registry").get("HKLM").get("Software").get("Valve").get("Steam").get("InstallPath").getValue();
                         LOG.log(Level.INFO, "Steam directory read from registry file: {0}", installPath);
                         return new File(installPath);
                     } catch (FileNotFoundException ex) {
@@ -113,14 +112,14 @@ public class SteamUtils {
                     VDF v = new VDF();
                     try {
                         v.readExternal(new FileInputStream(linReg));
-                        String installPath = v.getRoot().get("HKLM").get("Software").get("Valve").get("Steam").get("InstallPath").getValue();
+                        String installPath = v.getRoot().get("Registry").get("HKLM").get("Software").get("Valve").get("Steam").get("InstallPath").getValue();
                         LOG.log(Level.INFO, "Steam directory read from registry file: {0}", installPath);
                         return new File(installPath);
                     } catch (FileNotFoundException ex) {
                         LOG.log(Level.SEVERE, null, ex);
                     }
                 }
-                return new File(System.getenv("HOME") + "/.steam/steam");
+                return new File(System.getenv("HOME") + "/.steam/steam"); // shouldn't this be correct regardess?
             default:
                 return null;
         }
