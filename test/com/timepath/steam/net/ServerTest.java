@@ -6,10 +6,6 @@ import com.timepath.steam.SteamID;
 import com.timepath.steam.SteamUtils;
 import com.timepath.steam.io.VDF;
 import com.timepath.steam.io.util.VDFNode;
-import com.timepath.steam.net.MasterServer;
-import com.timepath.steam.net.Region;
-import com.timepath.steam.net.ServerListener;
-import com.timepath.steam.net.SourceServer;
 import java.awt.Dimension;
 import java.io.File;
 import java.io.FileInputStream;
@@ -87,7 +83,7 @@ public class ServerTest {
             LOG.info("Getting info ...");
             
             SourceServer ss = new SourceServer("27.50.71.201", 27016);
-//            ss.getInfo(new ServerListener() { public void inform(String update) { test.append(update + "\n"); } });
+            ss.getInfo(new ServerListener() { public void inform(String update) { test.append(update + "\n"); } });
             ss.getRules(new ServerListener() { public void inform(String update) { test.append(update + "\n"); } });
             
             LOG.info("Querying ...");
