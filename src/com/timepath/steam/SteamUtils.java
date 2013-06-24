@@ -44,6 +44,26 @@ public class SteamUtils {
         return null;
     }
 
+    public static File getUserData(SteamID user) {
+        if(user == null) {
+            return null;
+        }
+        File steam = getSteam();
+        if (steam == null) {
+            return null;
+        }
+        return new File(steam, "userdata/" + user.getUID().split(":")[2]);
+    }
+       
+    public static File getUserData() {
+        return getUserData(getUser());
+    }
+    
+    /**
+     * Todo: libraries:
+     * Steam/config/config.vdf:InstallConfigStore/Software/Valve/Steam/BaseInstallFolder_X
+     * @return 
+     */
     public static File getSteamApps() {
         File steam = getSteam();
         if (steam == null) {

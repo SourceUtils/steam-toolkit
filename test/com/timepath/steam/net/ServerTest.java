@@ -86,7 +86,7 @@ public class ServerTest {
             
             LOG.info("Getting info ...");
             
-            SourceServer ss = new SourceServer("27.50.71.3", 21045);
+            SourceServer ss = new SourceServer("27.50.71.201", 27016);
 //            ss.getInfo(new ServerListener() { public void inform(String update) { test.append(update + "\n"); } });
             ss.getRules(new ServerListener() { public void inform(String update) { test.append(update + "\n"); } });
             
