@@ -3,7 +3,7 @@ package com.timepath.steam.io;
 import com.timepath.DataUtils;
 import com.timepath.DateUtils;
 import com.timepath.Utils;
-import com.timepath.io.Savable;
+import com.timepath.io.utils.Savable;
 import com.timepath.steam.io.util.BlobNode;
 import com.timepath.swing.TreeUtils;
 import java.io.IOException;

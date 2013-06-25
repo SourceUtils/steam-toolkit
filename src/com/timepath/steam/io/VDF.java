@@ -1,6 +1,6 @@
 package com.timepath.steam.io;
 
-import com.timepath.io.Savable;
+import com.timepath.io.utils.Savable;
 import com.timepath.steam.io.util.VDFNode;
 import java.io.File;
 import java.io.FileNotFoundException;

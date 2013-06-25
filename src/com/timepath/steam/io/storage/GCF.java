@@ -5,7 +5,7 @@ import com.timepath.steam.io.storage.util.DirectoryEntry;
 import com.timepath.DataUtils;
 import com.timepath.EnumFlagUtils;
 import com.timepath.EnumFlags;
-import com.timepath.io.ViewableData;
+import com.timepath.io.utils.ViewableData;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;

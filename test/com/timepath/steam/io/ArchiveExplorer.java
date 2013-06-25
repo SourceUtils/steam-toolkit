@@ -1,7 +1,7 @@
 package com.timepath.steam.io;
 
 import com.timepath.FileUtils;
-import com.timepath.io.ViewableData;
+import com.timepath.io.utils.ViewableData;
 import com.timepath.plaf.x.filechooser.BaseFileChooser;
 import com.timepath.plaf.x.filechooser.BaseFileChooser.ExtensionFilter;
 import com.timepath.plaf.x.filechooser.NativeFileChooser;
