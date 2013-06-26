@@ -26,6 +26,7 @@ public class SteamID {
     public String getUser() {
         return user;
     }
+
     private String id64, uid, id32;
 
     public String getUID() {
@@ -51,18 +52,22 @@ public class SteamID {
     public String toString() {
         return "[" + user + ", " + id64 + ", " + uid + ", " + id32 + "]";
     }
+
     /**
      * Steam_# 0 from HL to TF2, 1 from L4D to CS:GO
      */
     public static final Pattern ID32 = Pattern.compile("STEAM_([0-9]):([0-9]):([0-9]{4,})");
+
     /**
      * http://steamcommunity.com/profiles/[uid]
      */
     public static final Pattern UID = Pattern.compile("U:([0-9]):([0-9]{4,})");
+
     /**
      * http://steamcommunity.com/profiles/id64
      */
     public static final Pattern ID64 = Pattern.compile("([0-9]{17,})");
+
     /**
      * The 4 is because hexadecimal; sqrt 16? 2^4 = 16? Probably that
      */
@@ -77,7 +82,8 @@ public class SteamID {
         if(!m.matches()) {
             return null;
         }
-        BigInteger id = new BigInteger(m.group(3)).multiply(BigInteger.valueOf(2)).add(new BigInteger(m.group(2)));
+        BigInteger id = new BigInteger(m.group(3)).multiply(BigInteger.valueOf(2)).add(
+                new BigInteger(m.group(2)));
         return "U:1:" + id.toString();
     }
 
@@ -111,5 +117,7 @@ public class SteamID {
     public static String ID64toID32(String steam) {
         return UIDtoID32(ID64toUID(steam));
     }
+
     private static final Logger LOG = Logger.getLogger(SteamID.class.getName());
+
 }

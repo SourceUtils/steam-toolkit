@@ -30,7 +30,7 @@ public class SourceServer extends Server {
             l = ServerListener.DUMMY;
         }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        baos.write(new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
+        baos.write(new byte[] {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
         baos.write(0x54);
         baos.write(("Source Engine Query" + "\0").getBytes());
         ByteBuffer send = ByteBuffer.wrap(baos.toByteArray());
@@ -138,9 +138,9 @@ public class SourceServer extends Server {
 
         //<editor-fold defaultstate="collapsed" desc="Get a challenge key">
         ByteArrayOutputStream challengeOut = new ByteArrayOutputStream();
-        challengeOut.write(new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
+        challengeOut.write(new byte[] {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
         challengeOut.write(0x56);
-        challengeOut.write(new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
+        challengeOut.write(new byte[] {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
         ByteBuffer challengeSend = ByteBuffer.wrap(challengeOut.toByteArray());
         this.send(challengeSend);
 
@@ -163,7 +163,7 @@ public class SourceServer extends Server {
 
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        baos.write(new byte[]{(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
+        baos.write(new byte[] {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
         baos.write(0x56);
         baos.write(challengeKey);
         ByteBuffer send = ByteBuffer.wrap(baos.toByteArray());
@@ -197,7 +197,7 @@ public class SourceServer extends Server {
                 ruleCount = buf.getShort();
             }
 
-            LOG.log(Level.INFO, "{0} / {1}", new Object[]{id, fragments});
+            LOG.log(Level.INFO, "{0} / {1}", new Object[] {id, fragments});
             byte[] data = new byte[buf.remaining()];
             buf.get(data);
             ruleBuf.put(data);
@@ -222,7 +222,9 @@ public class SourceServer extends Server {
 
     private enum ServerType {
 
-        DEDICATED('d'), LISTEN('l'), SOURCE_TV('p');
+        DEDICATED('d'),
+        LISTEN('l'),
+        SOURCE_TV('p');
 
         char code;
 
@@ -238,11 +240,13 @@ public class SourceServer extends Server {
             }
             return null;
         }
+
     }
 
     private enum Environment {
 
-        WINDOWS('w'), LINUX('l');
+        WINDOWS('w'),
+        LINUX('l');
 
         char code;
 
@@ -258,6 +262,7 @@ public class SourceServer extends Server {
             }
             return null;
         }
+
     }
 
     private static final Logger LOG = Logger.getLogger(SourceServer.class.getName());

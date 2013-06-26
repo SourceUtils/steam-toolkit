@@ -38,7 +38,9 @@ public class VPK implements Archive {
         }
         b.get(new byte[e.preloadBytes]);
     }
+
     private DefaultMutableTreeNode es;
+
     private String name;
 
     public InputStream get(int index) {
@@ -47,6 +49,7 @@ public class VPK implements Archive {
 
     public VPK() {
     }
+
     private static int expectedHeader = 0x55AA1234;
 
     public VPK loadArchive(File file) {
@@ -125,6 +128,7 @@ public class VPK implements Archive {
 //        LOG.info(Arrays.toString(baos.toByteArray()) + "");
         return Charset.forName("UTF-8").decode(ByteBuffer.wrap(baos.toByteArray())).toString();
     }
+
     private VPKDirectoryEntry[] entries;
 
     /**
@@ -137,15 +141,18 @@ public class VPK implements Archive {
          * A 32bit CRC of the file's data.
          */
         int CRC;
+
         /**
          * The number of bytes contained in the index file.
          */
         short preloadBytes;
+
         /**
          * A zero based index of the archive this file's data is contained in.
          * If 0x7fff, the data follows the directory.
          */
         short archiveIndex;
+
         /**
          * If ArchiveIndex is 0x7fff, the offset of the file data relative to
          * the end of the directory (see the header for more details).
@@ -153,11 +160,13 @@ public class VPK implements Archive {
          * archive.
          */
         int entryOffset;
+
         /**
          * If zero, the entire file is stored in the preload data. Otherwise,
          * the number of bytes stored starting at EntryOffset.
          */
         int entryLength;
+
         static int terminator = 0xffff; // short
 
         public int getItemSize() {
@@ -203,7 +212,9 @@ public class VPK implements Archive {
         public void extract(File out) throws IOException {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
+
     }
+
     private static final Logger LOG = Logger.getLogger(VPK.class.getName());
 
     public ArrayList<DirectoryEntry> find(String search) {
@@ -295,4 +306,5 @@ public class VPK implements Archive {
         }
         return last;
     }
+
 }

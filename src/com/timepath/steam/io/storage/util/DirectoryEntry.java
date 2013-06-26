@@ -30,4 +30,5 @@ public interface DirectoryEntry {
     public int getIndex();
 
     public void extract(File out) throws IOException;
+
 }

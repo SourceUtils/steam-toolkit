@@ -46,7 +46,9 @@ public class ServerTest {
                 protected Void doInBackground() throws Exception {
                     SteamID user = SteamUtils.getUser();
                     VDF vdf = new VDF();
-                    vdf.readExternal(new FileInputStream(new File(SteamUtils.getSteam(), "userdata/" + user.getUID().split(":")[2] + "/7/remote/serverbrowser_hist.vdf")));
+                    vdf.readExternal(new FileInputStream(new File(SteamUtils.getSteam(),
+                                                                  "userdata/" + user.getUID().split(
+                            ":")[2] + "/7/remote/serverbrowser_hist.vdf")));
                     VDFNode v = vdf.getRoot().get("Filters");
                     VDFNode favorites = v.get("Favorites");
                     VDFNode history = v.get("History");
@@ -79,16 +81,28 @@ public class ServerTest {
                     return null;
                 }
             }.execute();
-            
+
             LOG.info("Getting info ...");
-            
+
             SourceServer ss = new SourceServer("27.50.71.201", 27016);
-            ss.getInfo(new ServerListener() { public void inform(String update) { test.append(update + "\n"); } });
-            ss.getRules(new ServerListener() { public void inform(String update) { test.append(update + "\n"); } });
-            
+            ss.getInfo(new ServerListener() {
+                public void inform(String update) {
+                    test.append(update + "\n");
+                }
+            });
+            ss.getRules(new ServerListener() {
+                public void inform(String update) {
+                    test.append(update + "\n");
+                }
+            });
+
             LOG.info("Querying ...");
 
-            MasterServer.SOURCE.query(Region.AUSTRALIA, "\\gamedir\\tf", new ServerListener() { public void inform(String update) { net.append(update + "\n"); } });
+            MasterServer.SOURCE.query(Region.AUSTRALIA, "\\gamedir\\tf", new ServerListener() {
+                public void inform(String update) {
+                    net.append(update + "\n");
+                }
+            });
         } catch(IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }

@@ -36,4 +36,5 @@ public class ArchiveOutputStreamTest {
     }
 
     private static final Logger LOG = Logger.getLogger(ArchiveOutputStreamTest.class.getName());
+
 }

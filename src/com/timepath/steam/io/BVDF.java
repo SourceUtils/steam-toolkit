@@ -34,7 +34,9 @@ import javax.swing.tree.DefaultMutableTreeNode;
 public class BVDF implements Savable {
 
     private static final Logger LOG = Logger.getLogger(BVDF.class.getName());
+
     private static int binaryFailurePosition, binaryFailureByte;
+
     private DataNode root;
 
     public DataNode getRoot() {
@@ -50,7 +52,7 @@ public class BVDF implements Savable {
         try {
             byte[] buf = new byte[in.available()];
             readExternal(ByteBuffer.wrap(buf));
-        } catch (IOException ex) {
+        } catch(IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
     }
@@ -59,14 +61,14 @@ public class BVDF implements Savable {
     public void readExternal(ByteBuffer buf) {
         buf.order(ByteOrder.LITTLE_ENDIAN);
         int magic = buf.getInt();
-        switch (magic) {
+        switch(magic) {
             case 0x07564426:
                 //<editor-fold defaultstate="collapsed" desc="AppInfo">
                 int appUniverse = buf.getInt();
                 root.add(new DataNode("universe", Universe.getName(appUniverse)));
-                for (;;) {
+                for(;;) {
                     int appID = buf.getInt();
-                    if (appID == 0) {
+                    if(appID == 0) {
                         break;
                     }
                     DataNode c = new DataNode(appID);
@@ -99,21 +101,25 @@ public class BVDF implements Savable {
 
                     DataNode sections = new DataNode("Sections");
                     c.add(sections);
-                    for (;;) {
+                    for(;;) {
                         byte section = entrySlice.get();
-                        if (section == 0) {
+                        if(section == 0) {
                             break;
                         }
                         DataNode sectionNode = new DataNode(Section.get(section));
                         sections.add(sectionNode);
                         int sectionPosition = entrySlice.position();
                         DataNode binarySlice = parseBinaryData(entrySlice);
-                        if (binarySlice != null) {
+                        if(binarySlice != null) {
                             TreeUtils.moveChildren(binarySlice, sectionNode);
 //                        c.removeFromParent(); // TEMP
                         } else {
-                            Object[] vars = new Object[]{appID, Integer.toHexString(binaryFailureByte), Section.get(section), appPosition + sectionPosition, appPosition + binaryFailurePosition};
-                            LOG.log(Level.WARNING, "app: {0} byte: {1}, sec: {2}, secoff: {3} totaloff: {4}", vars);
+                            Object[] vars = new Object[] {appID, Integer.toHexString(
+                                binaryFailureByte), Section.get(section),
+                                                          appPosition + sectionPosition,
+                                                          appPosition + binaryFailurePosition};
+                            LOG.log(Level.WARNING,
+                                    "app: {0} byte: {1}, sec: {2}, secoff: {3} totaloff: {4}", vars);
                             break;
                         }
                     }
@@ -124,9 +130,9 @@ public class BVDF implements Savable {
                 //<editor-fold defaultstate="collapsed" desc="PackageInfo">
                 int packageUniverse = buf.getInt();
                 root.add(new DataNode("universe", Universe.getName(packageUniverse)));
-                for (;;) {
+                for(;;) {
                     int appID = buf.getInt();
-                    if (appID == 0xFFFFFFFF || appID == -1) { // same thing
+                    if(appID == 0xFFFFFFFF || appID == -1) { // same thing
                         break;
                     }
                     DataNode c = new DataNode("#", appID);
@@ -150,10 +156,11 @@ public class BVDF implements Savable {
                 //<editor-fold defaultstate="collapsed" desc="Generic .bin">
                 buf.position(0);
                 DataNode bvdf = parseBinaryData(buf);
-                if (bvdf != null) {
+                if(bvdf != null) {
                     TreeUtils.moveChildren(bvdf, root);
                 } else {
-                    Object[] vars = new Object[]{Integer.toHexString(binaryFailureByte), binaryFailurePosition};
+                    Object[] vars = new Object[] {Integer.toHexString(binaryFailureByte),
+                                                  binaryFailurePosition};
                     LOG.log(Level.WARNING, "err: {0}, off: {1}", vars);
                 }
                 //</editor-fold>
@@ -169,18 +176,18 @@ public class BVDF implements Savable {
     private static DataNode parseBinaryData(ByteBuffer buffer) {
         DataNode parent = new DataNode();
         parent.name = "<joiner>";
-        for (;;) {
+        for(;;) {
             int typeNum = buffer.get();
             ValueType type = ValueType.get(typeNum);
             LOG.log(Level.FINE, "Type : {0}", type);
 
-            if (type == null) { // parsing error
+            if(type == null) { // parsing error
                 binaryFailureByte = typeNum;
                 binaryFailurePosition = buffer.position() - 1;
                 return null;
             }
 
-            if (type == ValueType.TYPE_NUMTYPES) {
+            if(type == ValueType.TYPE_NUMTYPES) {
                 LOG.log(Level.FINE, "No more peers");
                 break;
             }
@@ -191,11 +198,11 @@ public class BVDF implements Savable {
             dat.name = token;
 
             //<editor-fold defaultstate="collapsed" desc="Different cases">
-            switch (type) {
+            switch(type) {
                 case TYPE_NONE:
                     LOG.log(Level.FINE, "Node has children");
                     DataNode recur = parseBinaryData(buffer);
-                    if (recur == null) {
+                    if(recur == null) {
                         return null;
                     }
                     TreeUtils.moveChildren(recur, dat);
@@ -230,7 +237,8 @@ public class BVDF implements Savable {
                     break;
 
                 case TYPE_COLOR:
-                    Color colorValue = new Color(buffer.get(), buffer.get(), buffer.get(), buffer.get());
+                    Color colorValue = new Color(buffer.get(), buffer.get(), buffer.get(),
+                                                 buffer.get());
                     dat.value = (colorValue);
                     LOG.log(Level.FINE, "Color value: {0}", colorValue);
                     break;
@@ -260,7 +268,7 @@ public class BVDF implements Savable {
         buffer.position(originalPosition + length);
         textBuffer.limit(length - 1);
         String token = Charset.forName("UTF-8").decode(textBuffer.duplicate()).toString();
-        LOG.log(Level.FINER, "Token {0} = {1}", new Object[]{token, Utils.hex(token.getBytes())});
+        LOG.log(Level.FINER, "Token {0} = {1}", new Object[] {token, Utils.hex(token.getBytes())});
         return token;
     }
 
@@ -274,14 +282,17 @@ public class BVDF implements Savable {
             this.name = name;
             this.value = obj;
         }
+
         private String name;
+
         public Object value;
+
         private ValueType type;
 
         @Override
         public String toString() {
             String splitComp = "";
-            if (name != null && value != null) {
+            if(name != null && value != null) {
                 splitComp = ": ";
             }
             return (name == null ? "" : name) + splitComp + (value == null ? "" : value + " [" + value.getClass().getSimpleName() + "]");
@@ -292,17 +303,18 @@ public class BVDF implements Savable {
 
         public DataNode get(String key) {
             DataNode node;
-            for (Object o : this.children) {
-                if (!(o instanceof DataNode)) {
+            for(Object o : this.children) {
+                if(!(o instanceof DataNode)) {
                     continue;
                 }
                 node = (DataNode) o;
-                if (node.name.equals(key)) {
+                if(node.name.equals(key)) {
                     return node;
                 }
             }
             return null;
         }
+
     }
 
     //<editor-fold defaultstate="collapsed" desc="Enums">
@@ -317,6 +329,7 @@ public class BVDF implements Savable {
         Universe(int i) {
             this.id = i;
         }
+
         private int id;
 
         public int ID() {
@@ -325,13 +338,14 @@ public class BVDF implements Savable {
 
         public static String getName(int i) {
             Universe[] search = Universe.values();
-            for (int s = 0; s < search.length; s++) {
-                if (search[s].ID() == i) {
+            for(int s = 0; s < search.length; s++) {
+                if(search[s].ID() == i) {
                     return search[s].name();
                 }
             }
             return "UNKNOWN (" + i + ")";
         }
+
     }
 
     private enum AppInfoState {
@@ -342,6 +356,7 @@ public class BVDF implements Savable {
         AppInfoState(int i) {
             this.id = i;
         }
+
         private int id;
 
         public int ID() {
@@ -350,14 +365,16 @@ public class BVDF implements Savable {
 
         public static String getName(int i) {
             AppInfoState[] search = AppInfoState.values();
-            for (int s = 0; s < search.length; s++) {
-                if (search[s].ID() == i) {
+            for(int s = 0; s < search.length; s++) {
+                if(search[s].ID() == i) {
                     return search[s].name();
                 }
             }
-            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[]{AppInfoState.class.getSimpleName(), i});
+            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] {
+                AppInfoState.class.getSimpleName(), i});
             return "UNKNOWN (" + i + ")";
         }
+
     }
 
     /**
@@ -387,6 +404,7 @@ public class BVDF implements Savable {
         Section(int i) {
             this.id = i;
         }
+
         private int id;
 
         public int ID() {
@@ -395,13 +413,14 @@ public class BVDF implements Savable {
 
         public static String get(int i) {
             Section[] search = Section.values();
-            for (int s = 0; s < search.length; s++) {
-                if (search[s].ID() == i) {
+            for(int s = 0; s < search.length; s++) {
+                if(search[s].ID() == i) {
                     return search[s].name();
                 }
             }
             return "UNKNOWN (" + i + ")";
         }
+
     }
 
     private enum SteamAppState {
@@ -430,6 +449,7 @@ public class BVDF implements Savable {
         SteamAppState(int i) {
             this.id = i;
         }
+
         private int id;
 
         public int ID() {
@@ -437,13 +457,14 @@ public class BVDF implements Savable {
         }
 
         public static String get(int i) {
-            for (SteamAppState s : SteamAppState.values()) {
-                if (s.ID() == i) {
+            for(SteamAppState s : SteamAppState.values()) {
+                if(s.ID() == i) {
                     return s.name();
                 }
             }
             return "UNKNOWN (" + i + ")";
         }
+
     };
 
     private enum AppInfoSectionPropagationType {
@@ -458,6 +479,7 @@ public class BVDF implements Savable {
         AppInfoSectionPropagationType(int i) {
             this.id = i;
         }
+
         private int id;
 
         public int ID() {
@@ -465,13 +487,14 @@ public class BVDF implements Savable {
         }
 
         public static String get(int i) {
-            for (AppInfoSectionPropagationType s : AppInfoSectionPropagationType.values()) {
-                if (s.ID() == i) {
+            for(AppInfoSectionPropagationType s : AppInfoSectionPropagationType.values()) {
+                if(s.ID() == i) {
                     return s.name();
                 }
             }
             return "UNKNOWN (" + i + ")";
         }
+
     };
 
     private enum ValueType {
@@ -489,6 +512,7 @@ public class BVDF implements Savable {
         ValueType(int i) {
             this.id = i;
         }
+
         private int id;
 
         public int ID() {
@@ -496,8 +520,8 @@ public class BVDF implements Savable {
         }
 
         public static ValueType get(int i) {
-            for (ValueType s : ValueType.values()) {
-                if (s.ID() == i) {
+            for(ValueType s : ValueType.values()) {
+                if(s.ID() == i) {
                     return s;
                 }
             }
@@ -505,13 +529,14 @@ public class BVDF implements Savable {
         }
 
         public static String getName(int i) {
-            for (ValueType s : ValueType.values()) {
-                if (s.ID() == i) {
+            for(ValueType s : ValueType.values()) {
+                if(s.ID() == i) {
                     return s.name();
                 }
             }
             return "UNKNOWN (" + i + ")";
         }
+
     };
     //</editor-fold>
 }

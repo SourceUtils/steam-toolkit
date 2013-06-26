@@ -25,7 +25,7 @@ public class MasterServer extends Server {
     public MasterServer(String hostname, int port) {
         super(hostname, port);
     }
-    
+
     public void query(Region r, ServerListener l) throws IOException {
         query(r, "", l);
     }
@@ -40,7 +40,7 @@ public class MasterServer extends Server {
         boolean looping = true;
         while(looping) {
             LOG.log(Level.FINE, "Last address: {0}", lastAddress);
-            
+
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             baos.write(0x31);
             baos.write(r.getCode());
@@ -65,13 +65,13 @@ public class MasterServer extends Server {
                 l.inform(rec);
                 break;
             }
-            
+
             byte ten = buf.get();
             if(ten != 0x0A) {
                 LOG.log(Level.WARNING, "Malformed byte {0}", ten);
                 break;
             }
-            
+
             int[] octet = new int[4];
             int serverPort;
             do {
@@ -85,11 +85,12 @@ public class MasterServer extends Server {
                     l.inform(lastAddress);
                 }
             } while(buf.remaining() >= 6);
-            
+
             if(buf.remaining() > 0) {
                 byte[] under = new byte[buf.remaining()];
                 if(under.length > 0) {
-                    LOG.log(Level.INFO, "{0} byte underflow: {0}", new Object[]{buf.remaining(), Utils.hex(under)});
+                    LOG.log(Level.INFO, "{0} byte underflow: {0}", new Object[] {buf.remaining(),
+                                                                                 Utils.hex(under)});
                 }
             }
         }

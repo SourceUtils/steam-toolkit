@@ -164,13 +164,14 @@ public class GCF implements Archive, ViewableData {
                 outFile = File.createTempFile(directoryEntries[index].getName(), null);
             }
             if(idx >= blocks.length) {
-                LOG.log(Level.WARNING, "Block out of range for {0} : {1}. Is the size 0?", new Object[]{outFile.getPath(), index});
+                LOG.log(Level.WARNING, "Block out of range for {0} : {1}. Is the size 0?",
+                        new Object[] {outFile.getPath(), index});
                 return null;
             }
             BlockAllocationTableEntry block = this.getBlock(idx);
             RandomAccessFile out = new RandomAccessFile(outFile, "rw");
             int dataIdx = block.firstClusterIndex;
-            LOG.log(Level.FINE, "bSize: {0}", new Object[]{block.fileDataSize});
+            LOG.log(Level.FINE, "bSize: {0}", new Object[] {block.fileDataSize});
             out.seek(block.fileDataOffset);
             while(true) {
                 byte[] buf = this.readData(block, dataIdx);
@@ -189,7 +190,8 @@ public class GCF implements Archive, ViewableData {
             long theoreticalSize = directoryEntries[index].itemSize;
             long realSize = out.getFilePointer();
             if(realSize != theoreticalSize) {
-                LOG.log(Level.WARNING, "size mismatch in {0}: was {1}, supposed to be {2}", new Object[]{outFile, realSize, theoreticalSize});
+                LOG.log(Level.WARNING, "size mismatch in {0}: was {1}, supposed to be {2}",
+                        new Object[] {outFile, realSize, theoreticalSize});
             }
             out.close();
             //</editor-fold>
@@ -380,7 +382,7 @@ public class GCF implements Archive, ViewableData {
             private GCFDirectoryEntry de = GCF.this.directoryEntries[index];
 
             private ByteBuffer buf = createBuffer();
-            
+
             private BlockAllocationTableEntry block;
 
             private int dataIdx;
@@ -400,7 +402,7 @@ public class GCF implements Archive, ViewableData {
                 try {
                     block = GCF.this.getBlock(idx);
                     dataIdx = block.firstClusterIndex;
-                    LOG.log(Level.FINE, "bSize: {0}", new Object[]{block.fileDataSize});
+                    LOG.log(Level.FINE, "bSize: {0}", new Object[] {block.fileDataSize});
                     data = fill(b);
                 } catch(IOException ex) {
                     Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
@@ -410,7 +412,7 @@ public class GCF implements Archive, ViewableData {
 
             private byte[] fill(ByteBuffer buf) {
                 if(dataIdx == 0xFFFF || dataIdx == -1) {
-                    return new byte[]{-1};
+                    return new byte[] {-1};
                 }
                 try {
                     byte[] b = GCF.this.readData(block, dataIdx);
@@ -424,7 +426,7 @@ public class GCF implements Archive, ViewableData {
                     return buf.array();
                 } catch(IOException ex) {
                     Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
-                    return new byte[]{-1};
+                    return new byte[] {-1};
                 }
             }
 
@@ -555,6 +557,7 @@ public class GCF implements Archive, ViewableData {
             String checkState = (checksum == checked) ? "OK" : checksum + "vs" + checked;
             return "id:" + applicationID + ", ver:" + formatVersion + ", rev:" + applicationVersion + ", mounted?: " + isMounted + ", size:" + fileSize + ", blockSize:" + clusterSize + ", blocks:" + clusterCount + ", checksum:" + checkState;
         }
+
     }
     //</editor-fold>
 
@@ -647,6 +650,7 @@ public class GCF implements Archive, ViewableData {
             String checkState = (checksum == checked) ? "OK" : checksum + " vs " + checked;
             return "blockCount:" + blockCount + ", blocksUsed:" + blocksUsed + ", check:" + checkState;
         }
+
     }
 
     private BlockAllocationTableEntry[] blocks;
@@ -714,6 +718,7 @@ public class GCF implements Archive, ViewableData {
         public String toString() {
             return "type:" + entryType + ", off:" + fileDataOffset + ", size:" + fileDataSize + ", firstidx:" + firstClusterIndex + ", nextidx:" + nextBlockEntryIndex + ", previdx:" + previousBlockEntryIndex + ", di:" + manifestIndex;
         }
+
     }
     //</editor-fold>
 
@@ -779,6 +784,7 @@ public class GCF implements Archive, ViewableData {
             String checkState = (checksum == checked) ? "OK" : checksum + "vs" + checked;
             return "blockCount:" + clusterCount + ", firstUnusedEntry:" + firstUnusedEntry + ", isLongTerminator:" + isLongTerminator + ", checksum:" + checkState;
         }
+
     }
 
     private FileAllocationTableEntry[] fragMapEntries;
@@ -808,6 +814,7 @@ public class GCF implements Archive, ViewableData {
         public String toString() {
             return "nextDataBlockIndex:" + nextClusterIndex;
         }
+
     }
     //</editor-fold>
 
@@ -833,6 +840,7 @@ public class GCF implements Archive, ViewableData {
             ManifestHeaderBitmask m = flags[mask];
             return m;
         }
+
     };
 
     public class ManifestHeader {
@@ -936,9 +944,12 @@ public class GCF implements Archive, ViewableData {
         @Override
         public String toString() {
             int checked = check();
-            String checkState = (checksum == checked) ? "OK" : DataUtils.toBinaryString(checksum) + " vs " + DataUtils.toBinaryString(checked);
-            return Long.toHexString(pos) + " : id:" + applicationID + ", ver:" + applicationVersion + ", bitmask:0x" + Integer.toHexString(bitmask).toUpperCase() + ", items:" + nodeCount + ", files:" + fileCount + ", dsize:" + binarySize + ", nsize:" + nameSize + ", info1:" + hashTableKeyCount + ", copy:" + minimumFootprintCount + ", local:" + userConfigCount + ", check:" + checkState;
+            String checkState = (checksum == checked) ? "OK" : DataUtils.toBinaryString(checksum) + " vs " + DataUtils.toBinaryString(
+                    checked);
+            return Long.toHexString(pos) + " : id:" + applicationID + ", ver:" + applicationVersion + ", bitmask:0x" + Integer.toHexString(
+                    bitmask).toUpperCase() + ", items:" + nodeCount + ", files:" + fileCount + ", dsize:" + binarySize + ", nsize:" + nameSize + ", info1:" + hashTableKeyCount + ", copy:" + minimumFootprintCount + ", local:" + userConfigCount + ", check:" + checkState;
         }
+
     }
 
     public GCFDirectoryEntry[] directoryEntries;
@@ -971,6 +982,7 @@ public class GCF implements Archive, ViewableData {
         public int getId() {
             return id;
         }
+
     }
 
     public class GCFDirectoryEntry implements DirectoryEntry, ViewableData {
@@ -1018,7 +1030,8 @@ public class GCF implements Archive, ViewableData {
             nameOffset = DataUtils.readULEInt(rf);
             itemSize = DataUtils.readULEInt(rf);
             checksumIndex = DataUtils.readULEInt(rf);
-            attributes = EnumFlagUtils.decode(DataUtils.readULEInt(rf), DirectoryEntryAttributes.class);
+            attributes = EnumFlagUtils.decode(DataUtils.readULEInt(rf),
+                                              DirectoryEntryAttributes.class);
             parentIndex = DataUtils.readULEInt(rf);
             nextIndex = DataUtils.readULEInt(rf);
             firstChildIndex = DataUtils.readULEInt(rf);
@@ -1086,6 +1099,7 @@ public class GCF implements Archive, ViewableData {
         public Object getAttributes() {
             return this.attributes;
         }
+
     }
 
     private tagGCFDIRECTORYINFO1ENTRY[] info1Entries; // nameTable
@@ -1108,6 +1122,7 @@ public class GCF implements Archive, ViewableData {
         public String toString() {
             return "" + (char) Dummy0;
         }
+
     }
 
     private tagGCFDIRECTORYINFO2ENTRY[] info2Entries; // hashTable
@@ -1130,6 +1145,7 @@ public class GCF implements Archive, ViewableData {
         public String toString() {
             return "" + (char) Dummy0;
         }
+
     }
 
     private tagGCFDIRECTORYCOPYENTRY[] copyEntries; // TODO
@@ -1181,6 +1197,7 @@ public class GCF implements Archive, ViewableData {
         public String toString() {
             return "headerVersion:" + headerVersion + ", Dummy0:" + dummy0;
         }
+
     }
 
     private DirectoryMapEntry[] directoryMapEntries;
@@ -1198,6 +1215,7 @@ public class GCF implements Archive, ViewableData {
         private DirectoryMapEntry() throws IOException {
             firstBlockIndex = DataUtils.readULEInt(rf);
         }
+
     }
     //</editor-fold>
 
@@ -1221,6 +1239,7 @@ public class GCF implements Archive, ViewableData {
         public String toString() {
             return "headerVersion:" + headerVersion + ", ChecksumSize:" + checksumSize;
         }
+
     }
     //</editor-fold>
 
@@ -1258,6 +1277,7 @@ public class GCF implements Archive, ViewableData {
             checksumEntries = new ChecksumEntry[checksumCount + 0x20];
             rf.skipBytes(checksumEntries.length * ChecksumEntry.SIZE);
         }
+
     }
 
     private ChecksumMapEntry[] checksumMapEntries;
@@ -1283,6 +1303,7 @@ public class GCF implements Archive, ViewableData {
         public String toString() {
             return "checkCount:" + checksumCount + ", first:" + firstChecksumIndex;
         }
+
     }
 
     private ChecksumEntry[] checksumEntries;
@@ -1305,6 +1326,7 @@ public class GCF implements Archive, ViewableData {
         public String toString() {
             return "check:" + checksum;
         }
+
     }
     //</editor-fold>
 
@@ -1372,8 +1394,10 @@ public class GCF implements Archive, ViewableData {
             checked += DataUtils.updateChecksumAdd(firstBlockOffset);
             checked += DataUtils.updateChecksumAdd(blocksUsed);
             String checkState = (checksum == checked) ? "OK" : checksum + "vs" + checked;
-            return "v:" + gcfRevision + ", blocks:" + blockCount + ", size:" + blockSize + ", offset:0x" + Integer.toHexString(firstBlockOffset) + ", used:" + blocksUsed + ", check:" + checkState;
+            return "v:" + gcfRevision + ", blocks:" + blockCount + ", size:" + blockSize + ", offset:0x" + Integer.toHexString(
+                    firstBlockOffset) + ", used:" + blocksUsed + ", check:" + checkState;
         }
+
     }
     //</editor-fold>
     //</editor-fold>

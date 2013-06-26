@@ -56,4 +56,5 @@ public class Property extends DefaultMutableTreeNode {
     }
 
     private static final Logger LOG = Logger.getLogger(Property.class.getName());
+
 }

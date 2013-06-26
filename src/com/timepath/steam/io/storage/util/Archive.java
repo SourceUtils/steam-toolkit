@@ -20,4 +20,5 @@ public interface Archive {
     public DirectoryEntry getRoot();
 
     public void analyze(DefaultMutableTreeNode top, boolean leaves);
+
 }

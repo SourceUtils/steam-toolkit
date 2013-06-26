@@ -28,13 +28,13 @@ import java.util.zip.Inflater;
 public class Blob implements Savable {
 
     private static final Logger LOG = Logger.getLogger(Blob.class.getName());
-    
+
     private BlobNode root;
 
     public BlobNode getRoot() {
         return root;
     }
-    
+
     public Blob() {
         root = new BlobNode("Blob");
     }
@@ -143,7 +143,8 @@ public class Blob implements Savable {
                                     byte[] data = new byte[Math.min(childPayload.remaining(), max)];
                                     childPayload.get(data);
                                     childPayload.position(0);
-                                    BlobNode raw = new BlobNode("Raw data: " + Utils.hex(data) + (remaining > max ? " ..." : ""));
+                                    BlobNode raw = new BlobNode(
+                                            "Raw data: " + Utils.hex(data) + (remaining > max ? " ..." : ""));
                                     parent.add(raw);
                                     parsePayload(childPayload, raw, true);
                                     break;
@@ -187,7 +188,9 @@ public class Blob implements Savable {
      * @return the originalBufffer decompressed
      */
     private ByteBuffer decompress(ByteBuffer originalBuffer) {
-        LOG.log(Level.INFO, "Inflating a compressed binary section, initial length (including header) is {0}", originalBuffer.remaining());
+        LOG.log(Level.INFO,
+                "Inflating a compressed binary section, initial length (including header) is {0}",
+                originalBuffer.remaining());
         int headerSkip = 2;
         Inflater inflater = new Inflater(true);
 
@@ -201,10 +204,14 @@ public class Blob implements Savable {
         int x2 = mybuf.getInt();
         int compLevel = mybuf.getShort();
 
-        LOG.log(Level.FINE, "Header claims payload compressed length is {0}, deflated length is {1}, compression level {2}", new Object[]{compressedLen, decompressedLen, compLevel});
+        LOG.log(Level.FINE,
+                "Header claims payload compressed length is {0}, deflated length is {1}, compression level {2}",
+                new Object[] {compressedLen, decompressedLen, compLevel});
 
         if(mybuf.remaining() < compressedLen) {
-            LOG.log(Level.WARNING, "The buffer remainder is too small ({0}) to contain the amount of data the header specifies ({1}).", new Object[]{mybuf.remaining(), compressedLen});
+            LOG.log(Level.WARNING,
+                    "The buffer remainder is too small ({0}) to contain the amount of data the header specifies ({1}).",
+                    new Object[] {mybuf.remaining(), compressedLen});
         }
 
         mybuf.limit(mybuf.position() + compressedLen);
@@ -247,5 +254,5 @@ public class Blob implements Savable {
     public void writeExternal(OutputStream out) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    
+
 }

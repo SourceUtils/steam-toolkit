@@ -31,7 +31,9 @@ import javax.swing.tree.DefaultMutableTreeNode;
 public class VDF implements Savable {
 
     private static final Logger LOG = Logger.getLogger(VDF.class.getName());
+
     protected VDFNode root;
+
     private Level logLevel = Level.FINER; // ALL == disabled
 
     public void setLogLevel(Level logLevel) {
@@ -45,7 +47,9 @@ public class VDF implements Savable {
     public VDF() {
         root = new VDFNode("VDF");
     }
+
     private static final Pattern quoteRegex = Pattern.compile("[^\\s\"']+|\"([^\"]*)\"");
+
     private static final Pattern platformRegex = Pattern.compile("(?:\\[(!)?\\$)(.*)(?:\\])");
 
     protected void processAnalyze(Scanner scanner, DefaultMutableTreeNode parent, int lineNum) {
@@ -94,7 +98,8 @@ public class VDF implements Savable {
                         val = null;
                     }
                 } else if(args.length > 2) {
-                    LOG.log(Level.WARNING, "More than 2 args on line {0}({1}): {2}", new Object[] {lineNum, line, Arrays.toString(args)});
+                    LOG.log(Level.WARNING, "More than 2 args on line {0}({1}): {2}", new Object[] {
+                        lineNum, line, Arrays.toString(args)});
                 }
             }
 
@@ -165,4 +170,5 @@ public class VDF implements Savable {
         }
         return false;
     }
+
 }

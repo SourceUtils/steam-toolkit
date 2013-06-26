@@ -41,7 +41,9 @@ import javax.swing.tree.TreeSelectionModel;
 public class ArchiveExplorer extends javax.swing.JFrame {
 
     private ArrayList<Archive> archives = new ArrayList<Archive>();
+
     private final DefaultTreeModel tree;
+
     private final DefaultTableModel table;
 
     /**
@@ -57,8 +59,11 @@ public class ArchiveExplorer extends javax.swing.JFrame {
             private JLabel label = new JLabel();
 
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                Component comp = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            public Component getTableCellRendererComponent(JTable table, Object value,
+                                                           boolean isSelected, boolean hasFocus,
+                                                           int row, int column) {
+                Component comp = super.getTableCellRendererComponent(table, value, isSelected,
+                                                                     hasFocus, row, column);
                 if(comp instanceof JLabel) {
                     label = (JLabel) comp;
                     label.setIcon(null);
@@ -82,13 +87,15 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         }
 
         @Override
-        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected,
+                                                     int row, int column) {
             Object val = table.getValueAt(row, 0);
             if(val instanceof DirectoryEntry) {
                 directoryChanged((DirectoryEntry) val);
             }
             return null;
         }
+
     }
 
     public void load(File f) {
@@ -115,7 +122,8 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         DefaultMutableTreeNode direct = new DefaultMutableTreeNode(a.getRoot());
         tree.insertNodeInto(direct, node, 0);
         a.analyze(direct, false);
-        tree.insertNodeInto(node, (MutableTreeNode) tree.getRoot(), tree.getChildCount(tree.getRoot()));
+        tree.insertNodeInto(node, (MutableTreeNode) tree.getRoot(), tree.getChildCount(
+                tree.getRoot()));
         tree.reload();
     }
 
@@ -275,7 +283,10 @@ public class ArchiveExplorer extends javax.swing.JFrame {
 
     private void open(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_open
         try {
-            File[] fs = new NativeFileChooser().setParent(this).setTitle("Open archive").setMultiSelectionEnabled(true).addFilter(new ExtensionFilter("GCF files", ".gcf")).addFilter(new ExtensionFilter("VPK files", "_dir.vpk")).setDirectory(SteamUtils.getSteamApps()).choose();
+            File[] fs = new NativeFileChooser().setParent(this).setTitle("Open archive").setMultiSelectionEnabled(
+                    true).addFilter(new ExtensionFilter("GCF files", ".gcf")).addFilter(
+                    new ExtensionFilter("VPK files", "_dir.vpk")).setDirectory(
+                    SteamUtils.getSteamApps()).choose();
             if(fs == null) {
                 return;
             }
@@ -317,7 +328,10 @@ public class ArchiveExplorer extends javax.swing.JFrame {
 
     private void jPopupMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jPopupMenuItem1ActionPerformed
         try {
-            File[] outs = new NativeFileChooser().setParent(this).setTitle("Select extraction directory").setMultiSelectionEnabled(false).setDialogType(BaseFileChooser.DialogType.SAVE_DIALOG).setFileMode(BaseFileChooser.FileMode.DIRECTORIES_ONLY).choose();
+            File[] outs = new NativeFileChooser().setParent(this).setTitle(
+                    "Select extraction directory").setMultiSelectionEnabled(false).setDialogType(
+                    BaseFileChooser.DialogType.SAVE_DIALOG).setFileMode(
+                    BaseFileChooser.FileMode.DIRECTORIES_ONLY).choose();
             if(outs == null) {
                 return;
             }
@@ -346,7 +360,8 @@ public class ArchiveExplorer extends javax.swing.JFrame {
             if(obj instanceof DefaultMutableTreeNode) {
                 obj = ((DefaultMutableTreeNode) obj).getUserObject();
             }
-            if(jTree1.getSelectionPaths() == null || !Arrays.asList(jTree1.getSelectionPaths()).contains(clicked)) {
+            if(jTree1.getSelectionPaths() == null || !Arrays.asList(jTree1.getSelectionPaths()).contains(
+                    clicked)) {
                 jTree1.setSelectionPath(clicked);
             }
             toExtract.clear();
@@ -429,7 +444,9 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         for(int i = 0; i < children.size(); i++) {
             DirectoryEntry c = children.get(i);
             if(!c.isDirectory()) {
-                table.addRow(new Object[] {c, c.getItemSize(), c.getAttributes(), c.getPath(), FileUtils.extension(c.getName()), c.getArchive(), c.isComplete()});
+                table.addRow(new Object[] {c, c.getItemSize(), c.getAttributes(), c.getPath(),
+                                           FileUtils.extension(c.getName()), c.getArchive(),
+                                           c.isComplete()});
             }
         }
     }
@@ -443,7 +460,9 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         for(int i = 0; i < children.length; i++) {
             DirectoryEntry c = children[i];
             if(!c.isDirectory()) {
-                table.addRow(new Object[] {c, c.getItemSize(), c.getAttributes(), c.getPath(), FileUtils.extension(c.getName()), c.getArchive(), c.isComplete()});
+                table.addRow(new Object[] {c, c.getItemSize(), c.getAttributes(), c.getPath(),
+                                           FileUtils.extension(c.getName()), c.getArchive(),
+                                           c.isComplete()});
             }
         }
     }
@@ -476,5 +495,7 @@ public class ArchiveExplorer extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTree jTree1;
     // End of variables declaration//GEN-END:variables
+
     private static final Logger LOG = Logger.getLogger(ArchiveExplorer.class.getName());
+
 }

@@ -25,7 +25,7 @@ public class ACF implements Archive {
     public Archive loadArchive(int appID) {
         return loadArchive(new File(SteamUtils.getSteamApps(), "appmanifest_" + appID + ".acf"));
     }
-    
+
     private File root;
 
     @Override
@@ -33,7 +33,8 @@ public class ACF implements Archive {
         try {
             VDF v = new VDF();
             v.readExternal(new FileInputStream(manifest));
-            root = new File(v.getRoot().get("AppState").get("UserConfig").get("appinstalldir").getValue());
+            root = new File(
+                    v.getRoot().get("AppState").get("UserConfig").get("appinstalldir").getValue());
             // TODO: gameinfo.txt
             ArrayList<File> files = buildPaths(root);
             LOG.log(Level.INFO, "VPK files: {0}", Arrays.toString(files.toArray()));
@@ -46,6 +47,7 @@ public class ACF implements Archive {
         }
         return null;
     }
+
     private ArrayList<VPK> VPK = new ArrayList<VPK>();
 
     private ArrayList<File> buildPaths(File path) {
@@ -154,11 +156,14 @@ public class ACF implements Archive {
         public void extract(File out) throws IOException {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
+
     }
 
     @Override
     public void analyze(DefaultMutableTreeNode top, boolean leaves) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
     private static final Logger LOG = Logger.getLogger(ACF.class.getName());
+
 }

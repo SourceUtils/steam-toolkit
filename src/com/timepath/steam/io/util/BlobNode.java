@@ -20,9 +20,9 @@ public class BlobNode extends DefaultMutableTreeNode {
         this.name = name;
         this.setUserObject(obj);
     }
-    
+
     private String name;
-    
+
     private int dataType = -1;
 
     public int getDataType() {
@@ -44,6 +44,7 @@ public class BlobNode extends DefaultMutableTreeNode {
             return (name != null ? name : o.getClass().getSimpleName()) + ": " + o;
         }
     }
+
     private int meta;
 
     public boolean isMeta() {
@@ -57,5 +58,7 @@ public class BlobNode extends DefaultMutableTreeNode {
     public void setMeta(int meta) {
         this.meta = meta;
     }
+
     private static final Logger LOG = Logger.getLogger(BlobNode.class.getName());
+
 }

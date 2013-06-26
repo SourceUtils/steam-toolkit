@@ -57,16 +57,17 @@ public class Server {
         chan = DatagramChannel.open();
         chan.connect(sock);
     }
-    
+
     private static Level sendLevel = Level.INFO;
-    
+
     public void send(ByteBuffer buf) throws IOException {
-        LOG.log(sendLevel, "Sending {0} bytes\nPayload: {1}\nAddress: {2}", new Object[]{buf.limit(), DataUtils.hexDump(buf), this.getAddress()});
+        LOG.log(sendLevel, "Sending {0} bytes\nPayload: {1}\nAddress: {2}", new Object[] {
+            buf.limit(), DataUtils.hexDump(buf), this.getAddress()});
         chan.write(buf);
     }
-    
+
     private static Level getLevel = Level.INFO;
-    
+
     public ByteBuffer get() throws IOException {
         ByteBuffer buf = ByteBuffer.allocate(1392);
         buf.order(ByteOrder.LITTLE_ENDIAN);
@@ -76,7 +77,8 @@ public class Server {
             buf.limit(bytesRead);
             buf = buf.slice();
         }
-        LOG.log(getLevel, "Receiving {0} bytes\nPayload: {1}\nAddress: {2}", new Object[]{buf.limit(), DataUtils.hexDump(buf), this.getAddress()});
+        LOG.log(getLevel, "Receiving {0} bytes\nPayload: {1}\nAddress: {2}", new Object[] {
+            buf.limit(), DataUtils.hexDump(buf), this.getAddress()});
         return buf;
     }
 
