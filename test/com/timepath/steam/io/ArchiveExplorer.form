@@ -22,7 +22,7 @@
             <Property name="text" type="java.lang.String" value="Properties"/>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jPopupMenuItem2ActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="showProperties"/>
           </Events>
         </MenuItem>
       </SubComponents>

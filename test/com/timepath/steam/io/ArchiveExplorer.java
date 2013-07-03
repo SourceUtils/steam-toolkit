@@ -63,9 +63,9 @@ public class ArchiveExplorer extends javax.swing.JFrame {
                                                                      hasFocus, row, column);
                 if(comp instanceof JLabel) {
                     label = (JLabel) comp;
-                    label.setIcon(null);
                     if(value instanceof ViewableData) {
                         ViewableData data = (ViewableData) value;
+                        label.setIcon(null);
                         label.setIcon(data.getIcon());
                         label.setText(data.toString());
                         return label;
@@ -164,7 +164,7 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         jPopupMenuItem2.setText("Properties");
         jPopupMenuItem2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jPopupMenuItem2ActionPerformed(evt);
+                showProperties(evt);
             }
         });
         jPopupMenu1.add(jPopupMenuItem2);
@@ -336,7 +336,7 @@ public class ArchiveExplorer extends javax.swing.JFrame {
                     .setParent(this)
                     .setTitle("Select extraction directory")
                     .setMultiSelectionEnabled(false)
-                    .setDialogType(BaseFileChooser.DialogType.SAVE_DIALOG)
+                    .setDialogType(BaseFileChooser.DialogType.OPEN_DIALOG)
                     .setFileMode(BaseFileChooser.FileMode.DIRECTORIES_ONLY)
                     .choose();
             if(outs == null) {
@@ -423,7 +423,7 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         search();
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    private void jPopupMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jPopupMenuItem2ActionPerformed
+    private void showProperties(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showProperties
         String title;
         String message = "";
         if(selectedArchive != null) {
@@ -432,10 +432,11 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         } else {
             DirectoryEntry last = toExtract.get(toExtract.size() - 1);
             title = last.getName();
-            message = "Entry " + last.getIndex() + ", " + last.getAbsoluteName() + "\n";
+            message += "Entry " + last.getIndex() + ", " + last.getAbsoluteName() + "\n";
+            message += last.getChecksum() + " vs " + last.calculateChecksum() + "\n";
         }
         JOptionPane.showMessageDialog(this, message, title, JOptionPane.INFORMATION_MESSAGE);
-    }//GEN-LAST:event_jPopupMenuItem2ActionPerformed
+    }//GEN-LAST:event_showProperties
 
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
         addArchive(new ACF().loadArchive(440));
@@ -464,6 +465,9 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         }
         DirectoryEntry[] children = dir.getImmediateChildren();
         table.setRowCount(0);
+        if(children == null) {
+            return;
+        }
         for(int i = 0; i < children.length; i++) {
             DirectoryEntry c = children[i];
             if(!c.isDirectory()) {

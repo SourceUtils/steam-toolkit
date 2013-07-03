@@ -2,6 +2,7 @@ package com.timepath.steam.io.storage;
 
 import com.timepath.DataUtils;
 import com.timepath.StringUtils;
+import com.timepath.io.utils.ViewableData;
 import com.timepath.steam.io.storage.util.Archive;
 import com.timepath.steam.io.storage.util.DirectoryEntry;
 import com.timepath.swing.TreeUtils;
@@ -11,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.logging.Logger;
 import java.util.zip.CRC32;
+import javax.swing.Icon;
+import javax.swing.UIManager;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
@@ -21,7 +24,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 public class VPK implements Archive {
 
     private static final Logger LOG = Logger.getLogger(VPK.class.getName());
-    
+
     private DefaultMutableTreeNode es = new DefaultMutableTreeNode();
 
     private ByteBuffer data;
@@ -31,7 +34,7 @@ public class VPK implements Archive {
     private boolean multiPart;
 
     private ByteBuffer[] store;
-    
+
     private ArrayList<VPKDirectoryEntry> entries;
 
     public VPK() {
@@ -89,12 +92,14 @@ public class VPK implements Archive {
             }
 
             entries = new ArrayList<VPKDirectoryEntry>();
-            entries.add(new VPKDirectoryEntry());
+            VPKDirectoryEntry root = new VPKDirectoryEntry("/");
+            root.isDirectory = true;
+            entries.add(root);
 
             ByteBuffer directoryInfo = DataUtils.getSlice(b, treeLength);
             data = DataUtils.getSlice(b, dataLength);
             b.get(new byte[v2]); // dir
-            b.get(new byte[v3]); // s+dir
+            b.get(new byte[v3]); // single+dir
             b.get(new byte[v4]); // dir
 
             Object[][] debug = {
@@ -134,9 +139,10 @@ public class VPK implements Archive {
                     if(filename.length() == 0) {
                         break;
                     }
-                    p.add(new DefaultMutableTreeNode(filename + (extension != null ? ("." + extension) : "")));
-                    VPKDirectoryEntry e = readFileInfo(b);
+                    VPKDirectoryEntry e = readFileInfo(b,
+                                                       filename + (extension != null ? ("." + extension) : ""));
                     entries.add(e);
+                    p.add(new DefaultMutableTreeNode(e));
                 }
             }
         }
@@ -158,7 +164,9 @@ public class VPK implements Archive {
                     }
                 }
                 if(node == null) {
-                    node = new DefaultMutableTreeNode(part);
+                    VPKDirectoryEntry dirEntry = new VPKDirectoryEntry(part);
+                    dirEntry.isDirectory = true;
+                    node = new DefaultMutableTreeNode(dirEntry);
                     parent.add(node);
                 }
                 parent = node;
@@ -166,16 +174,17 @@ public class VPK implements Archive {
         }
         return parent;
     }
-    
-    private VPKDirectoryEntry readFileInfo(ByteBuffer b) {
-        VPKDirectoryEntry e = new VPKDirectoryEntry();
-        e.CRC = b.getInt();
+
+    private VPKDirectoryEntry readFileInfo(ByteBuffer b, String name) {
+        VPKDirectoryEntry e = new VPKDirectoryEntry(name);
+
+        e.CRC = (long) b.getInt() & 0xFFFFFFFFL;
         e.preloadBytes = b.getShort();
         e.archiveIndex = b.getShort();
         e.entryOffset = b.getInt();
         e.entryLength = b.getInt();
-        
-        b.position(b.position() + e.preloadBytes);
+
+        b.position(b.position() + e.preloadBytes); // TODO: load preload bytes
 
         ByteBuffer source;
         if(e.archiveIndex == 0x7FFF) { // This archive
@@ -185,12 +194,12 @@ public class VPK implements Archive {
         }
         source.position(e.entryOffset);
         e.data = DataUtils.getSlice(source, e.entryLength);
-        
+
         short term = b.getShort();
         assert term == 0xFFFF : "VPK directory reading failed";
         return e;
     }
-    
+
     public InputStream get(int index) {
         return null;
     }
@@ -199,46 +208,45 @@ public class VPK implements Archive {
      * If a file contains preload data, the preload data immediately follows the
      * above structure. The entire size of a file is PreloadBytes + EntryLength.
      */
-    static class VPKDirectoryEntry implements DirectoryEntry {
+    static class VPKDirectoryEntry implements DirectoryEntry, ViewableData {
 
         /**
          * A 32bit CRC of the file's data.
          */
-        int CRC;
+        long CRC = -1;
 
-        /**
-         * The number of bytes contained in the index file. Usually 0
-         */
         short preloadBytes;
 
-        /**
-         * A zero based index of the archive this file's data is contained in.
-         * If 0x7fff, the data follows the directory.
-         */
         short archiveIndex;
 
-        /**
-         * If ArchiveIndex is 0x7fff, the offset of the file data relative to
-         * the end of the directory (see the header for more details).
-         * Otherwise, the offset of the data from the start of the specified
-         * archive.
-         */
         int entryOffset;
 
-        /**
-         * If zero, the entire file is stored in the preload data. Otherwise,
-         * the number of bytes stored starting at EntryOffset.
-         */
         int entryLength;
 
         ByteBuffer data;
 
-        static int terminator = 0xffff; // short
+        String name;
 
-        public long calcCRC32() {
+        boolean isDirectory;
+
+        VPKDirectoryEntry() {
+        }
+
+        VPKDirectoryEntry(String name) {
+            this.name = name;
+        }
+
+        public long getChecksum() {
+            return CRC;
+        }
+
+        public long calculateChecksum() {
+            if(data == null) {
+                return -1;
+            }
             CRC32 crc = new CRC32();
             byte[] buf = new byte[4096];
-
+            data.position(0);
             while(data.hasRemaining()) {
                 int bsize = Math.min(buf.length, data.remaining());
                 data.get(buf, 0, bsize);
@@ -257,8 +265,7 @@ public class VPK implements Archive {
         }
 
         public boolean isDirectory() {
-            return true;
-//            throw new UnsupportedOperationException("Not supported yet.");
+            return isDirectory;
         }
 
         public String getPath() {
@@ -270,32 +277,57 @@ public class VPK implements Archive {
         }
 
         public boolean isComplete() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            long theoretical = CRC;
+            long real = calculateChecksum();
+            return theoretical == real;
         }
 
         public String getName() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return name;
         }
 
         public String getAbsoluteName() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return getName(); // TODO
         }
 
         public DirectoryEntry[] getImmediateChildren() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return null;
         }
 
         public int getIndex() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return -1;
         }
 
-        public void extract(File out) throws IOException {
-            throw new UnsupportedOperationException("Not supported yet.");
+        public void extract(File dir) throws IOException {
+            File out = new File(dir, this.name);
+            out.createNewFile();
+            FileOutputStream fos = new FileOutputStream(out);
+            byte[] buf = new byte[4096];
+            data.position(0);
+            while(data.hasRemaining()) {
+                int bsize = Math.min(buf.length, data.remaining());
+                data.get(buf, 0, bsize);
+                fos.write(buf, 0, bsize);
+            }
         }
 
         @Override
         public String toString() {
-            return "/";
+            return getName();
+        }
+
+        public Icon getIcon() {
+            Icon i;
+//            if(this.index == 0) {
+//                return this.getArchive().getIcon();
+//            }
+            if(this.isDirectory()) {
+                return UIManager.getIcon("FileView.directoryIcon");
+            } else if(!isComplete()) {
+                return UIManager.getIcon("html.missingImage");
+            } else {
+                return UIManager.getIcon("FileView.fileIcon");
+            }
         }
 
     }

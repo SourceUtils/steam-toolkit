@@ -29,6 +29,10 @@ public interface DirectoryEntry {
 
     public int getIndex();
 
-    public void extract(File out) throws IOException;
+    public void extract(File dir) throws IOException;
+    
+    public long getChecksum();
+    
+    public long calculateChecksum();
 
 }

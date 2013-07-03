@@ -1100,6 +1100,14 @@ public class GCF implements Archive, ViewableData {
             return this.attributes;
         }
 
+        public long getChecksum() {
+            return 0;
+        }
+
+        public long calculateChecksum() {
+            return 0;
+        }
+
     }
 
     private tagGCFDIRECTORYINFO1ENTRY[] info1Entries; // nameTable
