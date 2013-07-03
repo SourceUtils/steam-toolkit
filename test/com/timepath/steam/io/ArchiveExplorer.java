@@ -46,9 +46,6 @@ public class ArchiveExplorer extends javax.swing.JFrame {
 
     private final DefaultTableModel table;
 
-    /**
-     * Creates new form GCFTest
-     */
     public ArchiveExplorer() {
         initComponents();
         jTree1.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
@@ -122,8 +119,10 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         DefaultMutableTreeNode direct = new DefaultMutableTreeNode(a.getRoot());
         tree.insertNodeInto(direct, node, 0);
         a.analyze(direct, false);
-        tree.insertNodeInto(node, (MutableTreeNode) tree.getRoot(), tree.getChildCount(
-                tree.getRoot()));
+        tree.insertNodeInto(
+                node,
+                (MutableTreeNode) tree.getRoot(),
+                tree.getChildCount(tree.getRoot()));
         tree.reload();
     }
 
@@ -283,10 +282,15 @@ public class ArchiveExplorer extends javax.swing.JFrame {
 
     private void open(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_open
         try {
-            File[] fs = new NativeFileChooser().setParent(this).setTitle("Open archive").setMultiSelectionEnabled(
-                    true).addFilter(new ExtensionFilter("GCF files", ".gcf")).addFilter(
-                    new ExtensionFilter("VPK files", "_dir.vpk")).setDirectory(
-                    SteamUtils.getSteamApps()).choose();
+            File[] fs = new NativeFileChooser()
+                    .setParent(this)
+                    .setTitle("Open archive")
+                    .setDirectory(SteamUtils.getSteamApps())
+                    .setMultiSelectionEnabled(true)
+                    .addFilter(new ExtensionFilter("GCF files", ".gcf"))
+                    .addFilter(new ExtensionFilter("VPK directory files", "_dir.vpk"))
+                    .addFilter(new ExtensionFilter("VPK files", ".vpk"))
+                    .choose();
             if(fs == null) {
                 return;
             }
@@ -328,10 +332,13 @@ public class ArchiveExplorer extends javax.swing.JFrame {
 
     private void jPopupMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jPopupMenuItem1ActionPerformed
         try {
-            File[] outs = new NativeFileChooser().setParent(this).setTitle(
-                    "Select extraction directory").setMultiSelectionEnabled(false).setDialogType(
-                    BaseFileChooser.DialogType.SAVE_DIALOG).setFileMode(
-                    BaseFileChooser.FileMode.DIRECTORIES_ONLY).choose();
+            File[] outs = new NativeFileChooser()
+                    .setParent(this)
+                    .setTitle("Select extraction directory")
+                    .setMultiSelectionEnabled(false)
+                    .setDialogType(BaseFileChooser.DialogType.SAVE_DIALOG)
+                    .setFileMode(BaseFileChooser.FileMode.DIRECTORIES_ONLY)
+                    .choose();
             if(outs == null) {
                 return;
             }
