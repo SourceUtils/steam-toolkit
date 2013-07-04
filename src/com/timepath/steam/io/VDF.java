@@ -1,13 +1,9 @@
 package com.timepath.steam.io;
 
 import com.timepath.io.utils.Savable;
+import com.timepath.steam.io.VDF.Token.Type;
 import com.timepath.steam.io.util.VDFNode;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,84 +44,142 @@ public class VDF implements Savable {
         root = new VDFNode("VDF");
     }
 
-    private static final Pattern quoteRegex = Pattern.compile("[^\\s\"']+|\"([^\"]*)\"");
+    // http://stackoverflow.com/questions/5695240/php-regex-to-ignore-escaped-quotes-within-quotes/5696141#5696141
+    // OR together:
+    // //(.*)
+    // Group 1 will be a comment
+    // ([^"\\]*(?:\\.[^"\\]*)*)
+    // Group 2 will be the unquoted text
+    // \[(!)?\$(.*)\]
+    // Group 3 will be "!" if it is present
+    // Group 4 will be the platform name
+    // ([^\s{}"]+)
+    // Group 5 will be a block of text
+    // |(\{)|(\})
+    // Group 6 will be found if indenting
+    // Group 7 will be found if returning
+    private static final Pattern regex = Pattern.compile(
+            "//(.*)|\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"|\\[(!)?\\$(.*)\\]|([^\\s{}\"]+)|(\\{)|(\\})");
 
-    private static final Pattern platformRegex = Pattern.compile("(?:\\[(!)?\\$)(.*)(?:\\])");
+    static class Token {
 
-    protected void processAnalyze(Scanner scanner, DefaultMutableTreeNode parent, int lineNum) {
+        enum Type {
+
+            COMMENT,
+            TEXT,
+            CONDITION,
+            PLATFORM,
+            IN,
+            OUT
+
+        }
+
+        Type type;
+
+        String val;
+
+        String leading;
+
+        int line;
+
+        Token(Type t, String val, String leading, int line) {
+            this.type = t;
+            this.val = val;
+            this.leading = leading;
+            this.line = line;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder(val.length());
+            sb.append(val);
+            return sb.toString();
+        }
+
+    }
+
+    protected void processAnalyze(Scanner scanner, DefaultMutableTreeNode parent) {
+        List<Token> matchList = new ArrayList<Token>();
+        int line = 0;
+        StringBuilder sb = new StringBuilder();
         while(scanner.hasNext()) {
-            String line = scanner.nextLine().trim();
-            lineNum++;
-            if(line.length() == 0) {
+            String str = scanner.nextLine();
+            sb.append(str).append("\n");
+            line++;
+            if(str.length() == 0) {
                 continue;
-            }
-            String comment = null;
-            int cIndex = line.indexOf("//");
-            if(cIndex != -1) {
-                comment = line.substring(cIndex);
-                line = line.substring(0, cIndex);
-            }
-
-            List<String> matchList = new ArrayList<String>();
-            Matcher regexMatcher = quoteRegex.matcher(line);
-            while(regexMatcher.find()) {
-                if(regexMatcher.group(1) != null) {
-                    // Add double-quoted string without the quotes
-                    matchList.add(regexMatcher.group(1));
-                } else {
-                    // Add unquoted word
-                    matchList.add(regexMatcher.group());
-                }
-            }
-            if(matchList.isEmpty()) {
-                if(comment != null && comment.trim().length() > 0) {
-                    LOG.log(logLevel, "Carrying extra: [{0}]", comment);
-                    parent.add(new DefaultMutableTreeNode(comment));
-                }
-                continue;
-            }
-            String[] args = matchList.toArray(new String[0]);
-            LOG.log(logLevel, "{0}:{1}", new Object[] {args.length, Arrays.toString(args)});
-
-            String val = null;
-            if(args.length >= 2) {
-                val = args[1];
-                Matcher plafMatcher = platformRegex.matcher(args[args.length - 1]);
-                if(plafMatcher.find()) {
-                    boolean bool = plafMatcher.group(1) == null; // true if "!" is present
-                    String platform = plafMatcher.group(2);
-                    if(args[args.length - 1] == val) { // yes, this is supposed to be a direct check
-                        val = null;
-                    }
-                } else if(args.length > 2) {
-                    LOG.log(Level.WARNING, "More than 2 args on line {0}({1}): {2}", new Object[] {
-                        lineNum, line, Arrays.toString(args)});
-                }
-            }
-
-            if(args[0].equals("{")) { // just a { on its own line
-                continue;
-            }
-
-            if(args[0].equals("}")) { // for returning out of recursion: analyze: processAnalyze > processAnalyze < break < break
-                Object obj = parent.getUserObject();
-//                if(obj instanceof Element) {
-//                    ((Element)e).validate(); // TODO: Thread safety. oops
-//                }
-                LOG.log(logLevel, "Leaving {0}", obj);
-                break; // TODO: /tf/scripts/HudAnimations_tf.txt
-            } else if(val == null) { // very good assumption
-                val = "{";
-            }
-
-            VDFNode p = new VDFNode(args[0], val);
-//            p.setFile(file);
-            parent.add(p);
-            if(val.equals("{")) { // make new sub
-                LOG.log(logLevel, "Stepping into {0}", p);
-                processAnalyze(scanner, p, lineNum);
             }
         }
+        String str = sb.toString();
+        Matcher matcher = regex.matcher(str);
+        String leading;
+        int previous = 0;
+        while(matcher.find()) {
+            leading = str.substring(previous, matcher.start());
+            previous = matcher.end();
+            if(matcher.group(1) != null) {
+                matchList.add(new Token(Type.COMMENT, matcher.group(1), leading, line));
+            } else if(matcher.group(2) != null) {
+                matchList.add(new Token(Type.TEXT, matcher.group(2), leading, line));
+            } else if(matcher.group(3) != null) {
+                matchList.add(new Token(Type.CONDITION, matcher.group(3), leading, line));
+            } else if(matcher.group(4) != null) {
+                matchList.add(new Token(Type.PLATFORM, matcher.group(4), leading, line));
+            } else if(matcher.group(5) != null) {
+                matchList.add(new Token(Type.TEXT, matcher.group(5), leading, line));
+            } else if(matcher.group(6) != null) {
+                matchList.add(new Token(Type.IN, matcher.group(6), leading, line));
+            } else if(matcher.group(7) != null) {
+                matchList.add(new Token(Type.OUT, matcher.group(7), leading, line));
+            } else {
+                LOG.log(Level.SEVERE, "Error parsing {0}", str);
+            }
+        }
+        Token[] tokens = matchList.toArray(new Token[0]);
+        LOG.log(logLevel, "{0}:{1}", new Object[] {tokens.length, Arrays.toString(tokens)});
+
+        recurse(tokens, 0, (VDFNode) parent);
+    }
+
+    private int recurse(Token[] tokens, int offset, VDFNode parent) {
+        VDFNode previous = null;
+        for(int i = offset; i < tokens.length; i++) {
+            Token token = tokens[i];
+            LOG.log(logLevel, "i = {0}", i);
+            switch(token.type) {
+                case TEXT:
+                    LOG.log(logLevel, token.val);
+                    if(previous == null) {
+                        previous = new VDFNode(token.val);
+                        parent.add(previous);
+                    } else {
+                        if(previous.getValue() == null) {
+                            previous.setValue(token.val);
+                            parent.add(previous);
+                            previous = null;
+                        } else {
+                            LOG.log(Level.WARNING, "Unhandled second var");
+                        }
+                    }
+                    break;
+                case IN:
+                    LOG.log(logLevel, token.val);
+                    i++;
+                    LOG.log(logLevel, "Reading {0}", new Object[] {previous});
+                    i = recurse(tokens, i, previous);
+                    previous = null;
+                    break;
+                case OUT:
+                    LOG.log(logLevel, token.val);
+                    int read = i - offset;
+                    LOG.log(logLevel, "Left {0} after reading {1}", new Object[] {parent, read});
+                    return i;
+                default:
+                    LOG.log(logLevel, "Unhandled {0}", token);
+                    break;
+            }
+        }
+        return tokens.length;
     }
 
     @Override
@@ -137,7 +191,7 @@ public class VDF implements Savable {
         Scanner s = null;
         try {
             s = new Scanner(in, encoding);
-            processAnalyze(s, root, 0);
+            processAnalyze(s, root);
         } catch(StackOverflowError ex) {
             LOG.log(Level.WARNING, "Too deep (Stack overflowed)");
         } finally {
