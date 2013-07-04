@@ -1,38 +1,63 @@
 package com.timepath.steam.io.storage.util;
 
+import com.timepath.io.utils.ViewableData;
 import java.io.File;
 import java.io.IOException;
+import javax.swing.Icon;
+import javax.swing.UIManager;
 
 /**
  *
  * @author timepath
  */
-public interface DirectoryEntry {
+public abstract class DirectoryEntry implements ViewableData {
 
-    public int getItemSize();
+    public abstract int getItemSize();
 
-    public Object getAttributes();
+    public abstract Object getAttributes();
 
-    public boolean isDirectory();
+    public abstract boolean isDirectory();
 
-    public String getPath();
+    public abstract String getName();
 
-    public String getName();
+    public abstract String getPath();
 
-    public String getAbsoluteName();
+    public abstract String getAbsoluteName();
 
-    public Archive getArchive();
+    public abstract Archive getArchive();
 
-    public boolean isComplete();
+    public abstract DirectoryEntry[] getImmediateChildren();
 
-    public DirectoryEntry[] getImmediateChildren();
+    public abstract int getIndex();
 
-    public int getIndex();
-
-    public void extract(File dir) throws IOException;
+    public abstract void extract(File dir) throws IOException;
     
-    public long getChecksum();
-    
-    public long calculateChecksum();
+    public abstract boolean isComplete();
+
+    public long getChecksum() {
+        return -1;
+    }
+
+    public long calculateChecksum() {
+        return -1;
+    }
+
+    public Icon getIcon() {
+        if(getIndex() == 0) {
+            return getArchive().getIcon();
+        }
+        if(isDirectory()) {
+            return UIManager.getIcon("FileView.directoryIcon");
+        } else if(!isComplete()) {
+            return UIManager.getIcon("html.missingImage");
+        } else {
+            return UIManager.getIcon("FileView.fileIcon");
+        }
+    }
+
+    @Override
+    public String toString() {
+        return getName();
+    }
 
 }

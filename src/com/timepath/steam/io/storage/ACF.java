@@ -14,39 +14,32 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.Icon;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  *
  * @author timepath
  */
-public class ACF implements Archive {
+public class ACF extends Archive {    
 
-    public Archive loadArchive(int appID) {
-        return loadArchive(new File(SteamUtils.getSteamApps(), "appmanifest_" + appID + ".acf"));
-    }
-
-    private File root;
-
-    @Override
-    public Archive loadArchive(File manifest) {
-        try {
-            VDF v = new VDF();
-            v.readExternal(new FileInputStream(manifest));
-            root = new File(
-                    v.getRoot().get("AppState").get("UserConfig").get("appinstalldir").getValue());
-            // TODO: gameinfo.txt
-            ArrayList<File> files = buildPaths(root);
-            LOG.log(Level.INFO, "VPK files: {0}", Arrays.toString(files.toArray()));
-            for(File f : files) {
-                VPK.add(new VPK().loadArchive(f));
-            }
-            return this;
-        } catch(FileNotFoundException ex) {
-            Logger.getLogger(ACF.class.getName()).log(Level.SEVERE, null, ex);
+    public ACF(File manifest) throws FileNotFoundException {
+        VDF v = new VDF();
+        v.readExternal(new FileInputStream(manifest));
+        root = new File(v.getRoot().get("AppState").get("UserConfig").get("appinstalldir").getValue());
+        // TODO: gameinfo.txt
+        ArrayList<File> files = buildPaths(root);
+        LOG.log(Level.INFO, "VPK files: {0}", Arrays.toString(files.toArray()));
+        for(File f : files) {
+            VPK.add(new VPK().loadArchive(f));
         }
-        return null;
     }
+    
+    public ACF(int appID) throws FileNotFoundException {
+        this(new File(SteamUtils.getSteamApps(), "appmanifest_" + appID + ".acf"));
+    }
+    
+    private File root;
 
     private ArrayList<VPK> VPK = new ArrayList<VPK>();
 
@@ -97,39 +90,45 @@ public class ACF implements Archive {
 
     @Override
     public DirectoryEntry getRoot() {
-        return new ACFDirectoryEntry();
+        return new ACFDirectoryEntry("/");
     }
 
-    class ACFDirectoryEntry implements DirectoryEntry {
+    class ACFDirectoryEntry extends DirectoryEntry {
+
+        String name;
+
+        ACFDirectoryEntry(String name) {
+            this.name = name;
+        }
 
         @Override
         public int getItemSize() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            return 1;
         }
 
         @Override
         public Object getAttributes() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            return null;
         }
 
         @Override
         public boolean isDirectory() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            return true;
         }
 
         @Override
         public String getPath() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            return "/";
         }
 
         @Override
         public String getName() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            return "/";
         }
 
         @Override
         public String getAbsoluteName() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            return "/";
         }
 
         @Override
@@ -139,17 +138,17 @@ public class ACF implements Archive {
 
         @Override
         public boolean isComplete() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            return true;
         }
 
         @Override
         public DirectoryEntry[] getImmediateChildren() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            return null;
         }
 
         @Override
         public int getIndex() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            return -1;
         }
 
         @Override
@@ -165,11 +164,19 @@ public class ACF implements Archive {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
+        public Icon getIcon() {
+            return null;
+        }
+
     }
 
     @Override
     public void analyze(DefaultMutableTreeNode top, boolean leaves) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        for(VPK v : VPK) {
+            DefaultMutableTreeNode archive = new DefaultMutableTreeNode(v);
+            v.analyze(archive, leaves);
+            top.add(archive);
+        }
     }
 
     private static final Logger LOG = Logger.getLogger(ACF.class.getName());

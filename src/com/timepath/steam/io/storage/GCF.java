@@ -5,12 +5,12 @@ import com.timepath.steam.io.storage.util.DirectoryEntry;
 import com.timepath.DataUtils;
 import com.timepath.EnumFlagUtils;
 import com.timepath.EnumFlags;
+import com.timepath.io.RandomAccessFileWrapper;
 import com.timepath.io.utils.ViewableData;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -19,8 +19,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
-import javax.swing.Icon;
-import javax.swing.UIManager;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
@@ -29,12 +27,91 @@ import javax.swing.tree.DefaultMutableTreeNode;
  *
  * @author timepath
  */
-public class GCF implements Archive, ViewableData {
+public class GCF extends Archive implements ViewableData {
 
     private static final Logger LOG = Logger.getLogger(GCF.class.getName());
 
-    public GCF() {
-        rf = null;
+    private String name;
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    private RandomAccessFileWrapper raf;
+
+    public GCF(File file) throws IOException {
+        name = file.getName();
+        raf = new RandomAccessFileWrapper(file, "r");
+
+        header = new FileHeader();
+        blockAllocationTableHeader = new BlockAllocationTableHeader();
+        fragMap = new FileAllocationTableHeader();
+
+        //<editor-fold defaultstate="collapsed" desc="Manifest">
+        manifestHeader = new ManifestHeader();
+        boolean skipManifest = false;
+        if(skipManifest) {
+            raf.skipBytes(manifestHeader.binarySize - ManifestHeader.SIZE);
+        } else {
+            directoryEntries = new GCFDirectoryEntry[manifestHeader.nodeCount];
+            for(int i = 0; i < manifestHeader.nodeCount; i++) {
+                directoryEntries[i] = new GCFDirectoryEntry(i);
+            }
+
+            ls = raf.readBytes(manifestHeader.nameSize);
+
+            info1Entries = new tagGCFDIRECTORYINFO1ENTRY[manifestHeader.hashTableKeyCount];
+            for(int i = 0; i < manifestHeader.hashTableKeyCount; i++) {
+                info1Entries[i] = new tagGCFDIRECTORYINFO1ENTRY();
+            }
+
+            info2Entries = new tagGCFDIRECTORYINFO2ENTRY[manifestHeader.nodeCount];
+            for(int i = 0; i < manifestHeader.nodeCount; i++) {
+                info2Entries[i] = new tagGCFDIRECTORYINFO2ENTRY();
+            }
+
+            copyEntries = new tagGCFDIRECTORYCOPYENTRY[manifestHeader.minimumFootprintCount];
+            for(int i = 0; i < manifestHeader.minimumFootprintCount; i++) {
+                tagGCFDIRECTORYCOPYENTRY f = new tagGCFDIRECTORYCOPYENTRY();
+                f.DirectoryIndex = raf.readULEInt();
+
+                copyEntries[i] = f;
+            }
+
+            localEntries = new tagGCFDIRECTORYLOCALENTRY[manifestHeader.userConfigCount];
+            for(int i = 0; i < manifestHeader.userConfigCount; i++) {
+                tagGCFDIRECTORYLOCALENTRY f = new tagGCFDIRECTORYLOCALENTRY();
+                f.DirectoryIndex = raf.readULEInt();
+
+                localEntries[i] = f;
+            }
+        }
+
+        //</editor-fold>
+
+        directoryMapHeader = new GCF.DirectoryMapHeader();
+
+        checksumHeader = new GCF.ChecksumHeader();
+
+        checksumMapHeader = new GCF.ChecksumMapHeader();
+
+        dataBlockHeader = new GCF.DataBlockHeader();
+
+        //<editor-fold defaultstate="collapsed" desc="Data">
+//        boolean skipRead = true;
+//        if(skipRead) {
+//            rf.seek(dataBlockHeader.firstBlockOffset + (dataBlockHeader.blockCount * dataBlockHeader.blockSize));
+//        } else {
+//            LOG.info("Loading Data ...");
+//            rf.seek(dataBlockHeader.firstBlockOffset);
+//            byte[] b = new byte[dataBlockHeader.blockSize];
+//            for(int i = 0; i < dataBlockHeader.blockCount; i++) {
+//                rf.read(b);
+//            }
+//        }
+        //</editor-fold>
+
     }
 
     //<editor-fold defaultstate="collapsed" desc="Utils">
@@ -169,7 +246,7 @@ public class GCF implements Archive, ViewableData {
                 return null;
             }
             BlockAllocationTableEntry block = this.getBlock(idx);
-            RandomAccessFile out = new RandomAccessFile(outFile, "rw");
+            RandomAccessFileWrapper out = new RandomAccessFileWrapper(outFile, "rw");
             int dataIdx = block.firstClusterIndex;
             LOG.log(Level.FINE, "bSize: {0}", new Object[] {block.fileDataSize});
             out.seek(block.fileDataOffset);
@@ -212,7 +289,8 @@ public class GCF implements Archive, ViewableData {
     public BlockAllocationTableEntry getBlock(int i) throws IOException {
         BlockAllocationTableEntry bae = blocks[i];
         if(bae == null) {
-            rf.seek((blockAllocationTableHeader.pos + BlockAllocationTableHeader.SIZE) + (i * BlockAllocationTableEntry.SIZE));
+            raf.seek(
+                    (blockAllocationTableHeader.pos + BlockAllocationTableHeader.SIZE) + (i * BlockAllocationTableEntry.SIZE));
             bae = new BlockAllocationTableEntry();
             blocks[i] = bae;
         }
@@ -222,7 +300,8 @@ public class GCF implements Archive, ViewableData {
     public FileAllocationTableEntry getEntry(int i) throws IOException {
         FileAllocationTableEntry fae = fragMapEntries[i];
         if(fae == null) {
-            rf.seek(fragMap.pos + FileAllocationTableHeader.SIZE + (i * FileAllocationTableEntry.SIZE));
+            raf.seek(
+                    fragMap.pos + FileAllocationTableHeader.SIZE + (i * FileAllocationTableEntry.SIZE));
             return (fragMapEntries[i] = new FileAllocationTableEntry());
         }
         return fae;
@@ -232,7 +311,8 @@ public class GCF implements Archive, ViewableData {
         DirectoryMapEntry dme = directoryMapEntries[i];
         if(dme == null) {
             try {
-                rf.seek(directoryMapHeader.pos + DirectoryMapHeader.SIZE + (i * DirectoryMapEntry.SIZE));
+                raf.seek(
+                        directoryMapHeader.pos + DirectoryMapHeader.SIZE + (i * DirectoryMapEntry.SIZE));
                 return (directoryMapEntries[i] = new DirectoryMapEntry());
             } catch(IOException ex) {
                 Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
@@ -244,7 +324,7 @@ public class GCF implements Archive, ViewableData {
     public ChecksumMapEntry checksumMapEntries(int i) throws IOException {
         ChecksumMapEntry cme = checksumMapEntries[i];
         if(cme == null) {
-            rf.seek(directoryMapHeader.pos + ChecksumMapHeader.SIZE + (i * ChecksumMapEntry.SIZE));
+            raf.seek(directoryMapHeader.pos + ChecksumMapHeader.SIZE + (i * ChecksumMapEntry.SIZE));
             return (checksumMapEntries[i] = new ChecksumMapEntry());
         }
         return cme;
@@ -253,7 +333,8 @@ public class GCF implements Archive, ViewableData {
     public ChecksumEntry checksumEntries(int i) throws IOException {
         ChecksumEntry ce = checksumEntries[i];
         if(ce == null) {
-            rf.seek(directoryMapHeader.pos + ChecksumMapHeader.SIZE + (checksumMapEntries.length * ChecksumMapEntry.SIZE) + (i * ChecksumEntry.SIZE));
+            raf.seek(
+                    directoryMapHeader.pos + ChecksumMapHeader.SIZE + (checksumMapEntries.length * ChecksumMapEntry.SIZE) + (i * ChecksumEntry.SIZE));
             return (checksumEntries[i] = new ChecksumEntry());
         }
         return ce;
@@ -261,121 +342,21 @@ public class GCF implements Archive, ViewableData {
 
     public byte[] readData(BlockAllocationTableEntry block, int dataIdx) throws IOException {
         long pos = ((long) dataBlockHeader.firstBlockOffset + ((long) dataIdx * (long) dataBlockHeader.blockSize));
-        rf.seek(pos);
+        raf.seek(pos);
         byte[] buf = new byte[dataBlockHeader.blockSize];
         if(block.fileDataOffset != 0) {
             LOG.log(Level.INFO, "off = {0}", block.fileDataOffset);
         }
-        rf.read(buf);
+        raf.read(buf);
         return buf;
     }
     //</editor-fold>
 
-    private File file;
-
-    private final RandomAccessFile rf;
-
     public byte[] ls = null;
-
-    @Override
-    public String toString() {
-        return file.getName();
-    }
-
-    public GCF loadArchive(File f) {
-        try {
-            return new GCF(f);
-        } catch(IOException e) {
-            return null;
-        }
-    }
-
-    public GCF(File file) throws IOException {
-        this.file = file;
-        rf = new RandomAccessFile(file, "r");
-
-        header = new FileHeader();
-        blockAllocationTableHeader = new BlockAllocationTableHeader();
-        fragMap = new FileAllocationTableHeader();
-
-        //<editor-fold defaultstate="collapsed" desc="Manifest">
-        manifestHeader = new ManifestHeader();
-        boolean skipManifest = false;
-        if(skipManifest) {
-            rf.skipBytes(manifestHeader.binarySize - ManifestHeader.SIZE);
-        } else {
-            directoryEntries = new GCFDirectoryEntry[manifestHeader.nodeCount];
-            for(int i = 0; i < manifestHeader.nodeCount; i++) {
-                directoryEntries[i] = new GCFDirectoryEntry(i);
-            }
-
-            ls = DataUtils.readBytes(rf, manifestHeader.nameSize);
-
-            info1Entries = new tagGCFDIRECTORYINFO1ENTRY[manifestHeader.hashTableKeyCount];
-            for(int i = 0; i < manifestHeader.hashTableKeyCount; i++) {
-                info1Entries[i] = new tagGCFDIRECTORYINFO1ENTRY();
-            }
-
-            info2Entries = new tagGCFDIRECTORYINFO2ENTRY[manifestHeader.nodeCount];
-            for(int i = 0; i < manifestHeader.nodeCount; i++) {
-                info2Entries[i] = new tagGCFDIRECTORYINFO2ENTRY();
-            }
-
-            copyEntries = new tagGCFDIRECTORYCOPYENTRY[manifestHeader.minimumFootprintCount];
-            for(int i = 0; i < manifestHeader.minimumFootprintCount; i++) {
-                tagGCFDIRECTORYCOPYENTRY f = new tagGCFDIRECTORYCOPYENTRY();
-                f.DirectoryIndex = DataUtils.readULEInt(rf);
-
-                copyEntries[i] = f;
-            }
-
-            localEntries = new tagGCFDIRECTORYLOCALENTRY[manifestHeader.userConfigCount];
-            for(int i = 0; i < manifestHeader.userConfigCount; i++) {
-                tagGCFDIRECTORYLOCALENTRY f = new tagGCFDIRECTORYLOCALENTRY();
-                f.DirectoryIndex = DataUtils.readULEInt(rf);
-
-                localEntries[i] = f;
-            }
-        }
-
-        //</editor-fold>
-
-        directoryMapHeader = new GCF.DirectoryMapHeader();
-
-        checksumHeader = new GCF.ChecksumHeader();
-
-        checksumMapHeader = new GCF.ChecksumMapHeader();
-
-        dataBlockHeader = new GCF.DataBlockHeader();
-
-        //<editor-fold defaultstate="collapsed" desc="Data">
-//        boolean skipRead = true;
-//        if(skipRead) {
-//            rf.seek(dataBlockHeader.firstBlockOffset + (dataBlockHeader.blockCount * dataBlockHeader.blockSize));
-//        } else {
-//            LOG.info("Loading Data ...");
-//            rf.seek(dataBlockHeader.firstBlockOffset);
-//            byte[] b = new byte[dataBlockHeader.blockSize];
-//            for(int i = 0; i < dataBlockHeader.blockCount; i++) {
-//                rf.read(b);
-//            }
-//        }
-        //</editor-fold>
-
-//        LOG.log(Level.INFO, "{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n{6}\n{7}\n", new Object[]{file.getPath(), "header:\t" + header.toString(), "blockHchecksumeader:\t" + blockAllocationTableHeader.toString(), "fragMap:\t" + fragMap.toString(), "directoryHeader:\t" + manifestHeader.toString(), "directoryMapHeader:\t" + directoryMapHeader.toString(), "checksumHeader:\t" + checksumHeader.toString(), "dataBlockHeader:\t" + dataBlockHeader.toString()});
-    }
 
     //<editor-fold defaultstate="collapsed" desc="Header info">
     //<editor-fold defaultstate="collapsed" desc="Header">
     public FileHeader header;
-
-    public Icon getIcon() {
-        Icon i = UIManager.getIcon("FileView.hardDriveIcon");
-        if(i == null) {
-            i = UIManager.getIcon("FileView.directoryIcon");
-        }
-        return i;
-    }
 
     public InputStream get(final int index) {
         return new InputStream() {
@@ -522,18 +503,18 @@ public class GCF implements Archive, ViewableData {
         public final int checksum;
 
         private FileHeader() throws IOException {
-            pos = rf.getFilePointer();
-            headerVersion = DataUtils.readULEInt(rf);
-            cacheType = DataUtils.readULEInt(rf);
-            formatVersion = DataUtils.readULEInt(rf);
-            applicationID = DataUtils.readULEInt(rf);
-            applicationVersion = DataUtils.readULEInt(rf);
-            isMounted = DataUtils.readULEInt(rf);
-            dummy0 = DataUtils.readULEInt(rf);
-            fileSize = DataUtils.readULEInt(rf);
-            clusterSize = DataUtils.readULEInt(rf);
-            clusterCount = DataUtils.readULEInt(rf);
-            checksum = DataUtils.readULEInt(rf);
+            pos = raf.getFilePointer();
+            headerVersion = raf.readULEInt();
+            cacheType = raf.readULEInt();
+            formatVersion = raf.readULEInt();
+            applicationID = raf.readULEInt();
+            applicationVersion = raf.readULEInt();
+            isMounted = raf.readULEInt();
+            dummy0 = raf.readULEInt();
+            fileSize = raf.readULEInt();
+            clusterSize = raf.readULEInt();
+            clusterCount = raf.readULEInt();
+            checksum = raf.readULEInt();
         }
 
         public int check() {
@@ -618,18 +599,18 @@ public class GCF implements Archive, ViewableData {
         public final int checksum;
 
         private BlockAllocationTableHeader() throws IOException {
-            pos = rf.getFilePointer();
-            blockCount = DataUtils.readULEInt(rf);
-            blocksUsed = DataUtils.readULEInt(rf);
-            lastBlockUsed = DataUtils.readULEInt(rf);
-            dummy0 = DataUtils.readULEInt(rf);
-            dummy1 = DataUtils.readULEInt(rf);
-            dummy2 = DataUtils.readULEInt(rf);
-            dummy3 = DataUtils.readULEInt(rf);
-            checksum = DataUtils.readULEInt(rf);
+            pos = raf.getFilePointer();
+            blockCount = raf.readULEInt();
+            blocksUsed = raf.readULEInt();
+            lastBlockUsed = raf.readULEInt();
+            dummy0 = raf.readULEInt();
+            dummy1 = raf.readULEInt();
+            dummy2 = raf.readULEInt();
+            dummy3 = raf.readULEInt();
+            checksum = raf.readULEInt();
 
             blocks = new BlockAllocationTableEntry[blockCount];
-            rf.skipBytes(blocks.length * BlockAllocationTableEntry.SIZE);
+            raf.skipBytes(blocks.length * BlockAllocationTableEntry.SIZE);
         }
 
         public int check() {
@@ -705,13 +686,13 @@ public class GCF implements Archive, ViewableData {
         public final int manifestIndex;
 
         private BlockAllocationTableEntry() throws IOException {
-            entryType = DataUtils.readULEInt(rf);
-            fileDataOffset = DataUtils.readULEInt(rf);
-            fileDataSize = DataUtils.readULEInt(rf);
-            firstClusterIndex = DataUtils.readULEInt(rf);
-            nextBlockEntryIndex = DataUtils.readULEInt(rf);
-            previousBlockEntryIndex = DataUtils.readULEInt(rf);
-            manifestIndex = DataUtils.readULEInt(rf);
+            entryType = raf.readULEInt();
+            fileDataOffset = raf.readULEInt();
+            fileDataSize = raf.readULEInt();
+            firstClusterIndex = raf.readULEInt();
+            nextBlockEntryIndex = raf.readULEInt();
+            previousBlockEntryIndex = raf.readULEInt();
+            manifestIndex = raf.readULEInt();
         }
 
         @Override
@@ -760,14 +741,14 @@ public class GCF implements Archive, ViewableData {
         public final int checksum;
 
         private FileAllocationTableHeader() throws IOException {
-            pos = rf.getFilePointer();
-            clusterCount = DataUtils.readULEInt(rf);
-            firstUnusedEntry = DataUtils.readULEInt(rf);
-            isLongTerminator = DataUtils.readULEInt(rf);
-            checksum = DataUtils.readULEInt(rf);
+            pos = raf.getFilePointer();
+            clusterCount = raf.readULEInt();
+            firstUnusedEntry = raf.readULEInt();
+            isLongTerminator = raf.readULEInt();
+            checksum = raf.readULEInt();
 
             fragMapEntries = new FileAllocationTableEntry[clusterCount];
-            rf.skipBytes(fragMapEntries.length * FileAllocationTableEntry.SIZE);
+            raf.skipBytes(fragMapEntries.length * FileAllocationTableEntry.SIZE);
         }
 
         public int check() {
@@ -807,7 +788,7 @@ public class GCF implements Archive, ViewableData {
         public final int nextClusterIndex;
 
         private FileAllocationTableEntry() throws IOException {
-            nextClusterIndex = DataUtils.readULEInt(rf);
+            nextClusterIndex = raf.readULEInt();
         }
 
         @Override
@@ -885,22 +866,22 @@ public class GCF implements Archive, ViewableData {
         public final int checksum;
 
         private ManifestHeader() throws IOException {
-            pos = rf.getFilePointer();
-            headerVersion = DataUtils.readULEInt(rf);
-            applicationID = DataUtils.readULEInt(rf);
-            applicationVersion = DataUtils.readULEInt(rf);
-            nodeCount = DataUtils.readULEInt(rf);
-            fileCount = DataUtils.readULEInt(rf);
-            compressionBlockSize = DataUtils.readULEInt(rf);
-            binarySize = DataUtils.readULEInt(rf);
-            nameSize = DataUtils.readULEInt(rf);
-            hashTableKeyCount = DataUtils.readULEInt(rf);
-            minimumFootprintCount = DataUtils.readULEInt(rf);
-            userConfigCount = DataUtils.readULEInt(rf);
-//            bitmask = ManifestHeaderBitmask.get(DataUtils.readULEInt(rf));
-            bitmask = DataUtils.readULEInt(rf);
-            fingerprint = DataUtils.readULEInt(rf);
-            checksum = DataUtils.readULEInt(rf);
+            pos = raf.getFilePointer();
+            headerVersion = raf.readULEInt();
+            applicationID = raf.readULEInt();
+            applicationVersion = raf.readULEInt();
+            nodeCount = raf.readULEInt();
+            fileCount = raf.readULEInt();
+            compressionBlockSize = raf.readULEInt();
+            binarySize = raf.readULEInt();
+            nameSize = raf.readULEInt();
+            hashTableKeyCount = raf.readULEInt();
+            minimumFootprintCount = raf.readULEInt();
+            userConfigCount = raf.readULEInt();
+//            bitmask = ManifestHeaderBitmask.get(raf.readULEInt());
+            bitmask = raf.readULEInt();
+            fingerprint = raf.readULEInt();
+            checksum = raf.readULEInt();
         }
 
         public int check() {
@@ -924,11 +905,11 @@ public class GCF implements Archive, ViewableData {
                 bbh.flip();
                 byte[] bytes1 = bbh.array();
 
-                rf.seek(pos + SIZE);
+                raf.seek(pos + SIZE);
                 ByteBuffer bb = ByteBuffer.allocate(binarySize);
                 bb.order(ByteOrder.LITTLE_ENDIAN);
                 bb.put(bytes1);
-                bb.put(DataUtils.readBytes(rf, binarySize - SIZE));
+                bb.put(raf.readBytes(binarySize - SIZE));
                 bb.flip();
                 byte[] bytes = bb.array();
                 Checksum adler32 = new Adler32();
@@ -985,7 +966,7 @@ public class GCF implements Archive, ViewableData {
 
     }
 
-    public class GCFDirectoryEntry implements DirectoryEntry, ViewableData {
+    public class GCFDirectoryEntry extends DirectoryEntry {
 
         /**
          * Offset to the directory item name from the end of the directory items
@@ -1027,19 +1008,14 @@ public class GCF implements Archive, ViewableData {
 
         private GCFDirectoryEntry(int index) throws IOException {
             this.index = index;
-            nameOffset = DataUtils.readULEInt(rf);
-            itemSize = DataUtils.readULEInt(rf);
-            checksumIndex = DataUtils.readULEInt(rf);
-            attributes = EnumFlagUtils.decode(DataUtils.readULEInt(rf),
+            nameOffset = raf.readULEInt();
+            itemSize = raf.readULEInt();
+            checksumIndex = raf.readULEInt();
+            attributes = EnumFlagUtils.decode(raf.readULEInt(),
                                               DirectoryEntryAttributes.class);
-            parentIndex = DataUtils.readULEInt(rf);
-            nextIndex = DataUtils.readULEInt(rf);
-            firstChildIndex = DataUtils.readULEInt(rf);
-        }
-
-        @Override
-        public String toString() {
-            return getName();
+            parentIndex = raf.readULEInt();
+            nextIndex = raf.readULEInt();
+            firstChildIndex = raf.readULEInt();
         }
 
         public String getAbsoluteName() {
@@ -1070,20 +1046,6 @@ public class GCF implements Archive, ViewableData {
             return true;
         }
 
-        public Icon getIcon() {
-            Icon i;
-            if(this.index == 0) {
-                return this.getArchive().getIcon();
-            }
-            if(this.isDirectory()) {
-                return UIManager.getIcon("FileView.directoryIcon");
-            } else if(isComplete()) {
-                return UIManager.getIcon("FileView.fileIcon");
-            } else {
-                return UIManager.getIcon("html.missingImage");
-            }
-        }
-
         public void extract(File out) throws IOException {
             this.getArchive().extract(index, out);
         }
@@ -1101,11 +1063,11 @@ public class GCF implements Archive, ViewableData {
         }
 
         public long getChecksum() {
-            return 0;
+            return -1;
         }
 
         public long calculateChecksum() {
-            return 0;
+            return -1;
         }
 
     }
@@ -1123,7 +1085,7 @@ public class GCF implements Archive, ViewableData {
         public final int Dummy0;
 
         private tagGCFDIRECTORYINFO1ENTRY() throws IOException {
-            Dummy0 = DataUtils.readULEInt(rf);
+            Dummy0 = raf.readULEInt();
         }
 
         @Override
@@ -1146,7 +1108,7 @@ public class GCF implements Archive, ViewableData {
         public final int Dummy0;
 
         private tagGCFDIRECTORYINFO2ENTRY() throws IOException {
-            Dummy0 = DataUtils.readULEInt(rf);
+            Dummy0 = raf.readULEInt();
         }
 
         @Override
@@ -1193,12 +1155,12 @@ public class GCF implements Archive, ViewableData {
         public final int dummy0;     // Always 0x00000000
 
         private DirectoryMapHeader() throws IOException {
-            pos = rf.getFilePointer();
-            headerVersion = DataUtils.readULEInt(rf);
-            dummy0 = DataUtils.readULEInt(rf);
+            pos = raf.getFilePointer();
+            headerVersion = raf.readULEInt();
+            dummy0 = raf.readULEInt();
 
             directoryMapEntries = new DirectoryMapEntry[manifestHeader.nodeCount];
-            rf.skipBytes(directoryMapEntries.length * DirectoryMapEntry.SIZE);
+            raf.skipBytes(directoryMapEntries.length * DirectoryMapEntry.SIZE);
         }
 
         @Override
@@ -1221,7 +1183,7 @@ public class GCF implements Archive, ViewableData {
         public final int firstBlockIndex;    // Index of the first data block. (N/A if == BlockCount.)
 
         private DirectoryMapEntry() throws IOException {
-            firstBlockIndex = DataUtils.readULEInt(rf);
+            firstBlockIndex = raf.readULEInt();
         }
 
     }
@@ -1239,8 +1201,8 @@ public class GCF implements Archive, ViewableData {
         // the number of bytes in the checksum section (excluding this structure and the following LatestApplicationVersion structure).
 
         private ChecksumHeader() throws IOException {
-            headerVersion = DataUtils.readULEInt(rf);
-            checksumSize = DataUtils.readULEInt(rf);
+            headerVersion = raf.readULEInt();
+            checksumSize = raf.readULEInt();
         }
 
         @Override
@@ -1273,17 +1235,17 @@ public class GCF implements Archive, ViewableData {
         public final int checksumCount;		// Number of checksums.
 
         private ChecksumMapHeader() throws IOException {
-            pos = rf.getFilePointer();
-            formatCode = DataUtils.readULEInt(rf);
-            dummy0 = DataUtils.readULEInt(rf);
-            itemCount = DataUtils.readULEInt(rf);
-            checksumCount = DataUtils.readULEInt(rf);
+            pos = raf.getFilePointer();
+            formatCode = raf.readULEInt();
+            dummy0 = raf.readULEInt();
+            itemCount = raf.readULEInt();
+            checksumCount = raf.readULEInt();
 
             checksumMapEntries = new ChecksumMapEntry[itemCount];
-            rf.skipBytes(checksumMapEntries.length * ChecksumMapEntry.SIZE);
+            raf.skipBytes(checksumMapEntries.length * ChecksumMapEntry.SIZE);
 
             checksumEntries = new ChecksumEntry[checksumCount + 0x20];
-            rf.skipBytes(checksumEntries.length * ChecksumEntry.SIZE);
+            raf.skipBytes(checksumEntries.length * ChecksumEntry.SIZE);
         }
 
     }
@@ -1303,8 +1265,8 @@ public class GCF implements Archive, ViewableData {
         public final int firstChecksumIndex;	// Index of first checksum.
 
         private ChecksumMapEntry() throws IOException {
-            checksumCount = DataUtils.readULEInt(rf);
-            firstChecksumIndex = DataUtils.readULEInt(rf);
+            checksumCount = raf.readULEInt();
+            firstChecksumIndex = raf.readULEInt();
         }
 
         @Override
@@ -1327,7 +1289,7 @@ public class GCF implements Archive, ViewableData {
         public final int checksum;				// Checksum.
 
         private ChecksumEntry() throws IOException {
-            checksum = DataUtils.readULEInt(rf);
+            checksum = raf.readULEInt();
         }
 
         @Override
@@ -1377,12 +1339,12 @@ public class GCF implements Archive, ViewableData {
         public final int checksum;
 
         private DataBlockHeader() throws IOException {
-            gcfRevision = DataUtils.readULEInt(rf);
-            blockCount = DataUtils.readULEInt(rf);
-            blockSize = DataUtils.readULEInt(rf);
-            firstBlockOffset = DataUtils.readULEInt(rf);
-            blocksUsed = DataUtils.readULEInt(rf);
-            checksum = DataUtils.readULEInt(rf);
+            gcfRevision = raf.readULEInt();
+            blockCount = raf.readULEInt();
+            blockSize = raf.readULEInt();
+            firstBlockOffset = raf.readULEInt();
+            blocksUsed = raf.readULEInt();
+            checksum = raf.readULEInt();
         }
 
         public int check() {

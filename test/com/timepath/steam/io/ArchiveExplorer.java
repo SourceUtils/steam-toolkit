@@ -14,6 +14,7 @@ import com.timepath.steam.io.storage.util.DirectoryEntry;
 import com.timepath.swing.DirectoryTreeCellRenderer;
 import java.awt.Component;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -95,11 +96,11 @@ public class ArchiveExplorer extends javax.swing.JFrame {
 
     }
 
-    public void load(File f) {
+    public void load(File f) throws IOException {
         String ext = FileUtils.extension(f);
         Archive a;
         if(ext.equals("gcf")) {
-            a = new GCF().loadArchive(f);
+            a = new GCF(f);
         } else if(ext.equals("vpk")) {
             a = new VPK().loadArchive(f);
         } else {
@@ -439,7 +440,11 @@ public class ArchiveExplorer extends javax.swing.JFrame {
     }//GEN-LAST:event_showProperties
 
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
-        addArchive(new ACF().loadArchive(440));
+        try {
+            addArchive(new ACF(440));
+        } catch(FileNotFoundException ex) {
+            Logger.getLogger(ArchiveExplorer.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
     private void search() {

@@ -2,7 +2,6 @@ package com.timepath.steam.io.storage;
 
 import com.timepath.DataUtils;
 import com.timepath.StringUtils;
-import com.timepath.io.utils.ViewableData;
 import com.timepath.steam.io.storage.util.Archive;
 import com.timepath.steam.io.storage.util.DirectoryEntry;
 import com.timepath.swing.TreeUtils;
@@ -10,10 +9,9 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.CRC32;
-import javax.swing.Icon;
-import javax.swing.UIManager;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
@@ -21,9 +19,11 @@ import javax.swing.tree.DefaultMutableTreeNode;
  *
  * @author timepath
  */
-public class VPK implements Archive {
+public class VPK extends Archive {
 
     private static final Logger LOG = Logger.getLogger(VPK.class.getName());
+    
+    private static int HEADER = 0x55AA1234;
 
     private DefaultMutableTreeNode es = new DefaultMutableTreeNode();
 
@@ -33,14 +33,26 @@ public class VPK implements Archive {
 
     private boolean multiPart;
 
-    private ByteBuffer[] store;
+    private File[] store;
+
+    private ByteBuffer[] mappings;
+
+    private ByteBuffer getData(int i) {
+        try {
+            if(mappings[i] == null) {
+                mappings[i] = DataUtils.mapFile(store[i]);
+            }
+            return mappings[i];
+        } catch(IOException ex) {
+            Logger.getLogger(VPK.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
 
     private ArrayList<VPKDirectoryEntry> entries;
 
     public VPK() {
     }
-
-    private static int expectedHeader = 0x55AA1234;
 
     public VPK loadArchive(final File file) {
         try {
@@ -63,18 +75,19 @@ public class VPK implements Archive {
                     return false;
                 }
             });
-            store = new ByteBuffer[files.length];
+            store = new File[files.length];
+            mappings = new ByteBuffer[store.length];
             for(File f : files) {
                 String[] split = f.getName().split("_");
                 int idx = Integer.parseInt(split[split.length - 1].replaceAll(".vpk", ""));
-                store[idx] = DataUtils.mapFile(f);
+                store[idx] = f;
             }
             //</editor-fold>
 
             ByteBuffer b = DataUtils.mapFile(file);
 
             int signature = b.getInt();
-            if(signature != expectedHeader) {
+            if(signature != HEADER) {
                 return null;
             }
             int ver = b.getInt();
@@ -190,11 +203,10 @@ public class VPK implements Archive {
         if(e.archiveIndex == 0x7FFF) { // This archive
             source = data;
         } else {
-            source = store[e.archiveIndex];
+            source = getData(e.archiveIndex);
         }
         source.position(e.entryOffset);
         e.data = DataUtils.getSlice(source, e.entryLength);
-
         short term = b.getShort();
         assert term == 0xFFFF : "VPK directory reading failed";
         return e;
@@ -208,12 +220,12 @@ public class VPK implements Archive {
      * If a file contains preload data, the preload data immediately follows the
      * above structure. The entire size of a file is PreloadBytes + EntryLength.
      */
-    static class VPKDirectoryEntry implements DirectoryEntry, ViewableData {
+    class VPKDirectoryEntry extends DirectoryEntry {
 
         /**
          * A 32bit CRC of the file's data.
          */
-        long CRC = -1;
+        long CRC;
 
         short preloadBytes;
 
@@ -273,7 +285,7 @@ public class VPK implements Archive {
         }
 
         public Archive getArchive() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return VPK.this;
         }
 
         public boolean isComplete() {
@@ -300,36 +312,23 @@ public class VPK implements Archive {
 
         public void extract(File dir) throws IOException {
             File out = new File(dir, this.name);
-            out.createNewFile();
-            FileOutputStream fos = new FileOutputStream(out);
-            byte[] buf = new byte[4096];
-            data.position(0);
-            while(data.hasRemaining()) {
-                int bsize = Math.min(buf.length, data.remaining());
-                data.get(buf, 0, bsize);
-                fos.write(buf, 0, bsize);
-            }
-        }
-
-        @Override
-        public String toString() {
-            return getName();
-        }
-
-        public Icon getIcon() {
-            Icon i;
-//            if(this.index == 0) {
-//                return this.getArchive().getIcon();
-//            }
-            if(this.isDirectory()) {
-                return UIManager.getIcon("FileView.directoryIcon");
-            } else if(!isComplete()) {
-                return UIManager.getIcon("html.missingImage");
+            if(this.isDirectory) {
+                out.mkdir();
+                for(DirectoryEntry e : getImmediateChildren()) {
+                    e.extract(out);
+                }
             } else {
-                return UIManager.getIcon("FileView.fileIcon");
+                out.createNewFile();
+                FileOutputStream fos = new FileOutputStream(out);
+                byte[] buf = new byte[4096];
+                data.position(0);
+                while(data.hasRemaining()) {
+                    int bsize = Math.min(buf.length, data.remaining());
+                    data.get(buf, 0, bsize);
+                    fos.write(buf, 0, bsize);
+                }
             }
         }
-
     }
 
     public ArrayList<DirectoryEntry> find(String search) {
