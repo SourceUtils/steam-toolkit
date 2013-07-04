@@ -100,37 +100,52 @@ public class VDF implements Savable {
 
     protected void processAnalyze(Scanner scanner, DefaultMutableTreeNode parent) {
         List<Token> matchList = new ArrayList<Token>();
-        int line = 0;
+        List<Integer> lineEnds = new ArrayList<Integer>();
+        lineEnds.add(0);
+
         StringBuilder sb = new StringBuilder();
         while(scanner.hasNext()) {
             String str = scanner.nextLine();
+            int cumulative = lineEnds.get(lineEnds.size() - 1);
+            lineEnds.add(cumulative + str.length() + 1); // +1 = \n. TODO: \r
             sb.append(str).append("\n");
-            line++;
-            if(str.length() == 0) {
-                continue;
-            }
         }
         String str = sb.toString();
+
         Matcher matcher = regex.matcher(str);
         String leading;
         int previous = 0;
         while(matcher.find()) {
+            int globalIndex = matcher.start();
+            int lineIndex = 1;
+            while(lineIndex < lineEnds.size()) {
+                if(globalIndex < lineEnds.get(lineIndex)) {
+                    lineIndex--;
+                    LOG.log(Level.FINER, "{0} <= {1}, therefore {2}", new Object[] {globalIndex,
+                                                                                    lineEnds.get(lineIndex),
+                                                                                    lineIndex});
+                    break;
+                }
+                lineIndex++;
+            }
             leading = str.substring(previous, matcher.start());
             previous = matcher.end();
             if(matcher.group(1) != null) {
-                matchList.add(new Token(Type.COMMENT, matcher.group(1), leading, line));
+                matchList.add(new Token(Type.COMMENT, matcher.group(1), leading, lineIndex));
             } else if(matcher.group(2) != null) {
-                matchList.add(new Token(Type.TEXT, matcher.group(2), leading, line));
+                matchList.add(new Token(Type.TEXT, matcher.group(2).replaceAll("\n", "\\\\n"),
+                                        leading, lineIndex));
             } else if(matcher.group(3) != null) {
-                matchList.add(new Token(Type.CONDITION, matcher.group(3), leading, line));
+                matchList.add(new Token(Type.CONDITION, matcher.group(3), leading, lineIndex));
             } else if(matcher.group(4) != null) {
-                matchList.add(new Token(Type.PLATFORM, matcher.group(4), leading, line));
+                matchList.add(new Token(Type.PLATFORM, matcher.group(4), leading, lineIndex));
             } else if(matcher.group(5) != null) {
-                matchList.add(new Token(Type.TEXT, matcher.group(5), leading, line));
+                matchList.add(new Token(Type.TEXT, matcher.group(5).replaceAll("\n", "\\\\n"),
+                                        leading, lineIndex));
             } else if(matcher.group(6) != null) {
-                matchList.add(new Token(Type.IN, matcher.group(6), leading, line));
+                matchList.add(new Token(Type.IN, matcher.group(6), leading, lineIndex));
             } else if(matcher.group(7) != null) {
-                matchList.add(new Token(Type.OUT, matcher.group(7), leading, line));
+                matchList.add(new Token(Type.OUT, matcher.group(7), leading, lineIndex));
             } else {
                 LOG.log(Level.SEVERE, "Error parsing {0}", str);
             }
