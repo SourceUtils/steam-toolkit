@@ -121,7 +121,7 @@ public class VPK extends Archive {
                 {"v3 = ", v3},
                 {"v4 = ", v4},
                 {"Underflow = ", b.remaining()},};
-            LOG.info(StringUtils.fromDoubleArray(debug));
+            LOG.info(StringUtils.fromDoubleArray(debug, "Debug:"));
 
             parseTree(directoryInfo);
 

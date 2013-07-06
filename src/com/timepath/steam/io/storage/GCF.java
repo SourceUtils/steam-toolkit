@@ -3,8 +3,8 @@ package com.timepath.steam.io.storage;
 import com.timepath.steam.io.storage.util.Archive;
 import com.timepath.steam.io.storage.util.DirectoryEntry;
 import com.timepath.DataUtils;
-import com.timepath.EnumFlagUtils;
 import com.timepath.EnumFlags;
+import com.timepath.EnumFlag;
 import com.timepath.io.RandomAccessFileWrapper;
 import com.timepath.io.utils.ViewableData;
 import java.io.ByteArrayOutputStream;
@@ -935,7 +935,7 @@ public class GCF extends Archive implements ViewableData {
 
     public GCFDirectoryEntry[] directoryEntries;
 
-    public enum DirectoryEntryAttributes implements EnumFlags<DirectoryEntryAttributes> {
+    public enum DirectoryEntryAttributes implements EnumFlag {
 
         Unknown_4(0x8000),
         File(0x4000),
@@ -1011,7 +1011,7 @@ public class GCF extends Archive implements ViewableData {
             nameOffset = raf.readULEInt();
             itemSize = raf.readULEInt();
             checksumIndex = raf.readULEInt();
-            attributes = EnumFlagUtils.decode(raf.readULEInt(),
+            attributes = EnumFlags.decode(raf.readULEInt(),
                                               DirectoryEntryAttributes.class);
             parentIndex = raf.readULEInt();
             nextIndex = raf.readULEInt();
