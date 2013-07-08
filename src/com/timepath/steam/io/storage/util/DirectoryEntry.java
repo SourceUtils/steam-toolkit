@@ -3,6 +3,8 @@ package com.timepath.steam.io.storage.util;
 import com.timepath.io.utils.ViewableData;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import javax.swing.Icon;
 import javax.swing.UIManager;
 
@@ -20,18 +22,22 @@ public abstract class DirectoryEntry implements ViewableData {
 
     public abstract String getName();
 
-    public abstract String getPath();
+    public String getPath() {
+        String path = (isDirectory() ? getName() : "").replaceAll("/", "");
+        if(parent != null) {
+            path = parent.getPath() + "/" + path;
+        }
+        return path;
+    }
 
-    public abstract String getAbsoluteName();
+    public String getAbsoluteName() {
+        return getPath() + getName();
+    }
 
     public abstract Archive getArchive();
 
-    public abstract DirectoryEntry[] getImmediateChildren();
-
-    public abstract int getIndex();
-
     public abstract void extract(File dir) throws IOException;
-    
+
     public abstract boolean isComplete();
 
     public long getChecksum() {
@@ -43,7 +49,7 @@ public abstract class DirectoryEntry implements ViewableData {
     }
 
     public Icon getIcon() {
-        if(getIndex() == 0) {
+        if(this == getArchive().getRoot()) {
             return getArchive().getIcon();
         }
         if(isDirectory()) {
@@ -58,6 +64,65 @@ public abstract class DirectoryEntry implements ViewableData {
     @Override
     public String toString() {
         return getName();
+    }
+
+    private DirectoryEntry parent;
+
+    private ArrayList<DirectoryEntry> children = new ArrayList<DirectoryEntry>();
+    
+    public ArrayList<DirectoryEntry> children() {
+        return children;
+    }
+
+    public void add(DirectoryEntry c) {
+        if(c == null || c == this) {
+            return;
+        }
+        if(children.contains(c)) {
+            return;
+        }
+        children.add(c);
+        c.setParent(this);
+    }
+
+    public void addAll(Collection<? extends DirectoryEntry> all) {
+        for(DirectoryEntry d : all) {
+            add(d);
+        }
+    }
+
+    public void remove(DirectoryEntry c) {
+        if(c == null || c == this) {
+            return;
+        }
+        if(!children.contains(c)) {
+            return;
+        }
+        children.remove(c);
+        c.removeFromParent();
+    }
+
+    public void removeAll(Collection<? extends DirectoryEntry> all) {
+        for(DirectoryEntry d : all) {
+            remove(d);
+        }
+    }
+
+    public void setParent(DirectoryEntry newParent) {
+        if(parent == newParent) {
+            return;
+        }
+        if(parent != null) {
+            parent.remove(this);
+        }
+        if(newParent != null) {
+            newParent.add(this);
+        }
+        parent = newParent;
+    }
+
+    public void removeFromParent() {
+        setParent(null);
     }
 
 }

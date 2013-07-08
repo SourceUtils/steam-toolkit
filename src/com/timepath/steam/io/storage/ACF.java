@@ -142,28 +142,21 @@ public class ACF extends Archive {
         }
 
         @Override
-        public DirectoryEntry[] getImmediateChildren() {
-            return null;
-        }
-
-        @Override
-        public int getIndex() {
-            return -1;
-        }
-
-        @Override
         public void extract(File out) throws IOException {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
+        @Override
         public long getChecksum() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
+        @Override
         public long calculateChecksum() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
+        @Override
         public Icon getIcon() {
             return null;
         }

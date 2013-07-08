@@ -117,9 +117,7 @@ public class ArchiveExplorer extends javax.swing.JFrame {
     private void addArchive(Archive a) {
         archives.add(a);
         DefaultMutableTreeNode node = new DefaultMutableTreeNode(a);
-        DefaultMutableTreeNode direct = new DefaultMutableTreeNode(a.getRoot());
-        tree.insertNodeInto(direct, node, 0);
-        a.analyze(direct, false);
+        a.analyze(node, false);
         tree.insertNodeInto(
                 node,
                 (MutableTreeNode) tree.getRoot(),
@@ -320,10 +318,17 @@ public class ArchiveExplorer extends javax.swing.JFrame {
             return;
         }
         Object obj = ((DefaultMutableTreeNode) node).getUserObject();
-        if(!(obj instanceof DirectoryEntry)) {
+        DirectoryEntry dir = null;
+        if(obj instanceof Archive) {
+            dir = ((Archive) obj).getRoot();
+        }
+        if(obj instanceof DirectoryEntry) {
+            dir = (DirectoryEntry) obj;
+        }
+        if(dir == null) {
             return;
         }
-        directoryChanged((DirectoryEntry) obj);
+        directoryChanged(dir);
     }//GEN-LAST:event_directoryChanged
     private ArrayList<DirectoryEntry> toExtract = new ArrayList<DirectoryEntry>();
 
@@ -433,7 +438,7 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         } else {
             DirectoryEntry last = toExtract.get(toExtract.size() - 1);
             title = last.getName();
-            message += "Entry " + last.getIndex() + ", " + last.getAbsoluteName() + "\n";
+            message += "Entry: " + last.getAbsoluteName() + "\n";
             message += last.getChecksum() + " vs " + last.calculateChecksum() + "\n";
         }
         JOptionPane.showMessageDialog(this, message, title, JOptionPane.INFORMATION_MESSAGE);
@@ -468,18 +473,16 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         if(!dir.isDirectory()) {
             return;
         }
-        DirectoryEntry[] children = dir.getImmediateChildren();
+
         table.setRowCount(0);
-        if(children == null) {
-            return;
-        }
-        for(int i = 0; i < children.length; i++) {
-            DirectoryEntry c = children[i];
-            if(!c.isDirectory()) {
-                table.addRow(new Object[] {c, c.getItemSize(), c.getAttributes(), c.getPath(),
-                                           FileUtils.extension(c.getName()), c.getArchive(),
-                                           c.isComplete()});
+        for(DirectoryEntry c : dir.children()) {
+            if(c.isDirectory()) {
+                continue;
             }
+            table.addRow(new Object[] {c, c.getItemSize(), c.getAttributes(), c.getPath(),
+                                       FileUtils.extension(c.getName()), c.getArchive(),
+                                       c.isComplete()});
+
         }
     }
 

@@ -8,6 +8,7 @@ import com.timepath.swing.TreeUtils;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,10 +23,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 public class VPK extends Archive {
 
     private static final Logger LOG = Logger.getLogger(VPK.class.getName());
-    
-    private static int HEADER = 0x55AA1234;
 
-    private DefaultMutableTreeNode es = new DefaultMutableTreeNode();
+    private static int HEADER = 0x55AA1234;
 
     private ByteBuffer data;
 
@@ -48,8 +47,6 @@ public class VPK extends Archive {
         }
         return null;
     }
-
-    private ArrayList<VPKDirectoryEntry> entries;
 
     public VPK() {
     }
@@ -83,6 +80,9 @@ public class VPK extends Archive {
                 store[idx] = f;
             }
             //</editor-fold>
+            
+            root = new VPKDirectoryEntry(name);
+            root.isDirectory = true;
 
             ByteBuffer b = DataUtils.mapFile(file);
 
@@ -103,11 +103,6 @@ public class VPK extends Archive {
                 v3 = b.getInt();
                 v4 = b.getInt();
             }
-
-            entries = new ArrayList<VPKDirectoryEntry>();
-            VPKDirectoryEntry root = new VPKDirectoryEntry("/");
-            root.isDirectory = true;
-            entries.add(root);
 
             ByteBuffer directoryInfo = DataUtils.getSlice(b, treeLength);
             data = DataUtils.getSlice(b, dataLength);
@@ -146,7 +141,7 @@ public class VPK extends Archive {
                 if(path.length() == 0) {
                     break;
                 }
-                DefaultMutableTreeNode p = nodeForPath(path);
+                DirectoryEntry p = nodeForPath(path);
                 for(;;) { // File names
                     String filename = DataUtils.readZeroString(b);
                     if(filename.length() == 0) {
@@ -154,32 +149,28 @@ public class VPK extends Archive {
                     }
                     VPKDirectoryEntry e = readFileInfo(b,
                                                        filename + (extension != null ? ("." + extension) : ""));
-                    entries.add(e);
-                    p.add(new DefaultMutableTreeNode(e));
+                    p.add(e);
                 }
             }
         }
     }
 
-    private DefaultMutableTreeNode nodeForPath(String path) {
-        DefaultMutableTreeNode parent = es;
+    private DirectoryEntry nodeForPath(String path) {
+        DirectoryEntry parent = getRoot();
         if(!path.equals(" ")) {
             String[] components = path.split("/");
-//            LOG.log(Level.INFO, "Path: {0}, {1}", new Object[] {path, Arrays.toString(components)});
-            for(String part : components) {
-                DefaultMutableTreeNode node = null;
-                Enumeration e = parent.children();
-                while(e.hasMoreElements()) {
-                    DefaultMutableTreeNode n = ((DefaultMutableTreeNode) e.nextElement());
-                    if(n.getUserObject().toString().equalsIgnoreCase(part)) {
-                        node = n;
+            for(String dir : components) {
+                DirectoryEntry node = null;
+                for(DirectoryEntry e : parent.children()) {
+                    if(e.isDirectory() && e.getName().equalsIgnoreCase(dir)) {
+                        node = e;
                         break;
                     }
                 }
                 if(node == null) {
-                    VPKDirectoryEntry dirEntry = new VPKDirectoryEntry(part);
+                    VPKDirectoryEntry dirEntry = new VPKDirectoryEntry(dir);
                     dirEntry.isDirectory = true;
-                    node = new DefaultMutableTreeNode(dirEntry);
+                    node = dirEntry;
                     parent.add(node);
                 }
                 parent = node;
@@ -248,13 +239,15 @@ public class VPK extends Archive {
             this.name = name;
         }
 
+        @Override
         public long getChecksum() {
             return CRC;
         }
 
+        @Override
         public long calculateChecksum() {
             if(data == null) {
-                return -1;
+                return 0;
             }
             CRC32 crc = new CRC32();
             byte[] buf = new byte[4096];
@@ -269,19 +262,15 @@ public class VPK extends Archive {
         }
 
         public int getItemSize() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return entryLength;
         }
 
         public Object getAttributes() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return null;
         }
 
         public boolean isDirectory() {
             return isDirectory;
-        }
-
-        public String getPath() {
-            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         public Archive getArchive() {
@@ -298,23 +287,11 @@ public class VPK extends Archive {
             return name;
         }
 
-        public String getAbsoluteName() {
-            return getName(); // TODO
-        }
-
-        public DirectoryEntry[] getImmediateChildren() {
-            return null;
-        }
-
-        public int getIndex() {
-            return -1;
-        }
-
         public void extract(File dir) throws IOException {
             File out = new File(dir, this.name);
             if(this.isDirectory) {
                 out.mkdir();
-                for(DirectoryEntry e : getImmediateChildren()) {
+                for(DirectoryEntry e : children()) {
                     e.extract(out);
                 }
             } else {
@@ -327,8 +304,10 @@ public class VPK extends Archive {
                     data.get(buf, 0, bsize);
                     fos.write(buf, 0, bsize);
                 }
+                fos.close();
             }
         }
+
     }
 
     public ArrayList<DirectoryEntry> find(String search) {
@@ -336,12 +315,10 @@ public class VPK extends Archive {
         return list;
     }
 
+    private VPKDirectoryEntry root;
+    
     public DirectoryEntry getRoot() {
-        return entries.get(0);
-    }
-
-    public void analyze(DefaultMutableTreeNode top, boolean leaves) {
-        TreeUtils.moveChildren(es, top);
+        return root;
     }
 
     @Override
