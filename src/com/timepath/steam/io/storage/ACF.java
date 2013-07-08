@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.Icon;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
@@ -31,7 +30,7 @@ public class ACF extends Archive {
         ArrayList<File> files = buildPaths(root);
         LOG.log(Level.INFO, "VPK files: {0}", Arrays.toString(files.toArray()));
         for(File f : files) {
-            VPK.add(new VPK().loadArchive(f));
+            VPK.add(new VPK(f));
         }
     }
     
@@ -79,16 +78,6 @@ public class ACF extends Archive {
     }
 
     @Override
-    public InputStream get(int index) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public ArrayList<DirectoryEntry> find(String search) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
     public DirectoryEntry getRoot() {
         return new ACFDirectoryEntry("/");
     }
@@ -117,17 +106,7 @@ public class ACF extends Archive {
         }
 
         @Override
-        public String getPath() {
-            return "/";
-        }
-
-        @Override
         public String getName() {
-            return "/";
-        }
-
-        @Override
-        public String getAbsoluteName() {
             return "/";
         }
 
@@ -157,8 +136,8 @@ public class ACF extends Archive {
         }
 
         @Override
-        public Icon getIcon() {
-            return null;
+        public InputStream asStream() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
     }

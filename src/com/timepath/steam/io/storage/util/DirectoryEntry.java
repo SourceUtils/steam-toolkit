@@ -3,6 +3,7 @@ package com.timepath.steam.io.storage.util;
 import com.timepath.io.utils.ViewableData;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.swing.Icon;
@@ -37,6 +38,8 @@ public abstract class DirectoryEntry implements ViewableData {
     public abstract Archive getArchive();
 
     public abstract void extract(File dir) throws IOException;
+    
+    public abstract InputStream asStream();
 
     public abstract boolean isComplete();
 

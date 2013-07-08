@@ -51,24 +51,23 @@ public class VDF implements Savable {
     // ([^"\\]*(?:\\.[^"\\]*)*)
     // Group 2 will be the unquoted text
     // \[(!)?\$(.*)\]
-    // Group 3 will be "!" if it is present
-    // Group 4 will be the platform name
+    // Group 3 will be the conditional
     // ([^\s{}"]+)
-    // Group 5 will be a block of text
+    // Group 4 will be a block of text
     // |(\{)|(\})
-    // Group 6 will be found if indenting
-    // Group 7 will be found if returning
+    // Group 5 will be found if indenting
+    // Group 6 will be found if returning
     private static final Pattern regex = Pattern.compile(
-            "//(.*)|\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"|\\[(!)?\\$(.*)\\]|([^\\s{}\"]+)|(\\{)|(\\})");
+            "//(.*)|\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"|\\[(.*\\$.*)\\]|([^\\s{}\"]+)|(\\{)|(\\})");
 
-    static class Token {
+    public static class Token {
 
         enum Type {
 
             COMMENT,
+            QUOTED,
             TEXT,
             CONDITION,
-            PLATFORM,
             IN,
             OUT
 
@@ -91,8 +90,22 @@ public class VDF implements Savable {
 
         @Override
         public String toString() {
-            StringBuilder sb = new StringBuilder(val.length());
+            StringBuilder sb = new StringBuilder();
+            sb.append(leading);
+            if(type == Type.COMMENT) {
+                sb.append("//");
+            }
+            if(type == Type.QUOTED) {
+                sb.append("\"");
+            } else if(type == Type.CONDITION) {
+                sb.append("[");
+            }
             sb.append(val);
+            if(type == Type.QUOTED) {
+                sb.append("\"");
+            } else if(type == Type.CONDITION) {
+                sb.append("]");
+            }
             return sb.toString();
         }
 
@@ -133,19 +146,18 @@ public class VDF implements Savable {
             if(matcher.group(1) != null) {
                 matchList.add(new Token(Type.COMMENT, matcher.group(1), leading, lineIndex));
             } else if(matcher.group(2) != null) {
-                matchList.add(new Token(Type.TEXT, matcher.group(2).replaceAll("\n", "\\\\n"),
+                matchList.add(new Token(Type.QUOTED, matcher.group(2).replaceAll("\n", "\\\\n"),
                                         leading, lineIndex));
-            } else if(matcher.group(3) != null) {
-                matchList.add(new Token(Type.CONDITION, matcher.group(3), leading, lineIndex));
+            } else if(matcher.group(3) != null) { // TODO: fit this into the regex
+                String cond = matcher.group(3);
+                matchList.add(new Token(Type.CONDITION, cond, leading, lineIndex));
             } else if(matcher.group(4) != null) {
-                matchList.add(new Token(Type.PLATFORM, matcher.group(4), leading, lineIndex));
-            } else if(matcher.group(5) != null) {
-                matchList.add(new Token(Type.TEXT, matcher.group(5).replaceAll("\n", "\\\\n"),
+                matchList.add(new Token(Type.TEXT, matcher.group(4).replaceAll("\n", "\\\\n"),
                                         leading, lineIndex));
+            } else if(matcher.group(5) != null) {
+                matchList.add(new Token(Type.IN, matcher.group(5), leading, lineIndex));
             } else if(matcher.group(6) != null) {
-                matchList.add(new Token(Type.IN, matcher.group(6), leading, lineIndex));
-            } else if(matcher.group(7) != null) {
-                matchList.add(new Token(Type.OUT, matcher.group(7), leading, lineIndex));
+                matchList.add(new Token(Type.OUT, matcher.group(6), leading, lineIndex));
             } else {
                 LOG.log(Level.SEVERE, "Error parsing {0}", str);
             }
@@ -162,6 +174,7 @@ public class VDF implements Savable {
             Token token = tokens[i];
             LOG.log(logLevel, "i = {0}", i);
             switch(token.type) {
+                case QUOTED:
                 case TEXT:
                     LOG.log(logLevel, token.val);
                     if(previous == null) {

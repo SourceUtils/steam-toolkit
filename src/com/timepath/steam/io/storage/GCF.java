@@ -6,20 +6,14 @@ import com.timepath.DataUtils;
 import com.timepath.EnumFlags;
 import com.timepath.EnumFlag;
 import com.timepath.io.RandomAccessFileWrapper;
-import com.timepath.io.utils.ViewableData;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.Adler32;
 import java.util.zip.Checksum;
-import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  *
@@ -27,9 +21,13 @@ import javax.swing.tree.DefaultMutableTreeNode;
  *
  * @author timepath
  */
-public class GCF extends Archive implements ViewableData {
+public class GCF extends Archive {
 
     private static final Logger LOG = Logger.getLogger(GCF.class.getName());
+    
+    public DirectoryEntry getRoot() {
+        return directoryEntries[0];
+    }
 
     private String name;
 
@@ -58,8 +56,26 @@ public class GCF extends Archive implements ViewableData {
             for(int i = 0; i < manifestHeader.nodeCount; i++) {
                 directoryEntries[i] = new GCFDirectoryEntry(i);
             }
+            byte[] ls = raf.readBytes(manifestHeader.nameSize);
 
-            ls = raf.readBytes(manifestHeader.nameSize);
+            //<editor-fold defaultstate="collapsed" desc="Fixup">
+            for(int i = 0; i < directoryEntries.length; i++) {
+                GCFDirectoryEntry de = directoryEntries[i];
+
+                int off = de.nameOffset;
+                ByteArrayOutputStream s = new ByteArrayOutputStream();
+                while(ls[off] != 0) {
+                    s.write(ls[off]);
+                    off++;
+                }
+                de.name = new String(s.toByteArray());
+
+                if(de.parentIndex != 0xFFFFFFFF) {
+                    de.setParent(directoryEntries[de.parentIndex]);
+                }
+            }
+            directoryEntries[0].name = this.name;
+            //</editor-fold>
 
             info1Entries = new tagGCFDIRECTORYINFO1ENTRY[manifestHeader.hashTableKeyCount];
             for(int i = 0; i < manifestHeader.hashTableKeyCount; i++) {
@@ -97,196 +113,10 @@ public class GCF extends Archive implements ViewableData {
         checksumMapHeader = new GCF.ChecksumMapHeader();
 
         dataBlockHeader = new GCF.DataBlockHeader();
-
-        //<editor-fold defaultstate="collapsed" desc="Data">
-//        boolean skipRead = true;
-//        if(skipRead) {
-//            rf.seek(dataBlockHeader.firstBlockOffset + (dataBlockHeader.blockCount * dataBlockHeader.blockSize));
-//        } else {
-//            LOG.info("Loading Data ...");
-//            rf.seek(dataBlockHeader.firstBlockOffset);
-//            byte[] b = new byte[dataBlockHeader.blockSize];
-//            for(int i = 0; i < dataBlockHeader.blockCount; i++) {
-//                rf.read(b);
-//            }
-//        }
-        //</editor-fold>
-
     }
-
-    //<editor-fold defaultstate="collapsed" desc="Utils">
-    public void analyze(DefaultMutableTreeNode top) {
-        analyze(top, true);
-    }
-
-    public void analyze(DefaultMutableTreeNode top, boolean leaves) {
-        GCFDirectoryEntry[] entries = directoryEntries;
-        analyze(entries[0], top, leaves);
-    }
-
-    /**
-     *
-     * @param rootEntry The root DirectoryEntry to analyze
-     * @param parent    The parent TreeNode to attach to
-     * @param leaves    Whether nodes with no children should be displayed
-     */
-    public void analyze(GCFDirectoryEntry rootEntry, DefaultMutableTreeNode parent, boolean leaves) {
-        GCFDirectoryEntry[] entries = getImmediateChildren(rootEntry);
-        for(int i = 0; i < entries.length; i++) {
-            DefaultMutableTreeNode child = new DefaultMutableTreeNode(entries[i]);
-            if(entries[i].firstChildIndex != 0) {
-                analyze(entries[i], child, leaves);
-            } else if(!leaves) {
-                continue;
-            }
-            parent.add(child);
-        }
-    }
-
-    public GCFDirectoryEntry[] getImmediateChildren(GCFDirectoryEntry root) {
-        int idx = root.index;
-        GCFDirectoryEntry[] entries = new GCFDirectoryEntry[directoryEntries[idx].itemSize];
-        int next = directoryEntries[idx].firstChildIndex;
-        for(int i = 0; i < entries.length; i++) {
-            entries[i] = directoryEntries[next];
-            next = entries[i].nextIndex;
-        }
-        return entries;
-    }
-
-    public String[] getEntryNames() {
-        String[] out = new String[directoryEntries.length];
-        for(int i = 0; i < out.length; i++) {
-            out[i] = nameForDirectoryIndexRecursive(i);
-        }
-        return out;
-    }
-
-    public String nameForDirectoryIndexRecursive(int idx) {
-        String str = nameForDirectoryIndex(idx) + "/";
-        if(idx == 0) {
-            str = "/";
-        }
-        if(directoryEntries[idx].parentIndex != 0xFFFFFFFF) {
-            String parent = nameForDirectoryIndexRecursive(directoryEntries[idx].parentIndex);
-            str = parent + str;
-        } else {
-            return str;
-        }
-        return str;
-    }
-
-    private String nameForDirectoryIndex(int idx) {
-        String str;
-        if(idx == 0) {
-            str = "/";
-        } else {
-            int off = directoryEntries[idx].nameOffset;
-            ByteArrayOutputStream s = new ByteArrayOutputStream();
-            while(ls[off] != 0) {
-                s.write(ls[off]);
-                off++;
-            }
-            str = new String(s.toByteArray());
-        }
-        return str;
-    }
-
-    public ArrayList<DirectoryEntry> find(String search) {
-        search = search.toLowerCase();
-        ArrayList<DirectoryEntry> list = new ArrayList<DirectoryEntry>(this.directoryEntries.length);
-        for(int i = 0; i < directoryEntries.length; i++) {
-            String str = directoryEntries[i].getName().toLowerCase();
-            if(str.contains(search)) {
-                list.add(directoryEntries[i]);
-            }
-        }
-        return list;
-    }
-
-    /**
-     *
-     * TODO: fast directory extraction
-     *
-     * @param index
-     * @param dest
-     *
-     * @return
-     *
-     * @throws IOException
-     */
-    public File extract(int index, File dest) throws IOException {
-        String str = nameForDirectoryIndexRecursive(index);
-        File outFile;
-        if(directoryEntries[index].isDirectory()) {
-            //<editor-fold defaultstate="collapsed" desc="Extract directory">
-            outFile = new File(dest.getPath(), str);
-            outFile.mkdirs();
-            GCFDirectoryEntry[] children = this.getImmediateChildren(directoryEntries[index]);
-            for(int i = 0; i < children.length; i++) {
-                extract(children[i].index, dest);
-            }
-            //</editor-fold>
-        } else {
-            //<editor-fold defaultstate="collapsed" desc="Extract file">
-            int idx = this.directoryMapEntries(index).firstBlockIndex;
-            //                logger.log(Level.INFO, "\n\np:{0}\nblockidx:{1}\n", new Object[]{f.getPath(), idx});
-            //                logger.log(Level.INFO, "\n\nb:{0}\n", new Object[]{block.toString()});
-            if(dest != null) {
-                outFile = new File(dest, str);
-                outFile.getParentFile().mkdirs();
-                outFile.delete();
-                outFile.createNewFile();
-            } else {
-                outFile = File.createTempFile(directoryEntries[index].getName(), null);
-            }
-            if(idx >= blocks.length) {
-                LOG.log(Level.WARNING, "Block out of range for {0} : {1}. Is the size 0?",
-                        new Object[] {outFile.getPath(), index});
-                return null;
-            }
-            BlockAllocationTableEntry block = this.getBlock(idx);
-            RandomAccessFileWrapper out = new RandomAccessFileWrapper(outFile, "rw");
-            int dataIdx = block.firstClusterIndex;
-            LOG.log(Level.FINE, "bSize: {0}", new Object[] {block.fileDataSize});
-            out.seek(block.fileDataOffset);
-            while(true) {
-                byte[] buf = this.readData(block, dataIdx);
-                if(out.getFilePointer() + buf.length > block.fileDataSize) {
-                    out.write(buf, 0, block.fileDataSize % dataBlockHeader.blockSize);
-                } else {
-                    out.write(buf);
-                }
-
-                dataIdx = this.getEntry(dataIdx).nextClusterIndex;
-                LOG.log(Level.FINE, "next dataIdx: {0}", dataIdx);
-                if(dataIdx == 0xFFFF || dataIdx == -1) {
-                    break;
-                }
-            }
-            long theoreticalSize = directoryEntries[index].itemSize;
-            long realSize = out.getFilePointer();
-            if(realSize != theoreticalSize) {
-                LOG.log(Level.WARNING, "size mismatch in {0}: was {1}, supposed to be {2}",
-                        new Object[] {outFile, realSize, theoreticalSize});
-            }
-            out.close();
-            //</editor-fold>
-        }
-        return outFile;
-    }
-
-    public File extract(DirectoryEntry e, File dest) throws IOException {
-        if(!(e instanceof GCFDirectoryEntry)) {
-            LOG.log(Level.WARNING, "{0} is not a GCF directory entry", e);
-        }
-        GCFDirectoryEntry gde = (GCFDirectoryEntry) e;
-        return this.extract(gde.index, dest);
-    }
-    //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Core utils">
-    public BlockAllocationTableEntry getBlock(int i) throws IOException {
+    private BlockAllocationTableEntry getBlock(int i) throws IOException {
         BlockAllocationTableEntry bae = blocks[i];
         if(bae == null) {
             raf.seek(
@@ -297,7 +127,7 @@ public class GCF extends Archive implements ViewableData {
         return bae;
     }
 
-    public FileAllocationTableEntry getEntry(int i) throws IOException {
+    private FileAllocationTableEntry getEntry(int i) throws IOException {
         FileAllocationTableEntry fae = fragMapEntries[i];
         if(fae == null) {
             raf.seek(
@@ -307,7 +137,7 @@ public class GCF extends Archive implements ViewableData {
         return fae;
     }
 
-    public DirectoryMapEntry directoryMapEntries(int i) {
+    private DirectoryMapEntry directoryMapEntries(int i) {
         DirectoryMapEntry dme = directoryMapEntries[i];
         if(dme == null) {
             try {
@@ -321,7 +151,7 @@ public class GCF extends Archive implements ViewableData {
         return dme;
     }
 
-    public ChecksumMapEntry checksumMapEntries(int i) throws IOException {
+    private ChecksumMapEntry checksumMapEntries(int i) throws IOException {
         ChecksumMapEntry cme = checksumMapEntries[i];
         if(cme == null) {
             raf.seek(directoryMapHeader.pos + ChecksumMapHeader.SIZE + (i * ChecksumMapEntry.SIZE));
@@ -330,7 +160,7 @@ public class GCF extends Archive implements ViewableData {
         return cme;
     }
 
-    public ChecksumEntry checksumEntries(int i) throws IOException {
+    private ChecksumEntry checksumEntries(int i) throws IOException {
         ChecksumEntry ce = checksumEntries[i];
         if(ce == null) {
             raf.seek(
@@ -340,7 +170,7 @@ public class GCF extends Archive implements ViewableData {
         return ce;
     }
 
-    public byte[] readData(BlockAllocationTableEntry block, int dataIdx) throws IOException {
+    private byte[] readData(BlockAllocationTableEntry block, int dataIdx) throws IOException {
         long pos = ((long) dataBlockHeader.firstBlockOffset + ((long) dataIdx * (long) dataBlockHeader.blockSize));
         raf.seek(pos);
         byte[] buf = new byte[dataBlockHeader.blockSize];
@@ -352,155 +182,79 @@ public class GCF extends Archive implements ViewableData {
     }
     //</editor-fold>
 
-    public byte[] ls = null;
-
     //<editor-fold defaultstate="collapsed" desc="Header info">
     //<editor-fold defaultstate="collapsed" desc="Header">
-    public FileHeader header;
-
-    public InputStream get(final int index) {
-        return new InputStream() {
-            private GCFDirectoryEntry de = GCF.this.directoryEntries[index];
-
-            private ByteBuffer buf = createBuffer();
-
-            private BlockAllocationTableEntry block;
-
-            private int dataIdx;
-
-            private byte[] data;
-
-            private ByteBuffer createBuffer() {
-                byte[] data = new byte[de.itemSize];
-                ByteBuffer b = ByteBuffer.wrap(data);
-                b.order(ByteOrder.LITTLE_ENDIAN);
-
-                int idx = GCF.this.directoryMapEntries(index).firstBlockIndex;
-                if(idx >= blocks.length) {
-                    LOG.log(Level.WARNING, "Block out of range for item {0}. Is the size 0?", index);
-                    return null;
-                }
-                try {
-                    block = GCF.this.getBlock(idx);
-                    dataIdx = block.firstClusterIndex;
-                    LOG.log(Level.FINE, "bSize: {0}", new Object[] {block.fileDataSize});
-                    data = fill(b);
-                } catch(IOException ex) {
-                    Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                return b;
-            }
-
-            private byte[] fill(ByteBuffer buf) {
-                if(dataIdx == 0xFFFF || dataIdx == -1) {
-                    return new byte[] {-1};
-                }
-                try {
-                    byte[] b = GCF.this.readData(block, dataIdx);
-                    if(buf.position() + b.length > buf.capacity()) {
-                        buf.put(b, 0, block.fileDataSize % dataBlockHeader.blockSize);
-                    } else {
-                        buf.put(b);
-                    }
-                    dataIdx = GCF.this.getEntry(dataIdx).nextClusterIndex;
-                    LOG.log(Level.INFO, "next dataIdx: {0}", dataIdx);
-                    return buf.array();
-                } catch(IOException ex) {
-                    Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
-                    return new byte[] {-1};
-                }
-            }
-
-            private int pointer;
-
-            @Override
-            public int available() throws IOException {
-                return de.itemSize - pointer;
-            }
-
-            @Override
-            public int read() throws IOException {
-                if(data == null || pointer > data.length) {
-                    return -1;
-                }
-                return data[pointer++];
-            }
-        };
-    }
-
-    public DirectoryEntry getRoot() {
-        return directoryEntries[0];
-    }
+    private FileHeader header;
 
     /**
      *
      */
-    public class FileHeader {
+    private class FileHeader {
 
         /**
          * 11 * 4
          */
-        public static final int SIZE = 44;
+        private static final int SIZE = 44;
 
-        public final long pos;
+        private final long pos;
 
         /**
          * Always 0x00000001
          * Probably the version number for the structure
          */
-        public final int headerVersion;
+        private final int headerVersion;
 
         /**
          * Always 0x00000001 for GCF, 0x00000002 for NCF
          */
-        public final int cacheType;
+        private final int cacheType;
 
         /**
          * Container version
          */
-        public final int formatVersion;
+        private final int formatVersion;
 
         /**
          * ID of the cache
          * Can be found in the CDR section of ClientRegistry.blob
          * TF2 is 440
          */
-        public final int applicationID;
+        private final int applicationID;
 
         /**
          * Current revision
          */
-        public final int applicationVersion;
+        private final int applicationVersion;
 
         /**
          * Unsure
          */
-        public final int isMounted;
+        private final int isMounted;
 
         /**
          * Padding?
          */
-        public final int dummy0;
+        private final int dummy0;
 
         /**
          * Total size of GCF file in bytes
          */
-        public final int fileSize;
+        private final int fileSize;
 
         /**
          * Size of each data cluster in bytes
          */
-        public final int clusterSize;
+        private final int clusterSize;
 
         /**
          * Number of data blocks
          */
-        public final int clusterCount;
+        private final int clusterCount;
 
         /**
          * 'special' sum of all previous fields
          */
-        public final int checksum;
+        private final int checksum;
 
         private FileHeader() throws IOException {
             pos = raf.getFilePointer();
@@ -517,7 +271,7 @@ public class GCF extends Archive implements ViewableData {
             checksum = raf.readULEInt();
         }
 
-        public int check() {
+        private int check() {
             int checked = 0;
             checked += DataUtils.updateChecksumAddSpecial(headerVersion);
             checked += DataUtils.updateChecksumAddSpecial(cacheType);
@@ -543,60 +297,60 @@ public class GCF extends Archive implements ViewableData {
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Block">
-    public BlockAllocationTableHeader blockAllocationTableHeader;
+    private BlockAllocationTableHeader blockAllocationTableHeader;
 
     /**
      *
      */
-    public class BlockAllocationTableHeader {
+    private class BlockAllocationTableHeader {
 
         /**
          * 8 * 4
          */
-        public static final int SIZE = 32;
+        private static final int SIZE = 32;
 
-        public final long pos;
+        private final long pos;
 
         /**
          * Number of data blocks
          */
-        public final int blockCount;
+        private final int blockCount;
 
         /**
          * Number of data blocks that point to data
          */
-        public final int blocksUsed;
+        private final int blocksUsed;
 
         /**
          *
          */
-        public final int lastBlockUsed;
+        private final int lastBlockUsed;
 
         /**
          *
          */
-        public final int dummy0;
+        private final int dummy0;
 
         /**
          *
          */
-        public final int dummy1;
+        private final int dummy1;
 
         /**
          *
          */
-        public final int dummy2;
+        private final int dummy2;
 
         /**
          *
          */
-        public final int dummy3;
+        private final int dummy3;
 
         /**
          * Header checksum
          * The checksum is simply the sum total of all the preceeding DWORDs in the header
          */
-        public final int checksum;
+        private final int checksum;
 
         private BlockAllocationTableHeader() throws IOException {
             pos = raf.getFilePointer();
@@ -613,7 +367,7 @@ public class GCF extends Archive implements ViewableData {
             raf.skipBytes(blocks.length * BlockAllocationTableEntry.SIZE);
         }
 
-        public int check() {
+        private int check() {
             int checked = 0;
             checked += DataUtils.updateChecksumAdd(blockCount);
             checked += DataUtils.updateChecksumAdd(blocksUsed);
@@ -639,51 +393,51 @@ public class GCF extends Archive implements ViewableData {
     /**
      *
      */
-    public class BlockAllocationTableEntry {
+    private class BlockAllocationTableEntry {
 
         /**
          * 7 * 4
          */
-        public static final int SIZE = 28;
+        private static final int SIZE = 28;
 
-//        public final long pos; // unneccesary information
+//        private final long pos; // unneccesary information
         /**
          * Flags for the block entry
          * 0x200F0000 == Not used
          */
-        public final int entryType;
+        private final int entryType;
 
         /**
          * The offset for the data contained in this block entry in the file
          */
-        public final int fileDataOffset;
+        private final int fileDataOffset;
 
         /**
          * The length of the data in this block entry
          */
-        public final int fileDataSize;
+        private final int fileDataSize;
 
         /**
          * The index to the first data block of this block entry's data
          */
-        public final int firstClusterIndex;
+        private final int firstClusterIndex;
 
         /**
          * The next block entry in the series
          * (N/A if == BlockCount)
          */
-        public final int nextBlockEntryIndex;
+        private final int nextBlockEntryIndex;
 
         /**
          * The previous block entry in the series
          * (N/A if == BlockCount)
          */
-        public final int previousBlockEntryIndex;
+        private final int previousBlockEntryIndex;
 
         /**
          * The index of the block entry in the manifest
          */
-        public final int manifestIndex;
+        private final int manifestIndex;
 
         private BlockAllocationTableEntry() throws IOException {
             entryType = raf.readULEInt();
@@ -704,41 +458,41 @@ public class GCF extends Archive implements ViewableData {
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Frag Map">
-    public FileAllocationTableHeader fragMap;
+    private FileAllocationTableHeader fragMap;
 
     /**
      *
      */
-    public class FileAllocationTableHeader {
+    private class FileAllocationTableHeader {
 
         /**
          * 4 * 4
          */
-        public static final int SIZE = 16;
+        private static final int SIZE = 16;
 
-        public final long pos;
+        private final long pos;
 
         /**
          * Number of data blocks
          */
-        public final int clusterCount;
+        private final int clusterCount;
 
         /**
          * Index of 1st unused GCFFRAGMAP entry?
          */
-        public final int firstUnusedEntry;
+        private final int firstUnusedEntry;
 
         /**
          * Defines the end of block chain terminator
          * If the value is 0, then the terminator is 0x0000FFFF; if the value is 1, then the
          * terminator is 0xFFFFFFFF
          */
-        public final int isLongTerminator;
+        private final int isLongTerminator;
 
         /**
          * Header checksum
          */
-        public final int checksum;
+        private final int checksum;
 
         private FileAllocationTableHeader() throws IOException {
             pos = raf.getFilePointer();
@@ -751,7 +505,7 @@ public class GCF extends Archive implements ViewableData {
             raf.skipBytes(fragMapEntries.length * FileAllocationTableEntry.SIZE);
         }
 
-        public int check() {
+        private int check() {
             int checked = 0;
             checked += DataUtils.updateChecksumAdd(clusterCount);
             checked += DataUtils.updateChecksumAdd(firstUnusedEntry);
@@ -773,19 +527,19 @@ public class GCF extends Archive implements ViewableData {
     /**
      *
      */
-    public class FileAllocationTableEntry {
+    private class FileAllocationTableEntry {
 
         /**
          * 1 * 4
          */
-        public static final int SIZE = 4;
+        private static final int SIZE = 4;
 
         /**
          * The index of the next data block
          * If == FileAllocationTableHeader.isLongTerminator, there are no more clusters in the
          * file
          */
-        public final int nextClusterIndex;
+        private final int nextClusterIndex;
 
         private FileAllocationTableEntry() throws IOException {
             nextClusterIndex = raf.readULEInt();
@@ -800,9 +554,9 @@ public class GCF extends Archive implements ViewableData {
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Directories">
-    public ManifestHeader manifestHeader;
+    private ManifestHeader manifestHeader;
 
-    public enum ManifestHeaderBitmask {
+    private enum ManifestHeaderBitmask {
 
         Build_Mode(0x1),
         Is_Purge_All(0x2),
@@ -817,53 +571,53 @@ public class GCF extends Archive implements ViewableData {
 
         private static final ManifestHeaderBitmask[] flags = ManifestHeaderBitmask.values();
 
-        public static ManifestHeaderBitmask get(int mask) {
+        private static ManifestHeaderBitmask get(int mask) {
             ManifestHeaderBitmask m = flags[mask];
             return m;
         }
 
     };
 
-    public class ManifestHeader {
+    private class ManifestHeader {
 
         /**
          * 14 * 4
          */
-        public static final int SIZE = 56;
+        private static final int SIZE = 56;
 
-        public final long pos;
+        private final long pos;
 
-        public final int headerVersion;		// Always 0x00000004
+        private final int headerVersion;		// Always 0x00000004
 
-        public final int applicationID;		// Cache ID.
+        private final int applicationID;		// Cache ID.
 
-        public final int applicationVersion;        // GCF file version.
+        private final int applicationVersion;        // GCF file version.
 
-        public final int nodeCount;          // Number of items in the directory.
+        private final int nodeCount;          // Number of items in the directory.
 
-        public final int fileCount;          // Number of files in the directory.
+        private final int fileCount;          // Number of files in the directory.
 
-        public final int compressionBlockSize;		// Always 0x00008000
+        private final int compressionBlockSize;		// Always 0x00008000
 
         /**
          * Inclusive of header
          */
-        public final int binarySize;	// Size of lpGCFDirectoryEntries & lpGCFDirectoryNames & lpGCFDirectoryInfo1Entries & lpGCFDirectoryInfo2Entries & lpGCFDirectoryCopyEntries & lpGCFDirectoryLocalEntries in bytes.
+        private final int binarySize;	// Size of lpGCFDirectoryEntries & lpGCFDirectoryNames & lpGCFDirectoryInfo1Entries & lpGCFDirectoryInfo2Entries & lpGCFDirectoryCopyEntries & lpGCFDirectoryLocalEntries in bytes.
 
-        public final int nameSize;		// Size of the directory names in bytes.
+        private final int nameSize;		// Size of the directory names in bytes.
 
-        public final int hashTableKeyCount;         // Number of Info1 entires.
+        private final int hashTableKeyCount;         // Number of Info1 entires.
 
-        public final int minimumFootprintCount;          // Number of files to copy.
+        private final int minimumFootprintCount;          // Number of files to copy.
 
-        public final int userConfigCount;         // Number of files to keep local.
+        private final int userConfigCount;         // Number of files to keep local.
 //        ManifestHeaderBitmask bitmask;
 
-        public final int bitmask;
+        private final int bitmask;
 
-        public final int fingerprint;
+        private final int fingerprint;
 
-        public final int checksum;
+        private final int checksum;
 
         private ManifestHeader() throws IOException {
             pos = raf.getFilePointer();
@@ -884,7 +638,7 @@ public class GCF extends Archive implements ViewableData {
             checksum = raf.readULEInt();
         }
 
-        public int check() {
+        private int check() {
             try {
                 ByteBuffer bbh = ByteBuffer.allocate(SIZE);
                 bbh.order(ByteOrder.LITTLE_ENDIAN);
@@ -933,9 +687,9 @@ public class GCF extends Archive implements ViewableData {
 
     }
 
-    public GCFDirectoryEntry[] directoryEntries;
+    private GCFDirectoryEntry[] directoryEntries;
 
-    public enum DirectoryEntryAttributes implements EnumFlag {
+    private enum DirectoryEntryAttributes implements EnumFlag {
 
         Unknown_4(0x8000),
         File(0x4000),
@@ -966,43 +720,45 @@ public class GCF extends Archive implements ViewableData {
 
     }
 
-    public class GCFDirectoryEntry extends DirectoryEntry {
+    private class GCFDirectoryEntry extends DirectoryEntry {
 
         /**
          * Offset to the directory item name from the end of the directory items
          */
-        public final int nameOffset;
+        private final int nameOffset;
+
+        private String name;
 
         /**
          * Size of the item. (If file, file size. If folder, num items.)
          */
-        public final int itemSize;
+        private final int itemSize;
 
         /**
          * Checksum index / file ID. (0xFFFFFFFF == None).
          */
-        public final int checksumIndex;
+        private final int checksumIndex;
 
-        public final EnumSet<DirectoryEntryAttributes> attributes;
+        private final EnumSet<DirectoryEntryAttributes> attributes;
 
         /**
          * Index of the parent directory item. (0xFFFFFFFF == None).
          */
-        public final int parentIndex;
+        private final int parentIndex;
 
         /**
          * Index of the next directory item. (0x00000000 == None).
          */
-        public final int nextIndex;
+        private final int nextIndex;
 
         /**
          * Index of the first directory item. (0x00000000 == None).
          */
-        public final int firstChildIndex;
+        private final int firstChildIndex;
 
-        public final int index;
+        private final int index;
 
-        public int getIndex() {
+        private int getIndex() {
             return index;
         }
 
@@ -1011,24 +767,14 @@ public class GCF extends Archive implements ViewableData {
             nameOffset = raf.readULEInt();
             itemSize = raf.readULEInt();
             checksumIndex = raf.readULEInt();
-            attributes = EnumFlags.decode(raf.readULEInt(),
-                                              DirectoryEntryAttributes.class);
+            attributes = EnumFlags.decode(raf.readULEInt(), DirectoryEntryAttributes.class);
             parentIndex = raf.readULEInt();
             nextIndex = raf.readULEInt();
             firstChildIndex = raf.readULEInt();
         }
 
-        public String getAbsoluteName() {
-            return nameForDirectoryIndexRecursive(index);
-        }
-
         public String getName() {
-            return nameForDirectoryIndex(index);
-        }
-
-        public String getPath() {
-            String abs = getAbsoluteName();
-            return abs.substring(0, abs.substring(0, abs.length() - 1).lastIndexOf('/'));
+            return name;
         }
 
         public GCF getArchive() {
@@ -1046,12 +792,106 @@ public class GCF extends Archive implements ViewableData {
             return true;
         }
 
-        public void extract(File out) throws IOException {
-            this.getArchive().extract(index, out);
+        public void extract(File dir) throws IOException {
+            File out = new File(dir, getName());
+            if(isDirectory()) {
+                out.mkdir();
+                for(DirectoryEntry e : children()) {
+                    e.extract(out);
+                }
+            } else {
+                int idx = this.getArchive().directoryMapEntries(index).firstBlockIndex;
+
+                out.getParentFile().mkdirs();
+                out.delete();
+                out.createNewFile();
+
+                if(idx >= blocks.length) {
+                    LOG.log(Level.WARNING, "Block out of range for {0} : {1}. Is the size 0?",
+                            new Object[] {out.getPath(), index});
+                    return;
+                }
+                BlockAllocationTableEntry block = this.getArchive().getBlock(idx);
+                RandomAccessFileWrapper raf = new RandomAccessFileWrapper(out, "rw");
+                int dataIdx = block.firstClusterIndex;
+                LOG.log(Level.FINE, "bSize: {0}", new Object[] {block.fileDataSize});
+                raf.seek(block.fileDataOffset);
+
+                byte[] buf = this.getArchive().readData(block, dataIdx);
+                if(raf.getFilePointer() + buf.length > block.fileDataSize) {
+                    raf.write(buf, 0, block.fileDataSize % dataBlockHeader.blockSize);
+                } else {
+                    raf.write(buf);
+                }
+            }
         }
 
-        public GCFDirectoryEntry[] getImmediateChildren() {
-            return GCF.this.getImmediateChildren(this);
+        public InputStream asStream() {
+            return new InputStream() {
+                private ByteBuffer buf = createBuffer();
+
+                private BlockAllocationTableEntry block;
+
+                private int dataIdx;
+
+                private byte[] data;
+
+                private ByteBuffer createBuffer() {
+                    byte[] data = new byte[GCFDirectoryEntry.this.itemSize];
+                    ByteBuffer b = ByteBuffer.wrap(data);
+                    b.order(ByteOrder.LITTLE_ENDIAN);
+
+                    int idx = GCF.this.directoryMapEntries(GCFDirectoryEntry.this.index).firstBlockIndex;
+                    if(idx >= blocks.length) {
+                        LOG.log(Level.WARNING, "Block out of range for item {0}. Is the size 0?", GCFDirectoryEntry.this);
+                        return null;
+                    }
+                    try {
+                        block = GCF.this.getBlock(idx);
+                        dataIdx = block.firstClusterIndex;
+                        LOG.log(Level.FINE, "bSize: {0}", new Object[] {block.fileDataSize});
+                        data = fill(b);
+                    } catch(IOException ex) {
+                        Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    return b;
+                }
+
+                private byte[] fill(ByteBuffer buf) {
+                    if(dataIdx == 0xFFFF || dataIdx == -1) {
+                        return new byte[] {-1};
+                    }
+                    try {
+                        byte[] b = GCF.this.readData(block, dataIdx);
+                        if(buf.position() + b.length > buf.capacity()) {
+                            buf.put(b, 0, block.fileDataSize % dataBlockHeader.blockSize);
+                        } else {
+                            buf.put(b);
+                        }
+                        dataIdx = GCF.this.getEntry(dataIdx).nextClusterIndex;
+                        LOG.log(Level.INFO, "next dataIdx: {0}", dataIdx);
+                        return buf.array();
+                    } catch(IOException ex) {
+                        Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
+                        return new byte[] {-1};
+                    }
+                }
+
+                private int pointer;
+
+                @Override
+                public int available() throws IOException {
+                    return GCFDirectoryEntry.this.itemSize - pointer;
+                }
+
+                @Override
+                public int read() throws IOException {
+                    if(data == null || pointer > data.length) {
+                        return -1;
+                    }
+                    return data[pointer++];
+                }
+            };
         }
 
         public int getItemSize() {
@@ -1062,10 +902,12 @@ public class GCF extends Archive implements ViewableData {
             return this.attributes;
         }
 
+        @Override
         public long getChecksum() {
             return -1;
         }
 
+        @Override
         public long calculateChecksum() {
             return -1;
         }
@@ -1075,14 +917,14 @@ public class GCF extends Archive implements ViewableData {
     private tagGCFDIRECTORYINFO1ENTRY[] info1Entries; // nameTable
 
     //GCF Directory Info 1 Entry
-    public class tagGCFDIRECTORYINFO1ENTRY {
+    private class tagGCFDIRECTORYINFO1ENTRY {
 
         /**
          * 1 * 4
          */
-        public static final int SIZE = 4;
+        private static final int SIZE = 4;
 
-        public final int Dummy0;
+        private final int Dummy0;
 
         private tagGCFDIRECTORYINFO1ENTRY() throws IOException {
             Dummy0 = raf.readULEInt();
@@ -1098,14 +940,14 @@ public class GCF extends Archive implements ViewableData {
     private tagGCFDIRECTORYINFO2ENTRY[] info2Entries; // hashTable
 
     //GCF Directory Info 2 Entry
-    public class tagGCFDIRECTORYINFO2ENTRY {
+    private class tagGCFDIRECTORYINFO2ENTRY {
 
         /**
          * 1 * 4
          */
-        public static final int SIZE = 4;
+        private static final int SIZE = 4;
 
-        public final int Dummy0;
+        private final int Dummy0;
 
         private tagGCFDIRECTORYINFO2ENTRY() throws IOException {
             Dummy0 = raf.readULEInt();
@@ -1138,21 +980,21 @@ public class GCF extends Archive implements ViewableData {
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Directory Map">
-    public DirectoryMapHeader directoryMapHeader;
+    private DirectoryMapHeader directoryMapHeader;
 
     //GCF Directory Map Header
-    public class DirectoryMapHeader {
+    private class DirectoryMapHeader {
 
         /**
          * 2 * 4
          */
-        public static final int SIZE = 8;
+        private static final int SIZE = 8;
 
-        public final long pos;
+        private final long pos;
 
-        public final int headerVersion;     // Always 0x00000001
+        private final int headerVersion;     // Always 0x00000001
 
-        public final int dummy0;     // Always 0x00000000
+        private final int dummy0;     // Always 0x00000000
 
         private DirectoryMapHeader() throws IOException {
             pos = raf.getFilePointer();
@@ -1173,14 +1015,14 @@ public class GCF extends Archive implements ViewableData {
     private DirectoryMapEntry[] directoryMapEntries;
 
     //GCF Directory Map Entry
-    public class DirectoryMapEntry {
+    private class DirectoryMapEntry {
 
         /**
          * 1 * 4
          */
-        public static final int SIZE = 4;
+        private static final int SIZE = 4;
 
-        public final int firstBlockIndex;    // Index of the first data block. (N/A if == BlockCount.)
+        private final int firstBlockIndex;    // Index of the first data block. (N/A if == BlockCount.)
 
         private DirectoryMapEntry() throws IOException {
             firstBlockIndex = raf.readULEInt();
@@ -1190,14 +1032,14 @@ public class GCF extends Archive implements ViewableData {
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Checksum Header">
-    public ChecksumHeader checksumHeader;
+    private ChecksumHeader checksumHeader;
 
     //GCF Checksum Header
-    public class ChecksumHeader {
+    private class ChecksumHeader {
 
-        public final int headerVersion;			// Always 0x00000001
+        private final int headerVersion;			// Always 0x00000001
 
-        public final int checksumSize;		// Size of LPGCFCHECKSUMHEADER & LPGCFCHECKSUMMAPHEADER & in bytes.
+        private final int checksumSize;		// Size of LPGCFCHECKSUMHEADER & LPGCFCHECKSUMMAPHEADER & in bytes.
         // the number of bytes in the checksum section (excluding this structure and the following LatestApplicationVersion structure).
 
         private ChecksumHeader() throws IOException {
@@ -1214,25 +1056,25 @@ public class GCF extends Archive implements ViewableData {
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Checksum map">
-    public ChecksumMapHeader checksumMapHeader;
+    private ChecksumMapHeader checksumMapHeader;
 
     //GCF Checksum Map Header
-    public class ChecksumMapHeader {
+    private class ChecksumMapHeader {
 
         /**
          * 4 * 4
          */
-        public static final int SIZE = 16;
+        private static final int SIZE = 16;
 
-        public final long pos;
+        private final long pos;
 
-        public final int formatCode;			// Always 0x14893721
+        private final int formatCode;			// Always 0x14893721
 
-        public final int dummy0;			// Always 0x00000001
+        private final int dummy0;			// Always 0x00000001
 
-        public final int itemCount;		// Number of items.
+        private final int itemCount;		// Number of items.
 
-        public final int checksumCount;		// Number of checksums.
+        private final int checksumCount;		// Number of checksums.
 
         private ChecksumMapHeader() throws IOException {
             pos = raf.getFilePointer();
@@ -1253,16 +1095,16 @@ public class GCF extends Archive implements ViewableData {
     private ChecksumMapEntry[] checksumMapEntries;
 
     //GCF Checksum Map Entry
-    public class ChecksumMapEntry {
+    private class ChecksumMapEntry {
 
         /**
          * 2 * 4
          */
-        public static final int SIZE = 8;
+        private static final int SIZE = 8;
 
-        public final int checksumCount;		// Number of checksums.
+        private final int checksumCount;		// Number of checksums.
 
-        public final int firstChecksumIndex;	// Index of first checksum.
+        private final int firstChecksumIndex;	// Index of first checksum.
 
         private ChecksumMapEntry() throws IOException {
             checksumCount = raf.readULEInt();
@@ -1279,14 +1121,14 @@ public class GCF extends Archive implements ViewableData {
     private ChecksumEntry[] checksumEntries;
 
     //GCF Checksum Entry
-    public class ChecksumEntry {
+    private class ChecksumEntry {
 
         /**
          * 1 * 4
          */
-        public static final int SIZE = 4;
+        private static final int SIZE = 4;
 
-        public final int checksum;				// Checksum.
+        private final int checksum;				// Checksum.
 
         private ChecksumEntry() throws IOException {
             checksum = raf.readULEInt();
@@ -1301,42 +1143,42 @@ public class GCF extends Archive implements ViewableData {
     //</editor-fold>
 
     //<editor-fold defaultstate="collapsed" desc="Data blocks">
-    public DataBlockHeader dataBlockHeader;
+    private DataBlockHeader dataBlockHeader;
 
     /**
      *
      */
-    public class DataBlockHeader {
+    private class DataBlockHeader {
 
         /**
          * GCF file version
          */
-        public final int gcfRevision;
+        private final int gcfRevision;
 
         /**
          * Number of data blocks
          */
-        public final int blockCount;
+        private final int blockCount;
 
         /**
          * Size of each data block in bytes
          */
-        public final int blockSize;
+        private final int blockSize;
 
         /**
          * Offset to first data block
          */
-        public final int firstBlockOffset;
+        private final int firstBlockOffset;
 
         /**
          * Number of data blocks that contain data
          */
-        public final int blocksUsed;
+        private final int blocksUsed;
 
         /**
          * Header checksum
          */
-        public final int checksum;
+        private final int checksum;
 
         private DataBlockHeader() throws IOException {
             gcfRevision = raf.readULEInt();
@@ -1347,7 +1189,7 @@ public class GCF extends Archive implements ViewableData {
             checksum = raf.readULEInt();
         }
 
-        public int check() {
+        private int check() {
             int checked = 0;
             checked += DataUtils.updateChecksumAdd(blockCount);
             checked += DataUtils.updateChecksumAdd(blockSize);

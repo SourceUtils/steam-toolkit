@@ -1,5 +1,6 @@
 package com.timepath.steam.io.util;
 
+import com.timepath.steam.io.VDF;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.logging.Logger;
@@ -108,6 +109,14 @@ public class VDFNode extends DefaultMutableTreeNode {
 
     public String getFile() {
         return fileName;
+    }
+    
+    public String save() {
+        StringBuilder sb = new StringBuilder();
+//        for(VDF.Token t : tokens) {
+//            sb.append(t.toString());
+//        }
+        return sb.toString();
     }
 
 }

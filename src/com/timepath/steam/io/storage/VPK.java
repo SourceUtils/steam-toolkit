@@ -4,16 +4,11 @@ import com.timepath.DataUtils;
 import com.timepath.StringUtils;
 import com.timepath.steam.io.storage.util.Archive;
 import com.timepath.steam.io.storage.util.DirectoryEntry;
-import com.timepath.swing.TreeUtils;
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.CRC32;
-import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  * Loads _dir.vpk files https://developer.valvesoftware.com/wiki/VPK_File_Format
@@ -48,7 +43,8 @@ public class VPK extends Archive {
         return null;
     }
 
-    public VPK() {
+    public VPK(final File file) {
+        this.loadArchive(file);
     }
 
     public VPK loadArchive(final File file) {
@@ -308,11 +304,11 @@ public class VPK extends Archive {
             }
         }
 
-    }
+        @Override
+        public InputStream asStream() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
 
-    public ArrayList<DirectoryEntry> find(String search) {
-        ArrayList<DirectoryEntry> list = new ArrayList<DirectoryEntry>();
-        return list;
     }
 
     private VPKDirectoryEntry root;

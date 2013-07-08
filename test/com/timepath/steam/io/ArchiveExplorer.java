@@ -102,7 +102,7 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         if(ext.equals("gcf")) {
             a = new GCF(f);
         } else if(ext.equals("vpk")) {
-            a = new VPK().loadArchive(f);
+            a = new VPK(f);
         } else {
             LOG.log(Level.WARNING, "Unrecognised archive: {0}", f);
             return;
@@ -369,10 +369,6 @@ public class ArchiveExplorer extends javax.swing.JFrame {
             if(clicked == null) {
                 return;
             }
-            Object obj = clicked.getLastPathComponent();
-            if(obj instanceof DefaultMutableTreeNode) {
-                obj = ((DefaultMutableTreeNode) obj).getUserObject();
-            }
             if(jTree1.getSelectionPaths() == null || !Arrays.asList(jTree1.getSelectionPaths()).contains(
                     clicked)) {
                 jTree1.setSelectionPath(clicked);
@@ -456,7 +452,7 @@ public class ArchiveExplorer extends javax.swing.JFrame {
         jTree1.setSelectionPath(null);
         ArrayList<DirectoryEntry> children = new ArrayList<DirectoryEntry>();
         for(Archive a : archives) {
-            children.addAll(a.find(jTextField1.getText()));
+            children.addAll(a.find(jTextField1.getText(), a.getRoot()));
         }
         table.setRowCount(0);
         for(int i = 0; i < children.size(); i++) {
