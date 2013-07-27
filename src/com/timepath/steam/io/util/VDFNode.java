@@ -1,6 +1,6 @@
 package com.timepath.steam.io.util;
 
-import com.timepath.steam.io.VDF;
+import com.timepath.steam.io.VDF.VDFToken;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.logging.Logger;
@@ -16,23 +16,22 @@ public class VDFNode extends DefaultMutableTreeNode {
     public VDFNode() {
     }
 
-    public VDFNode(String key) {
+    private VDFToken key;
+
+    public VDFNode(VDFToken key) {
         this.key = key;
     }
 
-    public VDFNode(String key, Object value) {
-        this.key = key;
-        this.userObject = value;
+    public VDFNode(String str) {
+        this.key = new VDFToken(str);
     }
-
-    private String key;
 
     public void setKey(String key) {
-        this.key = key;
+        this.key.setValue(key);
     }
 
     public String getKey() {
-        return key;
+        return key.getValue();
     }
 
     public VDFNode get(int index) {
@@ -52,13 +51,26 @@ public class VDFNode extends DefaultMutableTreeNode {
         }
         return null;
     }
+    
+    public void add(VDFNode v) {
+        super.add(v);
+    }
+    
+    private VDFToken value;
+    
+    public void setValue(VDFToken t) {
+        value = t;
+    }
 
     public void setValue(Object o) {
-        this.setUserObject(o);
+        value.setValue(o.toString());
     }
 
     public String getValue() {
-        return (String) this.getUserObject();
+        if(value == null) {
+            return null;
+        }
+        return value.getValue();
     }
 
     public int intValue() {
@@ -109,14 +121,6 @@ public class VDFNode extends DefaultMutableTreeNode {
 
     public String getFile() {
         return fileName;
-    }
-    
-    public String save() {
-        StringBuilder sb = new StringBuilder();
-//        for(VDF.Token t : tokens) {
-//            sb.append(t.toString());
-//        }
-        return sb.toString();
     }
 
 }

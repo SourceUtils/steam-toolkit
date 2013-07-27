@@ -1,7 +1,7 @@
 package com.timepath.steam.io;
 
 import com.timepath.io.utils.Savable;
-import com.timepath.steam.io.VDF.Token.Type;
+import com.timepath.steam.io.VDF.VDFToken.Type;
 import com.timepath.steam.io.util.VDFNode;
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 
 /**
  *
@@ -60,9 +61,37 @@ public class VDF implements Savable {
     private static final Pattern regex = Pattern.compile(
             "//(.*)|\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"|\\[(.*\\$.*)\\]|([^\\s{}\"]+)|(\\{)|(\\})");
 
-    public static class Token {
+    public static class VDFToken {
 
-        enum Type {
+        /**
+         * @return the value
+         */
+        public String getValue() {
+            return value;
+        }
+
+        /**
+         * @param val the value to set
+         */
+        public void setValue(String val) {
+            this.value = val;
+        }
+
+        /**
+         * @return the type
+         */
+        public Type getType() {
+            return type;
+        }
+
+        /**
+         * @param type the type to set
+         */
+        public void setType(Type type) {
+            this.type = type;
+        }
+
+        public enum Type {
 
             COMMENT,
             QUOTED,
@@ -73,17 +102,21 @@ public class VDF implements Savable {
 
         }
 
-        Type type;
+        private Type type;
 
-        String val;
+        private String value;
 
-        String leading;
+        private String leading;
 
-        int line;
+        private int line;
 
-        Token(Type t, String val, String leading, int line) {
+        public VDFToken(String value) {
+            this(Type.QUOTED, value, null, -1);
+        }
+
+        VDFToken(Type t, String value, String leading, int line) {
             this.type = t;
-            this.val = val;
+            this.value = value;
             this.leading = leading;
             this.line = line;
         }
@@ -92,27 +125,28 @@ public class VDF implements Savable {
         public String toString() {
             StringBuilder sb = new StringBuilder();
             sb.append(leading);
-            if(type == Type.COMMENT) {
+            if(getType() == Type.COMMENT) {
                 sb.append("//");
             }
-            if(type == Type.QUOTED) {
+            if(getType() == Type.QUOTED) {
                 sb.append("\"");
-            } else if(type == Type.CONDITION) {
+            } else if(getType() == Type.CONDITION) {
                 sb.append("[");
             }
-            sb.append(val);
-            if(type == Type.QUOTED) {
+            sb.append(getValue());
+            if(getType() == Type.QUOTED) {
                 sb.append("\"");
-            } else if(type == Type.CONDITION) {
+            } else if(getType() == Type.CONDITION) {
                 sb.append("]");
             }
             return sb.toString();
         }
 
     }
+    
+    List<VDFToken> tokens = new ArrayList<VDFToken>();
 
     protected void processAnalyze(Scanner scanner, DefaultMutableTreeNode parent) {
-        List<Token> matchList = new ArrayList<Token>();
         List<Integer> lineEnds = new ArrayList<Integer>();
         lineEnds.add(0);
 
@@ -135,7 +169,8 @@ public class VDF implements Savable {
                 if(globalIndex < lineEnds.get(lineIndex)) {
                     lineIndex--;
                     LOG.log(Level.FINER, "{0} <= {1}, therefore {2}", new Object[] {globalIndex,
-                                                                                    lineEnds.get(lineIndex),
+                                                                                    lineEnds.get(
+                        lineIndex),
                                                                                     lineIndex});
                     break;
                 }
@@ -144,45 +179,45 @@ public class VDF implements Savable {
             leading = str.substring(previous, matcher.start());
             previous = matcher.end();
             if(matcher.group(1) != null) {
-                matchList.add(new Token(Type.COMMENT, matcher.group(1), leading, lineIndex));
+                tokens.add(new VDFToken(Type.COMMENT, matcher.group(1), leading, lineIndex));
             } else if(matcher.group(2) != null) {
-                matchList.add(new Token(Type.QUOTED, matcher.group(2).replaceAll("\n", "\\\\n"),
-                                        leading, lineIndex));
+                tokens.add(new VDFToken(Type.QUOTED, matcher.group(2).replaceAll("\n", "\\\\n"),
+                                           leading, lineIndex));
             } else if(matcher.group(3) != null) { // TODO: fit this into the regex
                 String cond = matcher.group(3);
-                matchList.add(new Token(Type.CONDITION, cond, leading, lineIndex));
+                tokens.add(new VDFToken(Type.CONDITION, cond, leading, lineIndex));
             } else if(matcher.group(4) != null) {
-                matchList.add(new Token(Type.TEXT, matcher.group(4).replaceAll("\n", "\\\\n"),
-                                        leading, lineIndex));
+                tokens.add(new VDFToken(Type.TEXT, matcher.group(4).replaceAll("\n", "\\\\n"),
+                                           leading, lineIndex));
             } else if(matcher.group(5) != null) {
-                matchList.add(new Token(Type.IN, matcher.group(5), leading, lineIndex));
+                tokens.add(new VDFToken(Type.IN, matcher.group(5), leading, lineIndex));
             } else if(matcher.group(6) != null) {
-                matchList.add(new Token(Type.OUT, matcher.group(6), leading, lineIndex));
+                tokens.add(new VDFToken(Type.OUT, matcher.group(6), leading, lineIndex));
             } else {
                 LOG.log(Level.SEVERE, "Error parsing {0}", str);
             }
         }
-        Token[] tokens = matchList.toArray(new Token[0]);
+        VDFToken[] tokens = this.tokens.toArray(new VDFToken[0]);
         LOG.log(logLevel, "{0}:{1}", new Object[] {tokens.length, Arrays.toString(tokens)});
 
         recurse(tokens, 0, (VDFNode) parent);
     }
 
-    private int recurse(Token[] tokens, int offset, VDFNode parent) {
+    private int recurse(VDFToken[] tokens, int offset, VDFNode parent) {
         VDFNode previous = null;
         for(int i = offset; i < tokens.length; i++) {
-            Token token = tokens[i];
+            VDFToken token = tokens[i];
             LOG.log(logLevel, "i = {0}", i);
-            switch(token.type) {
+            switch(token.getType()) {
                 case QUOTED:
                 case TEXT:
-                    LOG.log(logLevel, token.val);
+                    LOG.log(logLevel, token.getValue());
                     if(previous == null) {
-                        previous = new VDFNode(token.val);
+                        previous = new VDFNode(token);
                         parent.add(previous);
                     } else {
                         if(previous.getValue() == null) {
-                            previous.setValue(token.val);
+                            previous.setValue(token);
                             parent.add(previous);
                             previous = null;
                         } else {
@@ -191,14 +226,14 @@ public class VDF implements Savable {
                     }
                     break;
                 case IN:
-                    LOG.log(logLevel, token.val);
+                    LOG.log(logLevel, token.getValue());
                     i++;
                     LOG.log(logLevel, "Reading {0}", new Object[] {previous});
                     i = recurse(tokens, i, previous);
                     previous = null;
                     break;
                 case OUT:
-                    LOG.log(logLevel, token.val);
+                    LOG.log(logLevel, token.getValue());
                     int read = i - offset;
                     LOG.log(logLevel, "Left {0} after reading {1}", new Object[] {parent, read});
                     return i;
@@ -251,6 +286,14 @@ public class VDF implements Savable {
             Logger.getLogger(VDF.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
+    }
+    
+    public String save() {
+        StringBuilder sb = new StringBuilder();
+        for(VDFToken t : tokens) {
+            sb.append(t.toString());
+        }
+        return sb.toString();
     }
 
 }
