@@ -3,10 +3,8 @@ package com.timepath.steam.webapi;
 import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import com.timepath.web.api.base.Connection;
 import com.timepath.web.api.base.RequestBuilder;
-import java.awt.BorderLayout;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.math.BigInteger;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.security.KeyFactory;
 import java.security.interfaces.RSAPublicKey;
@@ -35,14 +33,16 @@ public class Main {
 
     private class SteamConnection extends Connection {
 
-        public SteamConnection(String method) {
+        public SteamConnection(String method) throws MalformedURLException {
             super(method);
         }
 
+        @Override
         public String getBaseUrl() {
             return "https://steamcommunity.com/";
         }
 
+        @Override
         public String getUserAgent() {
             return "Java steam wrapper";
         }
