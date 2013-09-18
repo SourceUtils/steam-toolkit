@@ -30,7 +30,7 @@ public class ACF extends Archive {
         ArrayList<File> files = buildPaths(root);
         LOG.log(Level.INFO, "VPK files: {0}", Arrays.toString(files.toArray()));
         for(File f : files) {
-            VPK.add(new VPK(f));
+            archives.add(new VPK(f));
         }
     }
     
@@ -40,7 +40,11 @@ public class ACF extends Archive {
     
     private File root;
 
-    private ArrayList<VPK> VPK = new ArrayList<VPK>();
+    private ArrayList<Archive> archives = new ArrayList<Archive>();
+    
+    public ArrayList<Archive> getArchives() {
+        return archives;
+    }
 
     private ArrayList<File> buildPaths(File path) {
         File[] files = path.listFiles(new FileFilter() {
@@ -144,9 +148,9 @@ public class ACF extends Archive {
 
     @Override
     public void analyze(DefaultMutableTreeNode top, boolean leaves) {
-        for(VPK v : VPK) {
-            DefaultMutableTreeNode archive = new DefaultMutableTreeNode(v);
-            v.analyze(archive, leaves);
+        for(Archive a : archives) {
+            DefaultMutableTreeNode archive = new DefaultMutableTreeNode(a);
+            a.analyze(archive, leaves);
             top.add(archive);
         }
     }

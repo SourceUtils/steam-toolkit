@@ -2,6 +2,7 @@ package com.timepath.steam.io.storage;
 
 import com.timepath.DataUtils;
 import com.timepath.StringUtils;
+import com.timepath.io.ByteBufferInputStream;
 import com.timepath.steam.io.storage.util.Archive;
 import com.timepath.steam.io.storage.util.DirectoryEntry;
 import java.io.*;
@@ -43,42 +44,53 @@ public class VPK extends Archive {
         return null;
     }
 
-    public VPK(final File file) {
-        this.loadArchive(file);
+    public VPK() {
     }
 
-    public VPK loadArchive(final File file) {
+    public VPK(final File file) {
+        VPK.loadArchive(this, file);
+    }
+
+    public VPKDirectoryEntry create(String name) {
+        return new VPKDirectoryEntry(name);
+    }
+
+    public static VPK loadArchive(final File file) {
+        return loadArchive(new VPK(), file);
+    }
+
+    public static VPK loadArchive(final VPK v, final File file) {
         try {
             //<editor-fold defaultstate="collapsed" desc="Map extra archives">
-            this.name = file.getName();
-            this.name = this.name.substring(0, name.length() - 4); // Strip '.vkp'
-            if(name.endsWith("_dir")) {
-                multiPart = true;
-                this.name = this.name.substring(0, name.length() - 4); // Strip '_dir'
+            v.name = file.getName();
+            v.name = v.name.substring(0, v.name.length() - 4); // Strip '.vkp'
+            if(v.name.endsWith("_dir")) {
+                v.multiPart = true;
+                v.name = v.name.substring(0, v.name.length() - 4); // Strip '_dir'
             }
             File[] files = file.getParentFile().listFiles(new FileFilter() {
                 public boolean accept(File f) {
                     if(f.equals(file)) {
                         return false;
                     }
-                    if(f.getName().startsWith(name) && f.getName().length() == name.length() + 8) { // '_###.vpk' = 8
+                    if(f.getName().startsWith(v.name) && f.getName().length() == v.name.length() + 8) { // '_###.vpk' = 8
 
                         return true;
                     }
                     return false;
                 }
             });
-            store = new File[files.length];
-            mappings = new ByteBuffer[store.length];
+            v.store = new File[files.length];
+            v.mappings = new ByteBuffer[v.store.length];
             for(File f : files) {
                 String[] split = f.getName().split("_");
                 int idx = Integer.parseInt(split[split.length - 1].replaceAll(".vpk", ""));
-                store[idx] = f;
+                v.store[idx] = f;
             }
             //</editor-fold>
-            
-            root = new VPKDirectoryEntry(name);
-            root.isDirectory = true;
+
+            v.root = v.create(v.name);
+            v.root.isDirectory = true;
 
             ByteBuffer b = DataUtils.mapFile(file);
 
@@ -101,7 +113,7 @@ public class VPK extends Archive {
             }
 
             ByteBuffer directoryInfo = DataUtils.getSlice(b, treeLength);
-            data = DataUtils.getSlice(b, dataLength);
+            v.data = DataUtils.getSlice(b, dataLength);
             b.get(new byte[v2]); // dir
             b.get(new byte[v3]); // single+dir
             b.get(new byte[v4]); // dir
@@ -114,13 +126,13 @@ public class VPK extends Archive {
                 {"Underflow = ", b.remaining()},};
             LOG.info(StringUtils.fromDoubleArray(debug, "Debug:"));
 
-            parseTree(directoryInfo);
+            v.parseTree(directoryInfo);
 
         } catch(IOException ex) {
             ex.printStackTrace();
             return null;
         }
-        return this;
+        return v;
     }
 
     private void parseTree(ByteBuffer b) {
@@ -207,7 +219,7 @@ public class VPK extends Archive {
      * If a file contains preload data, the preload data immediately follows the
      * above structure. The entire size of a file is PreloadBytes + EntryLength.
      */
-    class VPKDirectoryEntry extends DirectoryEntry {
+    public class VPKDirectoryEntry extends DirectoryEntry {
 
         /**
          * A 32bit CRC of the file's data.
@@ -292,13 +304,13 @@ public class VPK extends Archive {
                 }
             } else {
                 out.createNewFile();
+                InputStream is = asStream();
                 FileOutputStream fos = new FileOutputStream(out);
-                byte[] buf = new byte[4096];
-                data.position(0);
-                while(data.hasRemaining()) {
-                    int bsize = Math.min(buf.length, data.remaining());
-                    data.get(buf, 0, bsize);
-                    fos.write(buf, 0, bsize);
+                byte[] buf = new byte[1024 * 8];
+                int read;
+                while((read = is.read(buf)) > -1) {
+                    fos.write(buf, 0, read);
+                    fos.flush();
                 }
                 fos.close();
             }
@@ -306,13 +318,13 @@ public class VPK extends Archive {
 
         @Override
         public InputStream asStream() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            return new ByteBufferInputStream(data);
         }
 
     }
 
     private VPKDirectoryEntry root;
-    
+
     public DirectoryEntry getRoot() {
         return root;
     }
