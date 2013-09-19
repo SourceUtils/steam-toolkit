@@ -3,6 +3,10 @@ package com.timepath.steam.io.storage;
 import com.timepath.steam.io.storage.util.Archive;
 import com.timepath.steam.io.storage.util.DirectoryEntry;
 import java.io.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,37 +16,60 @@ import java.util.logging.Logger;
  */
 public class Files extends Archive {
 
-    FilenameFilter norm = new FilenameFilter() {
+    public Files() {
+    }
 
-        public boolean accept(File dir, String name) {
-            return !name.endsWith(".vpk");
-        }
-        
-    };
-    
-    private void recurse(File parent, FileEntry root) {
-        File[] files = parent.listFiles(norm);
+    /**
+     * Archive to directory
+     */
+    private HashMap<DirectoryEntry, DirectoryEntry> archives = new HashMap<DirectoryEntry, DirectoryEntry>();
+
+    private void walk(File dir, FileEntry parent) {
+        File[] files = dir.listFiles();
         if(files == null) {
             return;
         }
-        for(File f : files) {
-            FileEntry e = new FileEntry(f);
-            root.add(e);
-            recurse(f, e);
+        for(File file : files) {
+            if(file.getName().endsWith("_dir.vpk")) {
+                VPK v = new VPK(file);
+                archives.put(v.getRoot(), parent);
+            } else if(file.getName().endsWith(".vpk")) {
+                // TODO:
+            } else {
+                FileEntry e = new FileEntry(file);
+                parent.add(e);
+                walk(file, e);
+            }
         }
     }
 
-    class FileEntry extends DirectoryEntry {
+    private void merge(DirectoryEntry r, DirectoryEntry parent) {
+        for(DirectoryEntry d : r.children().toArray(new DirectoryEntry[0])) {
+            DirectoryEntry existing = null;
+            for(DirectoryEntry t : parent.children()) {
+                if(t.getName().equals(d.getName())) {
+                    existing = t;
+                }
+            }
+            if(existing == null) {
+                parent.add(d);
+            } else {
+                merge(d, existing);
+            }
+        }
+    }
 
-        File f;
+    public class FileEntry extends DirectoryEntry {
+
+        File file;
 
         FileEntry(File f) {
-            this.f = f;
+            this.file = f;
         }
 
         @Override
         public int getItemSize() {
-            return (int) f.length();
+            return (int) file.length();
         }
 
         @Override
@@ -52,12 +79,12 @@ public class Files extends Archive {
 
         @Override
         public boolean isDirectory() {
-            return f.isDirectory();
+            return file.isDirectory();
         }
 
         @Override
         public String getName() {
-            return f.getName();
+            return file.getName();
         }
 
         @Override
@@ -73,7 +100,7 @@ public class Files extends Archive {
         @Override
         public InputStream asStream() {
             try {
-                return new BufferedInputStream(new FileInputStream(f));
+                return new BufferedInputStream(new FileInputStream(file));
             } catch(FileNotFoundException ex) {
                 Logger.getLogger(Files.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -87,14 +114,22 @@ public class Files extends Archive {
 
     }
 
-    File f;
+    File dir;
 
     FileEntry root;
 
     public Files(File dir) {
-        f = dir;
-        root = new FileEntry(f);
-        recurse(f, root);
+        this.dir = dir;
+        root = new FileEntry(dir);
+        walk(dir, root);
+        // TODO: additive directories to avoid this kludge
+        Set<Entry<DirectoryEntry, DirectoryEntry>> a = archives.entrySet();
+        for(Iterator<Entry<DirectoryEntry, DirectoryEntry>> i = a.iterator(); i.hasNext();) {
+            Entry<DirectoryEntry, DirectoryEntry> e = i.next();
+            DirectoryEntry r = e.getKey();
+            DirectoryEntry parent = e.getValue();
+            merge(r, parent);
+        }
     }
 
     @Override
@@ -104,7 +139,7 @@ public class Files extends Archive {
 
     @Override
     public String toString() {
-        return f.getName();
+        return dir.getName();
     }
 
 }

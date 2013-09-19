@@ -1,9 +1,7 @@
 package com.timepath.steam.io;
 
 import com.timepath.steam.io.storage.ACF;
-import com.timepath.steam.io.storage.util.Archive;
 import com.timepath.steam.io.storage.util.DirectoryEntry;
-import com.timepath.vfs.VFSStub;
 import com.timepath.vfs.VFile;
 import com.timepath.vfs.ftp.FTPFS;
 import java.io.IOException;
@@ -15,11 +13,18 @@ import java.io.InputStream;
  */
 public class ArchiveHost {
 
-    private static class ArchiveFile extends VFile {
+    /**
+     * TODO: Merge valve package formats with same interface
+     */
+    public static class ArchiveFile extends VFile {
 
         DirectoryEntry de;
 
         public ArchiveFile(DirectoryEntry e) {
+            for(DirectoryEntry de : e.children()) {
+                VFile vf = new ArchiveFile(de);
+                this.add(vf);
+            }
             this.de = e;
         }
 
@@ -65,25 +70,11 @@ public class ArchiveHost {
 
     }
 
-    public static void addAll(DirectoryEntry e, VFile f) {
-        for(DirectoryEntry de : e.children()) {
-            VFile vf = new ArchiveFile(de);
-            f.add(vf);
-            addAll(de, vf);
-        }
-    }
-
     public static void main(String... args) throws IOException {
         int appID = 440;
-        ACF acf = new ACF(appID);
+        ACF acf = ACF.fromManifest(appID);
         FTPFS ftp = new FTPFS(8000);
-        VFile f = new VFSStub(appID + "");
-        for(Archive a : acf.getArchives()) {
-            VFile ar = new VFSStub(a.toString());
-            addAll(a.getRoot(), ar);
-            f.add(ar);
-        }
-        ftp.add(f);
+        ftp.addAll(new ArchiveFile(acf.getRoot()).list());
         ftp.run();
     }
 

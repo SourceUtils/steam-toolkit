@@ -442,7 +442,7 @@ public class ArchiveExplorer extends javax.swing.JFrame {
 
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
         try {
-            addArchive(new ACF(440));
+            addArchive(ACF.fromManifest(440));
         } catch(FileNotFoundException ex) {
             Logger.getLogger(ArchiveExplorer.class.getName()).log(Level.SEVERE, null, ex);
         }
