@@ -29,11 +29,6 @@ public class ArchiveHost {
         }
 
         @Override
-        public int itemSize() {
-            return de.getItemSize();
-        }
-
-        @Override
         public String owner() {
             return "ftp";
         }

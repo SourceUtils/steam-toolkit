@@ -32,6 +32,7 @@ public class ACF extends Archive {
         for(File f : files) {
             archives.add(new VPK(f));
         }
+        archives.add(new Files(root));
     }
     
     public ACF(int appID) throws FileNotFoundException {
