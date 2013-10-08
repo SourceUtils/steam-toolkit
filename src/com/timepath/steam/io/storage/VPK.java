@@ -22,7 +22,7 @@ public class VPK extends Archive {
 
     private static int HEADER = 0x55AA1234;
 
-    private ByteBuffer data;
+    private ByteBuffer globaldata;
 
     private String name;
 
@@ -69,6 +69,7 @@ public class VPK extends Archive {
                 v.name = v.name.substring(0, v.name.length() - 4); // Strip '_dir'
             }
             File[] files = file.getParentFile().listFiles(new FileFilter() {
+
                 public boolean accept(File f) {
                     if(f.equals(file)) {
                         return false;
@@ -113,7 +114,7 @@ public class VPK extends Archive {
             }
 
             ByteBuffer directoryInfo = DataUtils.getSlice(b, treeLength);
-            v.data = DataUtils.getSlice(b, dataLength);
+            v.globaldata = DataUtils.getSlice(b, dataLength);
             b.get(new byte[v2]); // dir
             b.get(new byte[v3]); // single+dir
             b.get(new byte[v4]); // dir
@@ -198,14 +199,6 @@ public class VPK extends Archive {
 
         b.position(b.position() + e.preloadBytes); // TODO: load preload bytes
 
-        ByteBuffer source;
-        if(e.archiveIndex == 0x7FFF) { // This archive
-            source = data;
-        } else {
-            source = getData(e.archiveIndex);
-        }
-        source.position(e.entryOffset);
-        e.data = DataUtils.getSlice(source, e.entryLength);
         short term = b.getShort();
         assert term == 0xFFFF : "VPK directory reading failed";
         return e;
@@ -234,11 +227,26 @@ public class VPK extends Archive {
 
         int entryLength;
 
-        ByteBuffer data;
+        private ByteBuffer localdata;
 
         String name;
 
         boolean isDirectory;
+
+        public ByteBuffer getSource() {
+            if(archiveIndex == 0x7FFF) { // This archive
+                return globaldata;
+            }
+            return getData(archiveIndex);
+        }
+        
+        public ByteBuffer localData() {
+            if(localdata == null) {
+                getSource().position(entryOffset);
+                localdata = DataUtils.getSlice(getSource(), entryLength);
+            }
+            return localdata;
+        }
 
         VPKDirectoryEntry() {
         }
@@ -254,15 +262,15 @@ public class VPK extends Archive {
 
         @Override
         public long calculateChecksum() {
-            if(data == null) {
+            if(localData() == null) {
                 return 0;
             }
             CRC32 crc = new CRC32();
             byte[] buf = new byte[4096];
-            data.position(0);
-            while(data.hasRemaining()) {
-                int bsize = Math.min(buf.length, data.remaining());
-                data.get(buf, 0, bsize);
+            localData().position(0);
+            while(localData().hasRemaining()) {
+                int bsize = Math.min(buf.length, localData().remaining());
+                localData().get(buf, 0, bsize);
                 crc.update(buf, 0, bsize);
             }
 
@@ -318,9 +326,8 @@ public class VPK extends Archive {
 
         @Override
         public InputStream asStream() {
-            return new ByteBufferInputStream(data);
+            return new ByteBufferInputStream(localData());
         }
-
     }
 
     private VPKDirectoryEntry root;
@@ -333,5 +340,4 @@ public class VPK extends Archive {
     public String toString() {
         return this.name;
     }
-
 }
