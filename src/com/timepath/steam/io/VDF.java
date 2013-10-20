@@ -14,7 +14,6 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreeNode;
 
 /**
  *
@@ -181,13 +180,13 @@ public class VDF implements Savable {
             if(matcher.group(1) != null) {
                 tokens.add(new VDFToken(Type.COMMENT, matcher.group(1), leading, lineIndex));
             } else if(matcher.group(2) != null) {
-                tokens.add(new VDFToken(Type.QUOTED, matcher.group(2).replaceAll("\n", "\\\\n"),
+                tokens.add(new VDFToken(Type.QUOTED, matcher.group(2),//.replace("\n", "\\\\n"),
                                            leading, lineIndex));
             } else if(matcher.group(3) != null) { // TODO: fit this into the regex
                 String cond = matcher.group(3);
                 tokens.add(new VDFToken(Type.CONDITION, cond, leading, lineIndex));
             } else if(matcher.group(4) != null) {
-                tokens.add(new VDFToken(Type.TEXT, matcher.group(4).replaceAll("\n", "\\\\n"),
+                tokens.add(new VDFToken(Type.TEXT, matcher.group(4),//.replace("\n", "\\\\n"),
                                            leading, lineIndex));
             } else if(matcher.group(5) != null) {
                 tokens.add(new VDFToken(Type.IN, matcher.group(5), leading, lineIndex));
