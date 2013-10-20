@@ -8,6 +8,7 @@ public abstract class LoginDialog extends javax.swing.JDialog {
 
     /**
      * Creates new form LoginDialog
+     * <p>
      * @param parent
      * @param modal
      */
@@ -128,7 +129,7 @@ public abstract class LoginDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_login
 
     public abstract void login();
-    
+
     /**
      * @param args the command line arguments
      */
@@ -142,9 +143,9 @@ public abstract class LoginDialog extends javax.swing.JDialog {
 
                     @Override
                     public void login() {
-                        
+
                     }
-                    
+
                 };
                 dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                     @Override

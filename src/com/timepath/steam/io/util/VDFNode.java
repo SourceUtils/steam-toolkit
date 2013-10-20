@@ -51,13 +51,13 @@ public class VDFNode extends DefaultMutableTreeNode {
         }
         return null;
     }
-    
+
     public void add(VDFNode v) {
         super.add(v);
     }
-    
+
     private VDFToken value;
-    
+
     public void setValue(VDFToken t) {
         value = t;
     }

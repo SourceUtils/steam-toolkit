@@ -144,7 +144,7 @@ public class Blob implements Savable {
                                     childPayload.get(data);
                                     childPayload.position(0);
                                     BlobNode raw = new BlobNode(
-                                            "Raw data: " + Utils.hex(data) + (remaining > max ? " ..." : ""));
+                                        "Raw data: " + Utils.hex(data) + (remaining > max ? " ..." : ""));
                                     parent.add(raw);
                                     parsePayload(childPayload, raw, true);
                                     break;
@@ -220,7 +220,7 @@ public class Blob implements Savable {
         mybuf.get(compressed);
         inflater.setInput(compressed, headerSkip, compressed.length - headerSkip);
         byte[] decompressed = new byte[decompressedLen];
-        
+
         LOG.fine("Beginning decompression");
         try {
             inflater.inflate(decompressed);

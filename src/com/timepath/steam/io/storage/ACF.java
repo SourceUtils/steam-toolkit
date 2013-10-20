@@ -13,18 +13,19 @@ import java.util.logging.Logger;
  *
  * @author TimePath
  */
-public class ACF extends Files {  
-    
+public class ACF extends Files {
+
     private static final Logger LOG = Logger.getLogger(ACF.class.getName());
-    
+
     private static final HashMap<String, SoftReference<ACF>> cache = new HashMap<String, SoftReference<ACF>>();
 
     public static ACF fromManifest(File manifest) throws FileNotFoundException {
         VDF v = new VDF();
         v.readExternal(new FileInputStream(manifest));
-        File appInstallDir = new File(v.getRoot().get("AppState").get("UserConfig").get("appinstalldir").getValue());
+        File appInstallDir = new File(v.getRoot().get("AppState").get("UserConfig").get("appinstalldir")
+            .getValue());
         // TODO: gameinfo.txt
-        
+
         String key = manifest.getName();
         if(cache.containsKey(key)) {
             SoftReference<ACF> ref = cache.get(key);
@@ -37,11 +38,11 @@ public class ACF extends Files {
         cache.put(key, new SoftReference<ACF>(a));
         return a;
     }
-    
+
     public static ACF fromManifest(int appID) throws FileNotFoundException {
         return fromManifest(new File(SteamUtils.getSteamApps(), "appmanifest_" + appID + ".acf"));
     }
-    
+
     public ACF(File root) {
         super(root);
     }

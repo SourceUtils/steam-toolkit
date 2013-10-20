@@ -49,7 +49,7 @@ public class SteamID {
             return null;
         }
         BigInteger id = new BigInteger(m.group(3)).multiply(BigInteger.valueOf(2)).add(
-                new BigInteger(m.group(2)));
+            new BigInteger(m.group(2)));
         return "U:1:" + id.toString();
     }
 

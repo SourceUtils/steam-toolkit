@@ -163,7 +163,6 @@ public class SourceServer extends Server {
         challengeGet.get(challengeKey);
         //</editor-fold>
 
-
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write(new byte[] {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
         baos.write(0x56);

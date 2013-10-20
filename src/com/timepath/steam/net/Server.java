@@ -44,18 +44,14 @@ public class Server {
         try {
             this.address = InetAddress.getByName(hostname);
             this.port = port;
-            initSocket();
+            sock = new InetSocketAddress(this.address, port);
+            chan = DatagramChannel.open();
+            chan.connect(sock);
         } catch(UnknownHostException ex) {
             LOG.log(Level.SEVERE, null, ex);
         } catch(IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-    }
-
-    protected void initSocket() throws IOException {
-        sock = new InetSocketAddress(this.address, port);
-        chan = DatagramChannel.open();
-        chan.connect(sock);
     }
 
     private static Level sendLevel = Level.INFO;

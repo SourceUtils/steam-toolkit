@@ -295,7 +295,8 @@ public class BVDF implements Savable {
             if(name != null && value != null) {
                 splitComp = ": ";
             }
-            return (name == null ? "" : name) + splitComp + (value == null ? "" : value + " [" + value.getClass().getSimpleName() + "]");
+            return (name == null ? "" : name) + splitComp + (value == null ? "" : value + " [" + value
+                                                             .getClass().getSimpleName() + "]");
         }
 
         DataNode() {
@@ -539,4 +540,5 @@ public class BVDF implements Savable {
 
     };
     //</editor-fold>
+
 }

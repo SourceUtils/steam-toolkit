@@ -12,7 +12,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
  * @author TimePath
  */
 public abstract class Archive implements ViewableData {
-    
+
     public abstract DirectoryEntry getRoot();
 
     public ArrayList<DirectoryEntry> find(String search, DirectoryEntry root) {

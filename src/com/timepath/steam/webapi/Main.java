@@ -43,16 +43,16 @@ public class Main {
                 try {
                     String u = this.getUserInput().getText();
                     byte[] p = new String(this.getPassInput().getPassword()).getBytes();
-                    if(prevattempt == null ? u.toLowerCase() != null : !prevattempt.toLowerCase().equals(u.toLowerCase())) {
+                    if(prevattempt == null ? u.toLowerCase() != null : !prevattempt.toLowerCase().equals(u
+                        .toLowerCase())) {
                         prevattempt = u;
                         enc = encrypt(u, p);
                     }
                     boolean loggedin = Main.this.login(u, gid, enc);
                     if(loggedin) {
                         this.dispose();
-                        u = null;
-                        Arrays.fill(p, 0, Math.min(0, p.length - 1), (byte) 0);
-                        p = null;
+                        byte nul = 0;
+                        Arrays.fill(p, 0, Math.min(0, p.length - 1), nul);
                         return;
                     }
                 } catch(Exception ex) {
@@ -114,14 +114,14 @@ public class Main {
         Connection login = new SteamConnection();
         final JSONObject ret = new JSONObject(login.postget("login/dologin",
                                                             RequestBuilder.fromArray(
-                new Object[][] {
-                    {"password", DatatypeConverter.printBase64Binary(cipherData)},
-                    {"username", u},
-                    {"emailauth", eauth},
-                    {"captchagid", g},
-                    {"captcha_text", captcha},
-                    {"emailsteamid", emailsteamid},
-                    {"rsatimestamp", enc[1]},}).toString()));
+            new Object[][] {
+                {"password", DatatypeConverter.printBase64Binary(cipherData)},
+                {"username", u},
+                {"emailauth", eauth},
+                {"captchagid", g},
+                {"captcha_text", captcha},
+                {"emailsteamid", emailsteamid},
+                {"rsatimestamp", enc[1]},}).toString()));
 
         if(ret.getBoolean("success")) {
             RequestBuilder rb = new RequestBuilder();
@@ -142,7 +142,7 @@ public class Main {
                 gid = ret.getLong("captcha_gid");
                 String address = "https://steamcommunity.com/public/captcha.php?gid=" + gid;
                 dlg.getCaptchaLabel().setIcon(new ImageIcon(ImageIO.read(
-                        URI.create(address).toURL())));
+                    URI.create(address).toURL())));
             }
         }
         return false;

@@ -150,7 +150,8 @@ public class GCF extends Archive {
         BlockAllocationTableEntry bae = blocks[i];
         if(bae == null) {
             raf.seek(
-                    (blockAllocationTableHeader.pos + BlockAllocationTableHeader.SIZE) + (i * BlockAllocationTableEntry.SIZE));
+                (blockAllocationTableHeader.pos + BlockAllocationTableHeader.SIZE) + (i
+                                                                                      * BlockAllocationTableEntry.SIZE));
             bae = new BlockAllocationTableEntry();
             blocks[i] = bae;
         }
@@ -161,7 +162,7 @@ public class GCF extends Archive {
         FileAllocationTableEntry fae = fragMapEntries[i];
         if(fae == null) {
             raf.seek(
-                    fragMap.pos + FileAllocationTableHeader.SIZE + (i * FileAllocationTableEntry.SIZE));
+                fragMap.pos + FileAllocationTableHeader.SIZE + (i * FileAllocationTableEntry.SIZE));
             return (fragMapEntries[i] = new FileAllocationTableEntry());
         }
         return fae;
@@ -172,7 +173,7 @@ public class GCF extends Archive {
         if(dme == null) {
             try {
                 raf.seek(
-                        directoryMapHeader.pos + DirectoryMapHeader.SIZE + (i * DirectoryMapEntry.SIZE));
+                    directoryMapHeader.pos + DirectoryMapHeader.SIZE + (i * DirectoryMapEntry.SIZE));
                 return (directoryMapEntries[i] = new DirectoryMapEntry());
             } catch(IOException ex) {
                 Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
@@ -194,7 +195,9 @@ public class GCF extends Archive {
         ChecksumEntry ce = checksumEntries[i];
         if(ce == null) {
             raf.seek(
-                    directoryMapHeader.pos + ChecksumMapHeader.SIZE + (checksumMapEntries.length * ChecksumMapEntry.SIZE) + (i * ChecksumEntry.SIZE));
+                directoryMapHeader.pos + ChecksumMapHeader.SIZE + (checksumMapEntries.length
+                                                                   * ChecksumMapEntry.SIZE) + (i
+                                                                                               * ChecksumEntry.SIZE));
             return (checksumEntries[i] = new ChecksumEntry());
         }
         return ce;
@@ -298,23 +301,25 @@ public class GCF extends Archive {
         public String toString() {
             int checked = check();
             String checkState = (checksum == checked) ? "OK" : checksum + "vs" + checked;
-            return "id:" + applicationID + ", ver:" + formatVersion + ", rev:" + applicationVersion + ", mounted?: " + isMounted + ", size:" + fileSize + ", blockSize:" + clusterSize + ", blocks:" + clusterCount + ", checksum:" + checkState;
+            return "id:" + applicationID + ", ver:" + formatVersion + ", rev:" + applicationVersion
+                   + ", mounted?: " + isMounted + ", size:" + fileSize + ", blockSize:"
+                   + clusterSize + ", blocks:" + clusterCount + ", checksum:" + checkState;
         }
 
-                private int check() {
-                    int checked = 0;
-                    checked += DataUtils.updateChecksumAddSpecial(headerVersion);
-                    checked += DataUtils.updateChecksumAddSpecial(cacheType);
-                    checked += DataUtils.updateChecksumAddSpecial(formatVersion);
-                    checked += DataUtils.updateChecksumAddSpecial(applicationID);
-                    checked += DataUtils.updateChecksumAddSpecial(applicationVersion);
-                    checked += DataUtils.updateChecksumAddSpecial(isMounted);
-                    checked += DataUtils.updateChecksumAddSpecial(dummy0);
-                    checked += DataUtils.updateChecksumAddSpecial(fileSize);
-                    checked += DataUtils.updateChecksumAddSpecial(clusterSize);
-                    checked += DataUtils.updateChecksumAddSpecial(clusterCount);
-                    return checked;
-                }
+        private int check() {
+            int checked = 0;
+            checked += DataUtils.updateChecksumAddSpecial(headerVersion);
+            checked += DataUtils.updateChecksumAddSpecial(cacheType);
+            checked += DataUtils.updateChecksumAddSpecial(formatVersion);
+            checked += DataUtils.updateChecksumAddSpecial(applicationID);
+            checked += DataUtils.updateChecksumAddSpecial(applicationVersion);
+            checked += DataUtils.updateChecksumAddSpecial(isMounted);
+            checked += DataUtils.updateChecksumAddSpecial(dummy0);
+            checked += DataUtils.updateChecksumAddSpecial(fileSize);
+            checked += DataUtils.updateChecksumAddSpecial(clusterSize);
+            checked += DataUtils.updateChecksumAddSpecial(clusterCount);
+            return checked;
+        }
 
     }
 
@@ -387,20 +392,21 @@ public class GCF extends Archive {
         public String toString() {
             int checked = check();
             String checkState = (checksum == checked) ? "OK" : checksum + " vs " + checked;
-            return "blockCount:" + blockCount + ", blocksUsed:" + blocksUsed + ", check:" + checkState;
+            return "blockCount:" + blockCount + ", blocksUsed:" + blocksUsed + ", check:"
+                   + checkState;
         }
 
-                private int check() {
-                    int checked = 0;
-                    checked += DataUtils.updateChecksumAdd(blockCount);
-                    checked += DataUtils.updateChecksumAdd(blocksUsed);
-                    checked += DataUtils.updateChecksumAdd(lastBlockUsed);
-                    checked += DataUtils.updateChecksumAdd(dummy0);
-                    checked += DataUtils.updateChecksumAdd(dummy1);
-                    checked += DataUtils.updateChecksumAdd(dummy2);
-                    checked += DataUtils.updateChecksumAdd(dummy3);
-                    return checked;
-                }
+        private int check() {
+            int checked = 0;
+            checked += DataUtils.updateChecksumAdd(blockCount);
+            checked += DataUtils.updateChecksumAdd(blocksUsed);
+            checked += DataUtils.updateChecksumAdd(lastBlockUsed);
+            checked += DataUtils.updateChecksumAdd(dummy0);
+            checked += DataUtils.updateChecksumAdd(dummy1);
+            checked += DataUtils.updateChecksumAdd(dummy2);
+            checked += DataUtils.updateChecksumAdd(dummy3);
+            return checked;
+        }
 
     }
 
@@ -462,7 +468,9 @@ public class GCF extends Archive {
 
         @Override
         public String toString() {
-            return "type:" + entryType + ", off:" + fileDataOffset + ", size:" + fileDataSize + ", firstidx:" + firstClusterIndex + ", nextidx:" + nextBlockEntryIndex + ", previdx:" + previousBlockEntryIndex + ", di:" + manifestIndex;
+            return "type:" + entryType + ", off:" + fileDataOffset + ", size:" + fileDataSize
+                   + ", firstidx:" + firstClusterIndex + ", nextidx:" + nextBlockEntryIndex
+                   + ", previdx:" + previousBlockEntryIndex + ", di:" + manifestIndex;
         }
 
     }
@@ -513,16 +521,17 @@ public class GCF extends Archive {
         public String toString() {
             int checked = check();
             String checkState = (checksum == checked) ? "OK" : checksum + "vs" + checked;
-            return "blockCount:" + clusterCount + ", firstUnusedEntry:" + firstUnusedEntry + ", isLongTerminator:" + isLongTerminator + ", checksum:" + checkState;
+            return "blockCount:" + clusterCount + ", firstUnusedEntry:" + firstUnusedEntry
+                   + ", isLongTerminator:" + isLongTerminator + ", checksum:" + checkState;
         }
 
-                private int check() {
-                    int checked = 0;
-                    checked += DataUtils.updateChecksumAdd(clusterCount);
-                    checked += DataUtils.updateChecksumAdd(firstUnusedEntry);
-                    checked += DataUtils.updateChecksumAdd(isLongTerminator);
-                    return checked;
-                }
+        private int check() {
+            int checked = 0;
+            checked += DataUtils.updateChecksumAdd(clusterCount);
+            checked += DataUtils.updateChecksumAdd(firstUnusedEntry);
+            checked += DataUtils.updateChecksumAdd(isLongTerminator);
+            return checked;
+        }
 
     }
 
@@ -636,49 +645,54 @@ public class GCF extends Archive {
         @Override
         public String toString() {
             int checked = check();
-            String checkState = (checksum == checked) ? "OK" : DataUtils.toBinaryString(checksum) + " vs " + DataUtils.toBinaryString(
-                    checked);
-            return Long.toHexString(pos) + " : id:" + applicationID + ", ver:" + applicationVersion + ", bitmask:0x" + Integer.toHexString(
-                    bitmask).toUpperCase() + ", items:" + nodeCount + ", files:" + fileCount + ", dsize:" + binarySize + ", nsize:" + nameSize + ", info1:" + hashTableKeyCount + ", copy:" + minimumFootprintCount + ", local:" + userConfigCount + ", check:" + checkState;
+            String checkState = (checksum == checked) ? "OK" : DataUtils.toBinaryString(checksum)
+                                                               + " vs " + DataUtils.toBinaryString(
+                checked);
+            return Long.toHexString(pos) + " : id:" + applicationID + ", ver:" + applicationVersion
+                   + ", bitmask:0x" + Integer.toHexString(
+                bitmask).toUpperCase() + ", items:" + nodeCount + ", files:" + fileCount
+                   + ", dsize:" + binarySize + ", nsize:" + nameSize + ", info1:"
+                   + hashTableKeyCount + ", copy:" + minimumFootprintCount + ", local:"
+                   + userConfigCount + ", check:" + checkState;
         }
 
-                private int check() {
-                    try {
-                        ByteBuffer bbh = ByteBuffer.allocate(SIZE);
-                        bbh.order(ByteOrder.LITTLE_ENDIAN);
-                        bbh.putInt(headerVersion);
-                        bbh.putInt(applicationID);
-                        bbh.putInt(applicationVersion);
-                        bbh.putInt(nodeCount);
-                        bbh.putInt(fileCount);
-                        bbh.putInt(compressionBlockSize);
-                        bbh.putInt(binarySize);
-                        bbh.putInt(nameSize);
-                        bbh.putInt(hashTableKeyCount);
-                        bbh.putInt(minimumFootprintCount);
-                        bbh.putInt(userConfigCount);
-                        bbh.putInt(bitmask);
-                        bbh.putInt(0);
-                        bbh.putInt(0);
-                        bbh.flip();
-                        byte[] bytes1 = bbh.array();
-                        
-                        raf.seek(pos + SIZE);
-                        ByteBuffer bb = ByteBuffer.allocate(binarySize);
-                        bb.order(ByteOrder.LITTLE_ENDIAN);
-                        bb.put(bytes1);
-                        bb.put(raf.readBytes(binarySize - SIZE));
-                        bb.flip();
-                        byte[] bytes = bb.array();
-                        Checksum adler32 = new Adler32();
-                        adler32.update(bytes, 0, bytes.length);
-                        int checked = (int) (adler32.getValue() & 0xFFFFFFFF);
-                        return checked;
-                    } catch(IOException ex) {
-                        Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    return 0;
-                }
+        private int check() {
+            try {
+                ByteBuffer bbh = ByteBuffer.allocate(SIZE);
+                bbh.order(ByteOrder.LITTLE_ENDIAN);
+                bbh.putInt(headerVersion);
+                bbh.putInt(applicationID);
+                bbh.putInt(applicationVersion);
+                bbh.putInt(nodeCount);
+                bbh.putInt(fileCount);
+                bbh.putInt(compressionBlockSize);
+                bbh.putInt(binarySize);
+                bbh.putInt(nameSize);
+                bbh.putInt(hashTableKeyCount);
+                bbh.putInt(minimumFootprintCount);
+                bbh.putInt(userConfigCount);
+                bbh.putInt(bitmask);
+                bbh.putInt(0);
+                bbh.putInt(0);
+                bbh.flip();
+                byte[] bytes1 = bbh.array();
+
+                raf.seek(pos + SIZE);
+                ByteBuffer bb = ByteBuffer.allocate(binarySize);
+                bb.order(ByteOrder.LITTLE_ENDIAN);
+                bb.put(bytes1);
+                bb.put(raf.readBytes(binarySize - SIZE));
+                bb.flip();
+                byte[] bytes = bb.array();
+                Checksum adler32 = new Adler32();
+                adler32.update(bytes, 0, bytes.length);
+                int checked = (int) (adler32.getValue() & 0xFFFFFFFF);
+                return checked;
+            } catch(IOException ex) {
+                Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            return 0;
+        }
 
     }
 
@@ -775,7 +789,8 @@ public class GCF extends Archive {
         }
 
         public boolean isComplete() {
-            return GCF.this.directoryMapEntries(index).firstBlockIndex < blocks.length || this.itemSize == 0;
+            return GCF.this.directoryMapEntries(index).firstBlockIndex < blocks.length
+                   || this.itemSize == 0;
         }
 
         public void extract(File dir) throws IOException {
@@ -794,7 +809,7 @@ public class GCF extends Archive {
 
                 if(idx >= blocks.length) {
                     LOG.log(Level.WARNING, "Block out of range for {0} : {1}. Is the size 0?",
-                                           new Object[] {out.getPath(), index});
+                            new Object[] {out.getPath(), index});
                     return;
                 }
                 BlockAllocationTableEntry block = this.getArchive().getBlock(idx);
@@ -838,14 +853,13 @@ public class GCF extends Archive {
                 }
 
                 private ByteBuffer createBuffer() {
-                    byte[] data = new byte[GCFDirectoryEntry.this.itemSize];
-                    ByteBuffer b = ByteBuffer.wrap(data);
+                    ByteBuffer b = ByteBuffer.wrap(new byte[GCFDirectoryEntry.this.itemSize]);
                     b.order(ByteOrder.LITTLE_ENDIAN);
 
                     int idx = GCF.this.directoryMapEntries(GCFDirectoryEntry.this.index).firstBlockIndex;
                     if(idx >= blocks.length) {
                         LOG.log(Level.WARNING, "Block out of range for item {0}. Is the size 0?",
-                                               GCFDirectoryEntry.this);
+                                GCFDirectoryEntry.this);
                         return null;
                     }
                     try {
@@ -899,9 +913,9 @@ public class GCF extends Archive {
             return -1;
         }
 
-                private int getIndex() {
-                    return index;
-                }
+        private int getIndex() {
+            return index;
+        }
 
     }
 
@@ -1133,18 +1147,19 @@ public class GCF extends Archive {
             checked += DataUtils.updateChecksumAdd(firstBlockOffset);
             checked += DataUtils.updateChecksumAdd(blocksUsed);
             String checkState = (checksum == checked) ? "OK" : checksum + "vs" + checked;
-            return "v:" + gcfRevision + ", blocks:" + blockCount + ", size:" + blockSize + ", offset:0x" + Integer.toHexString(
-                    firstBlockOffset) + ", used:" + blocksUsed + ", check:" + checkState;
+            return "v:" + gcfRevision + ", blocks:" + blockCount + ", size:" + blockSize
+                   + ", offset:0x" + Integer.toHexString(
+                firstBlockOffset) + ", used:" + blocksUsed + ", check:" + checkState;
         }
 
-                private int check() {
-                    int checked = 0;
-                    checked += DataUtils.updateChecksumAdd(blockCount);
-                    checked += DataUtils.updateChecksumAdd(blockSize);
-                    checked += DataUtils.updateChecksumAdd(firstBlockOffset);
-                    checked += DataUtils.updateChecksumAdd(blocksUsed);
-                    return checked;
-                }
+        private int check() {
+            int checked = 0;
+            checked += DataUtils.updateChecksumAdd(blockCount);
+            checked += DataUtils.updateChecksumAdd(blockSize);
+            checked += DataUtils.updateChecksumAdd(firstBlockOffset);
+            checked += DataUtils.updateChecksumAdd(blocksUsed);
+            return checked;
+        }
 
     }
 

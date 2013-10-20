@@ -42,7 +42,7 @@ public abstract class DirectoryEntry implements ViewableData {
     public abstract Archive getArchive();
 
     public abstract void extract(File dir) throws IOException;
-    
+
     public abstract InputStream asStream();
 
     public abstract boolean isComplete();
@@ -72,7 +72,7 @@ public abstract class DirectoryEntry implements ViewableData {
     public String toString() {
         return getName();
     }
-    
+
     public ArrayList<DirectoryEntry> children() {
         return children;
     }

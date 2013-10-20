@@ -44,13 +44,6 @@ public class VPK extends Archive {
         return null;
     }
 
-    public VPK() {
-    }
-
-    public VPK(final File file) {
-        VPK.loadArchive(this, file);
-    }
-
     public VPKDirectoryEntry create(String name) {
         return new VPKDirectoryEntry(name);
     }
@@ -60,35 +53,35 @@ public class VPK extends Archive {
     }
 
     public static VPK loadArchive(final VPK v, final File file) {
-        try {
-            //<editor-fold defaultstate="collapsed" desc="Map extra archives">
-            v.name = file.getName();
-            v.name = v.name.substring(0, v.name.length() - 4); // Strip '.vkp'
-            if(v.name.endsWith("_dir")) {
-                v.multiPart = true;
-                v.name = v.name.substring(0, v.name.length() - 4); // Strip '_dir'
-            }
-            File[] files = file.getParentFile().listFiles(new FileFilter() {
+        //<editor-fold defaultstate="collapsed" desc="Map extra archives">
+        v.name = file.getName();
+        v.name = v.name.substring(0, v.name.length() - 4); // Strip '.vkp'
+        if(v.name.endsWith("_dir")) {
+            v.multiPart = true;
+            v.name = v.name.substring(0, v.name.length() - 4); // Strip '_dir'
+        }
+        File[] files = file.getParentFile().listFiles(new FileFilter() {
 
-                public boolean accept(File f) {
-                    if(f.equals(file)) {
-                        return false;
-                    }
-                    return f.getName().startsWith(v.name) && f.getName().length() == v.name.length() + 8;
+            public boolean accept(File f) {
+                if(f.equals(file)) {
+                    return false;
                 }
-            });
-            v.store = new File[files.length];
-            v.mappings = new ByteBuffer[v.store.length];
-            for(File f : files) {
-                String[] split = f.getName().split("_");
-                int idx = Integer.parseInt(split[split.length - 1].replaceAll(".vpk", ""));
-                v.store[idx] = f;
+                return f.getName().startsWith(v.name) && f.getName().length() == v.name.length() + 8;
             }
-            //</editor-fold>
+        });
+        v.store = new File[files.length];
+        v.mappings = new ByteBuffer[v.store.length];
+        for(File f : files) {
+            String[] split = f.getName().split("_");
+            int idx = Integer.parseInt(split[split.length - 1].replaceAll(".vpk", ""));
+            v.store[idx] = f;
+        }
+        //</editor-fold>
 
-            v.root = v.create(v.name);
-            v.root.isDirectory = true;
+        v.root = v.create(v.name);
+        v.root.isDirectory = true;
 
+        try {
             ByteBuffer b = DataUtils.mapFile(file);
 
             int signature = b.getInt();
@@ -124,11 +117,11 @@ public class VPK extends Archive {
             LOG.info(StringUtils.fromDoubleArray(debug, "Debug:"));
 
             v.parseTree(directoryInfo);
-
         } catch(IOException ex) {
-            ex.printStackTrace();
+            LOG.log(Level.SEVERE, null, ex);
             return null;
         }
+
         return v;
     }
 
@@ -235,7 +228,7 @@ public class VPK extends Archive {
             }
             return getData(archiveIndex);
         }
-        
+
         public ByteBuffer localData() {
             if(localdata == null) {
                 getSource().position(entryOffset);
@@ -324,6 +317,7 @@ public class VPK extends Archive {
         public InputStream asStream() {
             return new ByteBufferInputStream(localData());
         }
+
     }
 
     private VPKDirectoryEntry root;
@@ -336,4 +330,5 @@ public class VPK extends Archive {
     public String toString() {
         return this.name;
     }
+
 }

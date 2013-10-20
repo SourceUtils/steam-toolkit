@@ -20,7 +20,8 @@ public class Files extends Archive {
     /**
      * Archive to directory
      */
-    private final HashMap<DirectoryEntry, DirectoryEntry> archives = new HashMap<DirectoryEntry, DirectoryEntry>();
+    private final HashMap<DirectoryEntry, DirectoryEntry> archives
+                                                          = new HashMap<DirectoryEntry, DirectoryEntry>();
 
     File dir;
 
@@ -29,8 +30,8 @@ public class Files extends Archive {
     public Files() {
     }
 
-        public Files(File dir) {
-            this.dir = dir;
+    public Files(File dir) {
+        this.dir = dir;
         root = new FileEntry(dir);
         walk(dir, root);
         // TODO: additive directories to avoid this kludge
@@ -59,7 +60,7 @@ public class Files extends Archive {
         }
         for(File file : files) {
             if(file.getName().endsWith("_dir.vpk")) {
-                VPK v = new VPK(file);
+                VPK v = VPK.loadArchive(file);
                 archives.put(v.getRoot(), parent);
             } else if(file.getName().endsWith(".vpk")) {
                 // TODO:

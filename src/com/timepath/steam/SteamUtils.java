@@ -35,7 +35,7 @@ public class SteamUtils {
             i.setLogLevel(Level.ALL);
             i.readExternal(new FileInputStream(config));
             String id64 = i.getRoot().get("InstallConfigStore").get("Software").get("Valve").get(
-                    "Steam").get("Accounts").get(username).get("SteamID").getValue();
+                "Steam").get("Accounts").get(username).get("SteamID").getValue();
             String uid = SteamID.ID64toUID(id64);
             String sid = SteamID.UIDtoID32(uid);
             return new SteamID(username, id64, uid, sid);
@@ -122,7 +122,7 @@ public class SteamUtils {
                     try {
                         v.readExternal(new FileInputStream(macReg));
                         String installPath = v.getRoot().get("Registry").get("HKLM").get("Software").get(
-                                "Valve").get("Steam").get("InstallPath").getValue();
+                            "Valve").get("Steam").get("InstallPath").getValue();
                         LOG.log(Level.INFO, "Steam directory read from registry file: {0}",
                                 installPath);
                         return new File(installPath);
@@ -138,7 +138,7 @@ public class SteamUtils {
                     try {
                         v.readExternal(new FileInputStream(linReg));
                         String installPath = v.getRoot().get("Registry").get("HKLM").get("Software").get(
-                                "Valve").get("Steam").get("InstallPath").getValue();
+                            "Valve").get("Steam").get("InstallPath").getValue();
                         LOG.log(Level.INFO, "Steam directory read from registry file: {0}",
                                 installPath);
                         return new File(installPath);

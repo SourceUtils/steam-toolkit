@@ -58,7 +58,7 @@ public class VDF implements Savable {
     // Group 5 will be found if indenting
     // Group 6 will be found if returning
     private static final Pattern regex = Pattern.compile(
-            "//(.*)|\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"|\\[(.*\\$.*)\\]|([^\\s{}\"]+)|(\\{)|(\\})");
+        "//(.*)|\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"|\\[(.*\\$.*)\\]|([^\\s{}\"]+)|(\\{)|(\\})");
 
     public static class VDFToken {
 
@@ -142,7 +142,7 @@ public class VDF implements Savable {
         }
 
     }
-    
+
     List<VDFToken> tokens = new ArrayList<VDFToken>();
 
     protected void processAnalyze(Scanner scanner, DefaultMutableTreeNode parent) {
@@ -181,13 +181,13 @@ public class VDF implements Savable {
                 tokens.add(new VDFToken(Type.COMMENT, matcher.group(1), leading, lineIndex));
             } else if(matcher.group(2) != null) {
                 tokens.add(new VDFToken(Type.QUOTED, matcher.group(2),//.replace("\n", "\\\\n"),
-                                           leading, lineIndex));
+                                        leading, lineIndex));
             } else if(matcher.group(3) != null) { // TODO: fit this into the regex
                 String cond = matcher.group(3);
                 tokens.add(new VDFToken(Type.CONDITION, cond, leading, lineIndex));
             } else if(matcher.group(4) != null) {
                 tokens.add(new VDFToken(Type.TEXT, matcher.group(4),//.replace("\n", "\\\\n"),
-                                           leading, lineIndex));
+                                        leading, lineIndex));
             } else if(matcher.group(5) != null) {
                 tokens.add(new VDFToken(Type.IN, matcher.group(5), leading, lineIndex));
             } else if(matcher.group(6) != null) {
@@ -196,10 +196,10 @@ public class VDF implements Savable {
                 LOG.log(Level.SEVERE, "Error parsing {0}", str);
             }
         }
-        VDFToken[] tokens = this.tokens.toArray(new VDFToken[this.tokens.size()]);
-        LOG.log(logLevel, "{0}:{1}", new Object[] {tokens.length, Arrays.toString(tokens)});
+        VDFToken[] localtokens = this.tokens.toArray(new VDFToken[this.tokens.size()]);
+        LOG.log(logLevel, "{0}:{1}", new Object[] {localtokens.length, Arrays.toString(localtokens)});
 
-        recurse(tokens, 0, (VDFNode) parent);
+        recurse(localtokens, 0, (VDFNode) parent);
     }
 
     private int recurse(VDFToken[] tokens, int offset, VDFNode parent) {
@@ -286,7 +286,7 @@ public class VDF implements Savable {
         }
         return false;
     }
-    
+
     public String save() {
         StringBuilder sb = new StringBuilder();
         for(VDFToken t : tokens) {
