@@ -13,9 +13,11 @@ import java.util.logging.Logger;
  *
  * https://developer.valvesoftware.com/wiki/Server_Queries
  *
- * @author timepath
+ * @author TimePath
  */
 public class SourceServer extends Server {
+
+    private static final Logger LOG = Logger.getLogger(SourceServer.class.getName());
 
     public SourceServer(String hostname) {
         super(hostname);
@@ -264,7 +266,5 @@ public class SourceServer extends Server {
         }
 
     }
-
-    private static final Logger LOG = Logger.getLogger(SourceServer.class.getName());
 
 }

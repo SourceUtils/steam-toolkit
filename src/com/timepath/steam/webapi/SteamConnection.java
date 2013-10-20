@@ -2,6 +2,7 @@ package com.timepath.steam.webapi;
 
 import com.timepath.web.api.base.Connection;
 import java.net.MalformedURLException;
+import java.util.logging.Logger;
 
 /**
  * http://api.steampowered.com/ISteamWebAPIUtil/GetSupportedAPIList/v1/
@@ -10,9 +11,11 @@ import java.net.MalformedURLException;
  * https://github.com/Jessecar96/SteamBot/blob/a7ef3f402f5b7e2527b6be82d9e8c770d43eb5a0/SteamTrade/SteamWeb.cs
  * https://github.com/echeese/TradeOfferLib/blob/master/TradeOfferLib/src/main/java/com/ryanspeets/tradeoffer/TradeUser.java
  * <p>
- * @author timepath
+ * @author TimePath
  */
 public class SteamConnection extends Connection {
+
+    private static final Logger LOG = Logger.getLogger(SteamConnection.class.getName());
 
     public SteamConnection() throws MalformedURLException {
     }

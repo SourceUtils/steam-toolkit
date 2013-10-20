@@ -9,7 +9,7 @@ import javax.swing.tree.TreeNode;
 
 /**
  *
- * @author timepath
+ * @author TimePath
  */
 public class VDFNode extends DefaultMutableTreeNode {
 

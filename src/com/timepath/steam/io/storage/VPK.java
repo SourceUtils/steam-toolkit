@@ -14,7 +14,7 @@ import java.util.zip.CRC32;
 /**
  * Loads _dir.vpk files https://developer.valvesoftware.com/wiki/VPK_File_Format
  *
- * @author timepath
+ * @author TimePath
  */
 public class VPK extends Archive {
 
@@ -74,11 +74,7 @@ public class VPK extends Archive {
                     if(f.equals(file)) {
                         return false;
                     }
-                    if(f.getName().startsWith(v.name) && f.getName().length() == v.name.length() + 8) { // '_###.vpk' = 8
-
-                        return true;
-                    }
-                    return false;
+                    return f.getName().startsWith(v.name) && f.getName().length() == v.name.length() + 8;
                 }
             });
             v.store = new File[files.length];

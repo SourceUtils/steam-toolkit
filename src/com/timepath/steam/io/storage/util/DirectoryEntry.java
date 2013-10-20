@@ -11,9 +11,13 @@ import javax.swing.UIManager;
 
 /**
  *
- * @author timepath
+ * @author TimePath
  */
 public abstract class DirectoryEntry implements ViewableData {
+
+    private DirectoryEntry parent;
+
+    private final ArrayList<DirectoryEntry> children = new ArrayList<DirectoryEntry>();
 
     public abstract int getItemSize();
 
@@ -68,10 +72,6 @@ public abstract class DirectoryEntry implements ViewableData {
     public String toString() {
         return getName();
     }
-
-    private DirectoryEntry parent;
-
-    private ArrayList<DirectoryEntry> children = new ArrayList<DirectoryEntry>();
     
     public ArrayList<DirectoryEntry> children() {
         return children;

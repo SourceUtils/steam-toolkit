@@ -4,7 +4,6 @@ import com.timepath.steam.io.storage.util.Archive;
 import com.timepath.steam.io.storage.util.DirectoryEntry;
 import java.io.*;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
@@ -12,17 +11,46 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author timepath
+ * @author TimePath
  */
 public class Files extends Archive {
 
-    public Files() {
-    }
+    private static final Logger LOG = Logger.getLogger(Files.class.getName());
 
     /**
      * Archive to directory
      */
-    private HashMap<DirectoryEntry, DirectoryEntry> archives = new HashMap<DirectoryEntry, DirectoryEntry>();
+    private final HashMap<DirectoryEntry, DirectoryEntry> archives = new HashMap<DirectoryEntry, DirectoryEntry>();
+
+    File dir;
+
+    FileEntry root;
+
+    public Files() {
+    }
+
+        public Files(File dir) {
+            this.dir = dir;
+        root = new FileEntry(dir);
+        walk(dir, root);
+        // TODO: additive directories to avoid this kludge
+        Set<Entry<DirectoryEntry, DirectoryEntry>> a = archives.entrySet();
+        for(Entry<DirectoryEntry, DirectoryEntry> e : a) {
+            DirectoryEntry r = e.getKey();
+            DirectoryEntry parent = e.getValue();
+            merge(r, parent);
+        }
+    }
+
+    @Override
+    public DirectoryEntry getRoot() {
+        return root;
+    }
+
+    @Override
+    public String toString() {
+        return dir.getName();
+    }
 
     private void walk(File dir, FileEntry parent) {
         File[] files = dir.listFiles();
@@ -44,7 +72,7 @@ public class Files extends Archive {
     }
 
     private void merge(DirectoryEntry r, DirectoryEntry parent) {
-        for(DirectoryEntry d : r.children().toArray(new DirectoryEntry[0])) {
+        for(DirectoryEntry d : r.children().toArray(new DirectoryEntry[r.children().size()])) {
             DirectoryEntry existing = null;
             for(DirectoryEntry t : parent.children()) {
                 if(t.getName().equals(d.getName())) {
@@ -112,34 +140,6 @@ public class Files extends Archive {
             return true;
         }
 
-    }
-
-    File dir;
-
-    FileEntry root;
-
-    public Files(File dir) {
-        this.dir = dir;
-        root = new FileEntry(dir);
-        walk(dir, root);
-        // TODO: additive directories to avoid this kludge
-        Set<Entry<DirectoryEntry, DirectoryEntry>> a = archives.entrySet();
-        for(Iterator<Entry<DirectoryEntry, DirectoryEntry>> i = a.iterator(); i.hasNext();) {
-            Entry<DirectoryEntry, DirectoryEntry> e = i.next();
-            DirectoryEntry r = e.getKey();
-            DirectoryEntry parent = e.getValue();
-            merge(r, parent);
-        }
-    }
-
-    @Override
-    public DirectoryEntry getRoot() {
-        return root;
-    }
-
-    @Override
-    public String toString() {
-        return dir.getName();
     }
 
 }

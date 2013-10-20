@@ -12,11 +12,13 @@ import java.util.logging.Logger;
  *
  * https://developer.valvesoftware.com/wiki/Master_Server_Query_Protocol
  *
- * @author timepath
+ * @author TimePath
  */
 public class MasterServer extends Server {
 
     public static final MasterServer SOURCE = new MasterServer("hl2master.steampowered.com", 27011);
+
+    private static final Logger LOG = Logger.getLogger(MasterServer.class.getName());
 
     public MasterServer(String hostname) {
         super(hostname);
@@ -95,7 +97,5 @@ public class MasterServer extends Server {
             }
         }
     }
-
-    private static final Logger LOG = Logger.getLogger(MasterServer.class.getName());
 
 }

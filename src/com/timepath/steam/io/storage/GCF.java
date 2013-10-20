@@ -1,11 +1,11 @@
 package com.timepath.steam.io.storage;
 
+import com.timepath.DataUtils;
+import com.timepath.EnumFlag;
+import com.timepath.EnumFlags;
+import com.timepath.io.RandomAccessFileWrapper;
 import com.timepath.steam.io.storage.util.Archive;
 import com.timepath.steam.io.storage.util.DirectoryEntry;
-import com.timepath.DataUtils;
-import com.timepath.EnumFlags;
-import com.timepath.EnumFlag;
-import com.timepath.io.RandomAccessFileWrapper;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -19,24 +19,51 @@ import java.util.zip.Checksum;
  *
  * http://wiki.singul4rity.com/steam:filestructures:gcf
  *
- * @author timepath
+ * @author TimePath
  */
 public class GCF extends Archive {
 
     private static final Logger LOG = Logger.getLogger(GCF.class.getName());
-    
-    public DirectoryEntry getRoot() {
-        return directoryEntries[0];
-    }
 
-    private String name;
+    private final String name;
 
-    @Override
-    public String toString() {
-        return name;
-    }
+    private final RandomAccessFileWrapper raf;
 
-    private RandomAccessFileWrapper raf;
+    private final FileHeader header;
+
+    private final BlockAllocationTableHeader blockAllocationTableHeader;
+
+    private BlockAllocationTableEntry[] blocks;
+
+    private final FileAllocationTableHeader fragMap;
+
+    private FileAllocationTableEntry[] fragMapEntries;
+
+    private final ManifestHeader manifestHeader;
+
+    private GCFDirectoryEntry[] directoryEntries;
+
+    private tagGCFDIRECTORYINFO1ENTRY[] info1Entries; // nameTable
+
+    private tagGCFDIRECTORYINFO2ENTRY[] info2Entries; // hashTable
+
+    private tagGCFDIRECTORYCOPYENTRY[] copyEntries; // TODO
+
+    private tagGCFDIRECTORYLOCALENTRY[] localEntries; // TODO
+
+    private final DirectoryMapHeader directoryMapHeader;
+
+    private DirectoryMapEntry[] directoryMapEntries;
+
+    private final ChecksumHeader checksumHeader;
+
+    private final ChecksumMapHeader checksumMapHeader;
+
+    private ChecksumMapEntry[] checksumMapEntries;
+
+    private ChecksumEntry[] checksumEntries;
+
+    private final DataBlockHeader dataBlockHeader;
 
     public GCF(File file) throws IOException {
         name = file.getName();
@@ -57,11 +84,7 @@ public class GCF extends Archive {
                 directoryEntries[i] = new GCFDirectoryEntry(i);
             }
             byte[] ls = raf.readBytes(manifestHeader.nameSize);
-
-            //<editor-fold defaultstate="collapsed" desc="Fixup">
-            for(int i = 0; i < directoryEntries.length; i++) {
-                GCFDirectoryEntry de = directoryEntries[i];
-
+            for(GCFDirectoryEntry de : directoryEntries) {
                 int off = de.nameOffset;
                 ByteArrayOutputStream s = new ByteArrayOutputStream();
                 while(ls[off] != 0) {
@@ -75,7 +98,6 @@ public class GCF extends Archive {
                 }
             }
             directoryEntries[0].name = this.name;
-            //</editor-fold>
 
             info1Entries = new tagGCFDIRECTORYINFO1ENTRY[manifestHeader.hashTableKeyCount];
             for(int i = 0; i < manifestHeader.hashTableKeyCount; i++) {
@@ -105,7 +127,6 @@ public class GCF extends Archive {
         }
 
         //</editor-fold>
-
         directoryMapHeader = new GCF.DirectoryMapHeader();
 
         checksumHeader = new GCF.ChecksumHeader();
@@ -113,6 +134,15 @@ public class GCF extends Archive {
         checksumMapHeader = new GCF.ChecksumMapHeader();
 
         dataBlockHeader = new GCF.DataBlockHeader();
+    }
+
+    public DirectoryEntry getRoot() {
+        return directoryEntries[0];
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 
     //<editor-fold defaultstate="collapsed" desc="Core utils">
@@ -171,7 +201,7 @@ public class GCF extends Archive {
     }
 
     private byte[] readData(BlockAllocationTableEntry block, int dataIdx) throws IOException {
-        long pos = ((long) dataBlockHeader.firstBlockOffset + ((long) dataIdx * (long) dataBlockHeader.blockSize));
+        long pos = (dataBlockHeader.firstBlockOffset + (dataIdx * dataBlockHeader.blockSize));
         raf.seek(pos);
         byte[] buf = new byte[dataBlockHeader.blockSize];
         if(block.fileDataOffset != 0) {
@@ -182,13 +212,6 @@ public class GCF extends Archive {
     }
     //</editor-fold>
 
-    //<editor-fold defaultstate="collapsed" desc="Header info">
-    //<editor-fold defaultstate="collapsed" desc="Header">
-    private FileHeader header;
-
-    /**
-     *
-     */
     private class FileHeader {
 
         /**
@@ -271,21 +294,6 @@ public class GCF extends Archive {
             checksum = raf.readULEInt();
         }
 
-        private int check() {
-            int checked = 0;
-            checked += DataUtils.updateChecksumAddSpecial(headerVersion);
-            checked += DataUtils.updateChecksumAddSpecial(cacheType);
-            checked += DataUtils.updateChecksumAddSpecial(formatVersion);
-            checked += DataUtils.updateChecksumAddSpecial(applicationID);
-            checked += DataUtils.updateChecksumAddSpecial(applicationVersion);
-            checked += DataUtils.updateChecksumAddSpecial(isMounted);
-            checked += DataUtils.updateChecksumAddSpecial(dummy0);
-            checked += DataUtils.updateChecksumAddSpecial(fileSize);
-            checked += DataUtils.updateChecksumAddSpecial(clusterSize);
-            checked += DataUtils.updateChecksumAddSpecial(clusterCount);
-            return checked;
-        }
-
         @Override
         public String toString() {
             int checked = check();
@@ -293,15 +301,23 @@ public class GCF extends Archive {
             return "id:" + applicationID + ", ver:" + formatVersion + ", rev:" + applicationVersion + ", mounted?: " + isMounted + ", size:" + fileSize + ", blockSize:" + clusterSize + ", blocks:" + clusterCount + ", checksum:" + checkState;
         }
 
+                private int check() {
+                    int checked = 0;
+                    checked += DataUtils.updateChecksumAddSpecial(headerVersion);
+                    checked += DataUtils.updateChecksumAddSpecial(cacheType);
+                    checked += DataUtils.updateChecksumAddSpecial(formatVersion);
+                    checked += DataUtils.updateChecksumAddSpecial(applicationID);
+                    checked += DataUtils.updateChecksumAddSpecial(applicationVersion);
+                    checked += DataUtils.updateChecksumAddSpecial(isMounted);
+                    checked += DataUtils.updateChecksumAddSpecial(dummy0);
+                    checked += DataUtils.updateChecksumAddSpecial(fileSize);
+                    checked += DataUtils.updateChecksumAddSpecial(clusterSize);
+                    checked += DataUtils.updateChecksumAddSpecial(clusterCount);
+                    return checked;
+                }
+
     }
-    //</editor-fold>
 
-    //<editor-fold defaultstate="collapsed" desc="Block">
-    private BlockAllocationTableHeader blockAllocationTableHeader;
-
-    /**
-     *
-     */
     private class BlockAllocationTableHeader {
 
         /**
@@ -367,18 +383,6 @@ public class GCF extends Archive {
             raf.skipBytes(blocks.length * BlockAllocationTableEntry.SIZE);
         }
 
-        private int check() {
-            int checked = 0;
-            checked += DataUtils.updateChecksumAdd(blockCount);
-            checked += DataUtils.updateChecksumAdd(blocksUsed);
-            checked += DataUtils.updateChecksumAdd(lastBlockUsed);
-            checked += DataUtils.updateChecksumAdd(dummy0);
-            checked += DataUtils.updateChecksumAdd(dummy1);
-            checked += DataUtils.updateChecksumAdd(dummy2);
-            checked += DataUtils.updateChecksumAdd(dummy3);
-            return checked;
-        }
-
         @Override
         public String toString() {
             int checked = check();
@@ -386,13 +390,20 @@ public class GCF extends Archive {
             return "blockCount:" + blockCount + ", blocksUsed:" + blocksUsed + ", check:" + checkState;
         }
 
+                private int check() {
+                    int checked = 0;
+                    checked += DataUtils.updateChecksumAdd(blockCount);
+                    checked += DataUtils.updateChecksumAdd(blocksUsed);
+                    checked += DataUtils.updateChecksumAdd(lastBlockUsed);
+                    checked += DataUtils.updateChecksumAdd(dummy0);
+                    checked += DataUtils.updateChecksumAdd(dummy1);
+                    checked += DataUtils.updateChecksumAdd(dummy2);
+                    checked += DataUtils.updateChecksumAdd(dummy3);
+                    return checked;
+                }
+
     }
 
-    private BlockAllocationTableEntry[] blocks;
-
-    /**
-     *
-     */
     private class BlockAllocationTableEntry {
 
         /**
@@ -455,14 +466,7 @@ public class GCF extends Archive {
         }
 
     }
-    //</editor-fold>
 
-    //<editor-fold defaultstate="collapsed" desc="Frag Map">
-    private FileAllocationTableHeader fragMap;
-
-    /**
-     *
-     */
     private class FileAllocationTableHeader {
 
         /**
@@ -505,14 +509,6 @@ public class GCF extends Archive {
             raf.skipBytes(fragMapEntries.length * FileAllocationTableEntry.SIZE);
         }
 
-        private int check() {
-            int checked = 0;
-            checked += DataUtils.updateChecksumAdd(clusterCount);
-            checked += DataUtils.updateChecksumAdd(firstUnusedEntry);
-            checked += DataUtils.updateChecksumAdd(isLongTerminator);
-            return checked;
-        }
-
         @Override
         public String toString() {
             int checked = check();
@@ -520,13 +516,16 @@ public class GCF extends Archive {
             return "blockCount:" + clusterCount + ", firstUnusedEntry:" + firstUnusedEntry + ", isLongTerminator:" + isLongTerminator + ", checksum:" + checkState;
         }
 
+                private int check() {
+                    int checked = 0;
+                    checked += DataUtils.updateChecksumAdd(clusterCount);
+                    checked += DataUtils.updateChecksumAdd(firstUnusedEntry);
+                    checked += DataUtils.updateChecksumAdd(isLongTerminator);
+                    return checked;
+                }
+
     }
 
-    private FileAllocationTableEntry[] fragMapEntries;
-
-    /**
-     *
-     */
     private class FileAllocationTableEntry {
 
         /**
@@ -551,10 +550,6 @@ public class GCF extends Archive {
         }
 
     }
-    //</editor-fold>
-
-    //<editor-fold defaultstate="collapsed" desc="Directories">
-    private ManifestHeader manifestHeader;
 
     private enum ManifestHeaderBitmask {
 
@@ -638,44 +633,6 @@ public class GCF extends Archive {
             checksum = raf.readULEInt();
         }
 
-        private int check() {
-            try {
-                ByteBuffer bbh = ByteBuffer.allocate(SIZE);
-                bbh.order(ByteOrder.LITTLE_ENDIAN);
-                bbh.putInt(headerVersion);
-                bbh.putInt(applicationID);
-                bbh.putInt(applicationVersion);
-                bbh.putInt(nodeCount);
-                bbh.putInt(fileCount);
-                bbh.putInt(compressionBlockSize);
-                bbh.putInt(binarySize);
-                bbh.putInt(nameSize);
-                bbh.putInt(hashTableKeyCount);
-                bbh.putInt(minimumFootprintCount);
-                bbh.putInt(userConfigCount);
-                bbh.putInt(bitmask);
-                bbh.putInt(0);
-                bbh.putInt(0);
-                bbh.flip();
-                byte[] bytes1 = bbh.array();
-
-                raf.seek(pos + SIZE);
-                ByteBuffer bb = ByteBuffer.allocate(binarySize);
-                bb.order(ByteOrder.LITTLE_ENDIAN);
-                bb.put(bytes1);
-                bb.put(raf.readBytes(binarySize - SIZE));
-                bb.flip();
-                byte[] bytes = bb.array();
-                Checksum adler32 = new Adler32();
-                adler32.update(bytes, 0, bytes.length);
-                int checked = (int) (adler32.getValue() & 0xFFFFFFFF);
-                return checked;
-            } catch(IOException ex) {
-                Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            return 0;
-        }
-
         @Override
         public String toString() {
             int checked = check();
@@ -685,9 +642,45 @@ public class GCF extends Archive {
                     bitmask).toUpperCase() + ", items:" + nodeCount + ", files:" + fileCount + ", dsize:" + binarySize + ", nsize:" + nameSize + ", info1:" + hashTableKeyCount + ", copy:" + minimumFootprintCount + ", local:" + userConfigCount + ", check:" + checkState;
         }
 
-    }
+                private int check() {
+                    try {
+                        ByteBuffer bbh = ByteBuffer.allocate(SIZE);
+                        bbh.order(ByteOrder.LITTLE_ENDIAN);
+                        bbh.putInt(headerVersion);
+                        bbh.putInt(applicationID);
+                        bbh.putInt(applicationVersion);
+                        bbh.putInt(nodeCount);
+                        bbh.putInt(fileCount);
+                        bbh.putInt(compressionBlockSize);
+                        bbh.putInt(binarySize);
+                        bbh.putInt(nameSize);
+                        bbh.putInt(hashTableKeyCount);
+                        bbh.putInt(minimumFootprintCount);
+                        bbh.putInt(userConfigCount);
+                        bbh.putInt(bitmask);
+                        bbh.putInt(0);
+                        bbh.putInt(0);
+                        bbh.flip();
+                        byte[] bytes1 = bbh.array();
+                        
+                        raf.seek(pos + SIZE);
+                        ByteBuffer bb = ByteBuffer.allocate(binarySize);
+                        bb.order(ByteOrder.LITTLE_ENDIAN);
+                        bb.put(bytes1);
+                        bb.put(raf.readBytes(binarySize - SIZE));
+                        bb.flip();
+                        byte[] bytes = bb.array();
+                        Checksum adler32 = new Adler32();
+                        adler32.update(bytes, 0, bytes.length);
+                        int checked = (int) (adler32.getValue() & 0xFFFFFFFF);
+                        return checked;
+                    } catch(IOException ex) {
+                        Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    return 0;
+                }
 
-    private GCFDirectoryEntry[] directoryEntries;
+    }
 
     private enum DirectoryEntryAttributes implements EnumFlag {
 
@@ -758,10 +751,6 @@ public class GCF extends Archive {
 
         private final int index;
 
-        private int getIndex() {
-            return index;
-        }
-
         private GCFDirectoryEntry(int index) throws IOException {
             this.index = index;
             nameOffset = raf.readULEInt();
@@ -786,10 +775,7 @@ public class GCF extends Archive {
         }
 
         public boolean isComplete() {
-            if(GCF.this.directoryMapEntries(index).firstBlockIndex >= blocks.length && this.itemSize != 0) {
-                return false;
-            }
-            return true;
+            return GCF.this.directoryMapEntries(index).firstBlockIndex < blocks.length || this.itemSize == 0;
         }
 
         public void extract(File dir) throws IOException {
@@ -808,7 +794,7 @@ public class GCF extends Archive {
 
                 if(idx >= blocks.length) {
                     LOG.log(Level.WARNING, "Block out of range for {0} : {1}. Is the size 0?",
-                            new Object[] {out.getPath(), index});
+                                           new Object[] {out.getPath(), index});
                     return;
                 }
                 BlockAllocationTableEntry block = this.getArchive().getBlock(idx);
@@ -828,13 +814,28 @@ public class GCF extends Archive {
 
         public InputStream asStream() {
             return new InputStream() {
-                private ByteBuffer buf = createBuffer();
+                private final ByteBuffer buf = createBuffer();
 
                 private BlockAllocationTableEntry block;
 
                 private int dataIdx;
 
                 private byte[] data;
+
+                private int pointer;
+
+                @Override
+                public int available() throws IOException {
+                    return GCFDirectoryEntry.this.itemSize - pointer;
+                }
+
+                @Override
+                public int read() throws IOException {
+                    if(data == null || pointer > data.length) {
+                        return -1;
+                    }
+                    return data[pointer++];
+                }
 
                 private ByteBuffer createBuffer() {
                     byte[] data = new byte[GCFDirectoryEntry.this.itemSize];
@@ -843,7 +844,8 @@ public class GCF extends Archive {
 
                     int idx = GCF.this.directoryMapEntries(GCFDirectoryEntry.this.index).firstBlockIndex;
                     if(idx >= blocks.length) {
-                        LOG.log(Level.WARNING, "Block out of range for item {0}. Is the size 0?", GCFDirectoryEntry.this);
+                        LOG.log(Level.WARNING, "Block out of range for item {0}. Is the size 0?",
+                                               GCFDirectoryEntry.this);
                         return null;
                     }
                     try {
@@ -876,21 +878,6 @@ public class GCF extends Archive {
                         return new byte[] {-1};
                     }
                 }
-
-                private int pointer;
-
-                @Override
-                public int available() throws IOException {
-                    return GCFDirectoryEntry.this.itemSize - pointer;
-                }
-
-                @Override
-                public int read() throws IOException {
-                    if(data == null || pointer > data.length) {
-                        return -1;
-                    }
-                    return data[pointer++];
-                }
             };
         }
 
@@ -912,11 +899,12 @@ public class GCF extends Archive {
             return -1;
         }
 
+                private int getIndex() {
+                    return index;
+                }
+
     }
 
-    private tagGCFDIRECTORYINFO1ENTRY[] info1Entries; // nameTable
-
-    //GCF Directory Info 1 Entry
     private class tagGCFDIRECTORYINFO1ENTRY {
 
         /**
@@ -932,14 +920,11 @@ public class GCF extends Archive {
 
         @Override
         public String toString() {
-            return "" + (char) Dummy0;
+            return "" + Dummy0;
         }
 
     }
 
-    private tagGCFDIRECTORYINFO2ENTRY[] info2Entries; // hashTable
-
-    //GCF Directory Info 2 Entry
     private class tagGCFDIRECTORYINFO2ENTRY {
 
         /**
@@ -955,34 +940,11 @@ public class GCF extends Archive {
 
         @Override
         public String toString() {
-            return "" + (char) Dummy0;
+            return "" + Dummy0;
         }
 
     }
 
-    private tagGCFDIRECTORYCOPYENTRY[] copyEntries; // TODO
-
-    //GCF Directory Copy Entry
-    class tagGCFDIRECTORYCOPYENTRY {
-
-        int DirectoryIndex;	// Index of the directory item.
-
-    }
-
-    private tagGCFDIRECTORYLOCALENTRY[] localEntries; // TODO
-
-    //GCF Directory Local Entry
-    class tagGCFDIRECTORYLOCALENTRY {
-
-        int DirectoryIndex;	// Index of the directory item.
-
-    }
-    //</editor-fold>
-
-    //<editor-fold defaultstate="collapsed" desc="Directory Map">
-    private DirectoryMapHeader directoryMapHeader;
-
-    //GCF Directory Map Header
     private class DirectoryMapHeader {
 
         /**
@@ -1012,9 +974,6 @@ public class GCF extends Archive {
 
     }
 
-    private DirectoryMapEntry[] directoryMapEntries;
-
-    //GCF Directory Map Entry
     private class DirectoryMapEntry {
 
         /**
@@ -1029,12 +988,7 @@ public class GCF extends Archive {
         }
 
     }
-    //</editor-fold>
 
-    //<editor-fold defaultstate="collapsed" desc="Checksum Header">
-    private ChecksumHeader checksumHeader;
-
-    //GCF Checksum Header
     private class ChecksumHeader {
 
         private final int headerVersion;			// Always 0x00000001
@@ -1053,12 +1007,7 @@ public class GCF extends Archive {
         }
 
     }
-    //</editor-fold>
 
-    //<editor-fold defaultstate="collapsed" desc="Checksum map">
-    private ChecksumMapHeader checksumMapHeader;
-
-    //GCF Checksum Map Header
     private class ChecksumMapHeader {
 
         /**
@@ -1092,9 +1041,6 @@ public class GCF extends Archive {
 
     }
 
-    private ChecksumMapEntry[] checksumMapEntries;
-
-    //GCF Checksum Map Entry
     private class ChecksumMapEntry {
 
         /**
@@ -1118,9 +1064,6 @@ public class GCF extends Archive {
 
     }
 
-    private ChecksumEntry[] checksumEntries;
-
-    //GCF Checksum Entry
     private class ChecksumEntry {
 
         /**
@@ -1140,14 +1083,7 @@ public class GCF extends Archive {
         }
 
     }
-    //</editor-fold>
 
-    //<editor-fold defaultstate="collapsed" desc="Data blocks">
-    private DataBlockHeader dataBlockHeader;
-
-    /**
-     *
-     */
     private class DataBlockHeader {
 
         /**
@@ -1189,15 +1125,6 @@ public class GCF extends Archive {
             checksum = raf.readULEInt();
         }
 
-        private int check() {
-            int checked = 0;
-            checked += DataUtils.updateChecksumAdd(blockCount);
-            checked += DataUtils.updateChecksumAdd(blockSize);
-            checked += DataUtils.updateChecksumAdd(firstBlockOffset);
-            checked += DataUtils.updateChecksumAdd(blocksUsed);
-            return checked;
-        }
-
         @Override
         public String toString() {
             int checked = 0;
@@ -1210,7 +1137,27 @@ public class GCF extends Archive {
                     firstBlockOffset) + ", used:" + blocksUsed + ", check:" + checkState;
         }
 
+                private int check() {
+                    int checked = 0;
+                    checked += DataUtils.updateChecksumAdd(blockCount);
+                    checked += DataUtils.updateChecksumAdd(blockSize);
+                    checked += DataUtils.updateChecksumAdd(firstBlockOffset);
+                    checked += DataUtils.updateChecksumAdd(blocksUsed);
+                    return checked;
+                }
+
     }
-    //</editor-fold>
-    //</editor-fold>
+
+    class tagGCFDIRECTORYCOPYENTRY {
+
+        int DirectoryIndex;	// Index of the directory item.
+
+    }
+
+    class tagGCFDIRECTORYLOCALENTRY {
+
+        int DirectoryIndex;	// Index of the directory item.
+
+    }
+
 }

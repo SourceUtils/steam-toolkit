@@ -2,7 +2,7 @@ package com.timepath.steam.net;
 
 /**
  *
- * @author timepath
+ * @author TimePath
  */
 public interface ServerListener {
 

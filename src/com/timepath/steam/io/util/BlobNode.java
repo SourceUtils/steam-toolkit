@@ -5,7 +5,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  *
- * @author timepath
+ * @author TimePath
  */
 public class BlobNode extends DefaultMutableTreeNode {
 

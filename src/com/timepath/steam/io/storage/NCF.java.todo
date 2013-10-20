@@ -5,7 +5,7 @@ import java.io.InputStream;
 /**
  *
  * http://wiki.singul4rity.com/steam:filestructures:ncf
- * @author timepath
+ * @author TimePath
  */
 public class NCF implements Archive {
 

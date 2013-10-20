@@ -7,9 +7,11 @@ import javax.swing.tree.DefaultMutableTreeNode;
  *
  * aka KeyValue
  *
- * @author timepath
+ * @author TimePath
  */
 public class Property extends DefaultMutableTreeNode {
+
+    private static final Logger LOG = Logger.getLogger(Property.class.getName());
 
     private String key;
 
@@ -54,7 +56,5 @@ public class Property extends DefaultMutableTreeNode {
     public String toString() {
         return key + ":" + value + ":" + info;
     }
-
-    private static final Logger LOG = Logger.getLogger(Property.class.getName());
 
 }

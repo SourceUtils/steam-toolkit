@@ -29,7 +29,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
  * http://hlssmod.net/he_code/public/tier1/KeyValues.h
  * http://hpmod.googlecode.com/svn/trunk/tier1/KeyValues.cpp
  *
- * @author timepath
+ * @author TimePath
  */
 public class BVDF implements Savable {
 
@@ -132,7 +132,7 @@ public class BVDF implements Savable {
                 root.add(new DataNode("universe", Universe.getName(packageUniverse)));
                 for(;;) {
                     int appID = buf.getInt();
-                    if(appID == 0xFFFFFFFF || appID == -1) { // same thing
+                    if(appID == -1) {
                         break;
                     }
                     DataNode c = new DataNode("#", appID);
@@ -330,7 +330,7 @@ public class BVDF implements Savable {
             this.id = i;
         }
 
-        private int id;
+        private final int id;
 
         public int ID() {
             return id;
@@ -338,9 +338,9 @@ public class BVDF implements Savable {
 
         public static String getName(int i) {
             Universe[] search = Universe.values();
-            for(int s = 0; s < search.length; s++) {
-                if(search[s].ID() == i) {
-                    return search[s].name();
+            for(Universe search1 : search) {
+                if(search1.ID() == i) {
+                    return search1.name();
                 }
             }
             return "UNKNOWN (" + i + ")";
@@ -357,7 +357,7 @@ public class BVDF implements Savable {
             this.id = i;
         }
 
-        private int id;
+        private final int id;
 
         public int ID() {
             return id;
@@ -365,9 +365,9 @@ public class BVDF implements Savable {
 
         public static String getName(int i) {
             AppInfoState[] search = AppInfoState.values();
-            for(int s = 0; s < search.length; s++) {
-                if(search[s].ID() == i) {
-                    return search[s].name();
+            for(AppInfoState search1 : search) {
+                if(search1.ID() == i) {
+                    return search1.name();
                 }
             }
             LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] {
@@ -405,7 +405,7 @@ public class BVDF implements Savable {
             this.id = i;
         }
 
-        private int id;
+        private final int id;
 
         public int ID() {
             return id;
@@ -413,9 +413,9 @@ public class BVDF implements Savable {
 
         public static String get(int i) {
             Section[] search = Section.values();
-            for(int s = 0; s < search.length; s++) {
-                if(search[s].ID() == i) {
-                    return search[s].name();
+            for(Section search1 : search) {
+                if(search1.ID() == i) {
+                    return search1.name();
                 }
             }
             return "UNKNOWN (" + i + ")";
@@ -450,7 +450,7 @@ public class BVDF implements Savable {
             this.id = i;
         }
 
-        private int id;
+        private final int id;
 
         public int ID() {
             return id;
@@ -480,7 +480,7 @@ public class BVDF implements Savable {
             this.id = i;
         }
 
-        private int id;
+        private final int id;
 
         public int ID() {
             return id;
@@ -513,7 +513,7 @@ public class BVDF implements Savable {
             this.id = i;
         }
 
-        private int id;
+        private final int id;
 
         public int ID() {
             return id;

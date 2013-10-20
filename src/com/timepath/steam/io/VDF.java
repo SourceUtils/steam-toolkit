@@ -22,7 +22,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
  *
  * Standard KeyValues format loader
  *
- * @author timepath
+ * @author TimePath
  */
 public class VDF implements Savable {
 
@@ -196,7 +196,7 @@ public class VDF implements Savable {
                 LOG.log(Level.SEVERE, "Error parsing {0}", str);
             }
         }
-        VDFToken[] tokens = this.tokens.toArray(new VDFToken[0]);
+        VDFToken[] tokens = this.tokens.toArray(new VDFToken[this.tokens.size()]);
         LOG.log(logLevel, "{0}:{1}", new Object[] {tokens.length, Arrays.toString(tokens)});
 
         recurse(tokens, 0, (VDFNode) parent);

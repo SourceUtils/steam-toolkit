@@ -23,13 +23,13 @@ import java.util.zip.Inflater;
  * Nodes of name \1\0\0\0 contain 'folders', \2\0\0\0 contain 'files'
  * Leaf \1\0\0\0 directories the data type used in the following \2\0\0\0 node's payload
  *
- * @author timepath
+ * @author TimePath
  */
 public class Blob implements Savable {
 
     private static final Logger LOG = Logger.getLogger(Blob.class.getName());
 
-    private BlobNode root;
+    private final BlobNode root;
 
     public BlobNode getRoot() {
         return root;
@@ -220,12 +220,13 @@ public class Blob implements Savable {
         mybuf.get(compressed);
         inflater.setInput(compressed, headerSkip, compressed.length - headerSkip);
         byte[] decompressed = new byte[decompressedLen];
+        
+        LOG.fine("Beginning decompression");
         try {
-            LOG.fine("Beginning decompression");
             inflater.inflate(decompressed);
             LOG.fine("Decompression successful");
         } catch(DataFormatException ex) {
-            ex.printStackTrace();
+            LOG.log(Level.SEVERE, null, ex);
         }
 
         ByteBuffer newBuf = ByteBuffer.wrap(decompressed);

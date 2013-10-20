@@ -2,12 +2,14 @@ package com.timepath.steam.webapi;
 
 /**
  *
- * @author timepath
+ * @author TimePath
  */
 public abstract class LoginDialog extends javax.swing.JDialog {
 
     /**
      * Creates new form LoginDialog
+     * @param parent
+     * @param modal
      */
     public LoginDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);

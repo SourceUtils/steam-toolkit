@@ -2,25 +2,25 @@ package com.timepath.steam.net;
 
 /**
  *
- * @author timepath
+ * @author TimePath
  */
 public enum Region {
 
-    ALL((byte) 255),
-    US_EAST((byte) 0),
-    US_WEST((byte) 1),
-    SOUTH_AMERICA((byte) 2),
-    EUROPE((byte) 3),
-    ASIA((byte) 4),
-    AUSTRALIA((byte) 5),
-    MIDDLE_EAST((byte) 6),
-    AFRICA((byte) 7);
+    ALL(255),
+    US_EAST(0),
+    US_WEST(1),
+    SOUTH_AMERICA(2),
+    EUROPE(3),
+    ASIA(4),
+    AUSTRALIA(5),
+    MIDDLE_EAST(6),
+    AFRICA(7);
 
-    private Region(byte code) {
-        this.code = code;
+    private Region(int code) {
+        this.code = (byte) code;
     }
 
-    private byte code;
+    private final byte code;
 
     public byte getCode() {
         return code;

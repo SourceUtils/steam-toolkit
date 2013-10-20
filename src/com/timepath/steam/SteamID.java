@@ -13,45 +13,9 @@ import java.util.regex.Pattern;
  * http://forums.alliedmods.net/showthread.php?p=750532
  * http://sapi.techieanalyst.net/
  *
- * @author timepath
+ * @author TimePath
  */
 public class SteamID {
-
-    private String user;
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    public String getUser() {
-        return user;
-    }
-
-    private String id64, uid, id32;
-
-    public String getUID() {
-        return uid;
-    }
-
-    public String getID64() {
-        return id64;
-    }
-
-    public String getID32() {
-        return id32;
-    }
-
-    public SteamID(String user, String id64, String uid, String id32) {
-        this.user = user;
-        this.id64 = id64;
-        this.uid = uid;
-        this.id32 = id32;
-    }
-
-    @Override
-    public String toString() {
-        return "[" + user + ", " + id64 + ", " + uid + ", " + id32 + "]";
-    }
 
     /**
      * Steam_# 0 from HL to TF2, 1 from L4D to CS:GO
@@ -72,6 +36,8 @@ public class SteamID {
      * The 4 is because hexadecimal; sqrt 16? 2^4 = 16? Probably that
      */
     private static final BigInteger id64Offset = BigInteger.valueOf(0x01100001).shiftLeft(8 * 4);
+
+    private static final Logger LOG = Logger.getLogger(SteamID.class.getName());
 
     public static String ID32toID64(String steam) {
         return UIDtoID64(ID32toUID(steam));
@@ -118,6 +84,40 @@ public class SteamID {
         return UIDtoID32(ID64toUID(steam));
     }
 
-    private static final Logger LOG = Logger.getLogger(SteamID.class.getName());
+    private String user;
+
+    private final String id64, uid, id32;
+
+    public SteamID(String user, String id64, String uid, String id32) {
+        this.user = user;
+        this.id64 = id64;
+        this.uid = uid;
+        this.id32 = id32;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public String getUID() {
+        return uid;
+    }
+
+    public String getID64() {
+        return id64;
+    }
+
+    public String getID32() {
+        return id32;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + user + ", " + id64 + ", " + uid + ", " + id32 + "]";
+    }
 
 }

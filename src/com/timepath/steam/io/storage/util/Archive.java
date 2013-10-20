@@ -9,7 +9,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  *
- * @author timepath
+ * @author TimePath
  */
 public abstract class Archive implements ViewableData {
     

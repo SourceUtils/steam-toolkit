@@ -7,7 +7,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.lang.ref.SoftReference;
 import java.util.HashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -18,11 +17,7 @@ public class ACF extends Files {
     
     private static final Logger LOG = Logger.getLogger(ACF.class.getName());
     
-    public ACF(File root) {
-        super(root);
-    }
-    
-    private static HashMap<String, SoftReference<ACF>> cache = new HashMap<String, SoftReference<ACF>>();
+    private static final HashMap<String, SoftReference<ACF>> cache = new HashMap<String, SoftReference<ACF>>();
 
     public static ACF fromManifest(File manifest) throws FileNotFoundException {
         VDF v = new VDF();
@@ -45,6 +40,10 @@ public class ACF extends Files {
     
     public static ACF fromManifest(int appID) throws FileNotFoundException {
         return fromManifest(new File(SteamUtils.getSteamApps(), "appmanifest_" + appID + ".acf"));
+    }
+    
+    public ACF(File root) {
+        super(root);
     }
 
 }
