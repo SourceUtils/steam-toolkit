@@ -6,7 +6,7 @@
             <attribute name="enabled" value="true"/>
         </node>
         <node name="org.netbeans.modules.java.hints.encapsulation.ReturnEncapsulation.collection">
-            <attribute name="enabled" value="true"/>
+            <attribute name="enabled" value="false"/>
         </node>
         <node name="Javac_UNNECESSARY_CAST">
             <attribute name="enabled" value="true"/>
@@ -45,7 +45,7 @@
             <attribute name="enabled" value="true"/>
         </node>
         <node name="org.netbeans.modules.java.hints.AssignmentIssues.nestedAssignment">
-            <attribute name="enabled" value="true"/>
+            <attribute name="enabled" value="false"/>
         </node>
         <node name="org.netbeans.modules.java.hints.finalize.FinalizeDeclared">
             <attribute name="enabled" value="true"/>
@@ -183,7 +183,7 @@
             <attribute name="enabled" value="true"/>
         </node>
         <node name="org.netbeans.modules.java.hints.encapsulation.ReturnEncapsulation.array">
-            <attribute name="enabled" value="true"/>
+            <attribute name="enabled" value="false"/>
         </node>
         <node name="org.netbeans.modules.java.hints.encapsulation.FieldEncapsulation.privateField">
             <attribute name="enabled" value="true"/>
@@ -318,7 +318,7 @@
             <attribute name="enabled" value="true"/>
         </node>
         <node name="org.netbeans.modules.java.hints.perf.InitialCapacity.stringBuilder">
-            <attribute name="enabled" value="true"/>
+            <attribute name="enabled" value="false"/>
         </node>
         <node name="org.netbeans.modules.java.hints.bugs.Unbalanced$Array">
             <attribute name="enabled" value="true"/>
@@ -339,7 +339,7 @@
             <attribute name="enabled" value="true"/>
         </node>
         <node name="org.netbeans.modules.java.hints.AssignmentIssues.incrementDecrementUsed">
-            <attribute name="enabled" value="true"/>
+            <attribute name="enabled" value="false"/>
         </node>
         <node name="org.netbeans.modules.java.hints.NoLoggers">
             <attribute name="enabled" value="true"/>
