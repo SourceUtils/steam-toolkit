@@ -122,11 +122,6 @@ public class Files extends Archive {
         }
 
         @Override
-        public void extract(File dir) throws IOException {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        @Override
         public InputStream asStream() {
             try {
                 return new BufferedInputStream(new FileInputStream(file));

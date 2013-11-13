@@ -1,9 +1,7 @@
 package com.timepath.steam.io.storage.util;
 
 import com.timepath.io.utils.ViewableData;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.swing.Icon;
@@ -41,7 +39,27 @@ public abstract class DirectoryEntry implements ViewableData {
 
     public abstract Archive getArchive();
 
-    public abstract void extract(File dir) throws IOException;
+    public void extract(File dir) throws IOException {
+        File out = new File(dir, this.getName());
+        if(this.isDirectory()) {
+            out.mkdir();
+            for(DirectoryEntry e : this.children()) {
+                e.extract(out);
+            }
+        } else {
+            out.createNewFile();
+            InputStream is = asStream();
+            FileOutputStream fos = new FileOutputStream(out);
+            BufferedOutputStream os = new BufferedOutputStream(fos);
+            byte[] buf = new byte[1024 * 8]; // 8K read buffer
+            int read;
+            while((read = is.read(buf)) > -1) {
+                os.write(buf, 0, read);
+            }
+            os.flush();
+            os.close();
+        }
+    }
 
     public abstract InputStream asStream();
 

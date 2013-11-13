@@ -292,27 +292,6 @@ public class VPK extends Archive {
             return name;
         }
 
-        public void extract(File dir) throws IOException {
-            File out = new File(dir, this.name);
-            if(this.isDirectory) {
-                out.mkdir();
-                for(DirectoryEntry e : children()) {
-                    e.extract(out);
-                }
-            } else {
-                out.createNewFile();
-                InputStream is = asStream();
-                FileOutputStream fos = new FileOutputStream(out);
-                byte[] buf = new byte[1024 * 8];
-                int read;
-                while((read = is.read(buf)) > -1) {
-                    fos.write(buf, 0, read);
-                    fos.flush();
-                }
-                fos.close();
-            }
-        }
-
         @Override
         public InputStream asStream() {
             return new ByteBufferInputStream(localData());

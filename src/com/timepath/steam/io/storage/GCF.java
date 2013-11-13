@@ -793,49 +793,16 @@ public class GCF extends Archive {
                    || this.itemSize == 0;
         }
 
-        public void extract(File dir) throws IOException {
-            File out = new File(dir, getName());
-            if(isDirectory()) {
-                out.mkdir();
-                for(DirectoryEntry e : children()) {
-                    e.extract(out);
-                }
-            } else {
-                int idx = this.getArchive().directoryMapEntries(index).firstBlockIndex;
-
-                out.getParentFile().mkdirs();
-                out.delete();
-                out.createNewFile();
-
-                if(idx >= blocks.length) {
-                    LOG.log(Level.WARNING, "Block out of range for {0} : {1}. Is the size 0?",
-                            new Object[] {out.getPath(), index});
-                    return;
-                }
-                BlockAllocationTableEntry block = this.getArchive().getBlock(idx);
-                RandomAccessFileWrapper raf = new RandomAccessFileWrapper(out, "rw");
-                int dataIdx = block.firstClusterIndex;
-                LOG.log(Level.FINE, "bSize: {0}", new Object[] {block.fileDataSize});
-                raf.seek(block.fileDataOffset);
-
-                byte[] buf = this.getArchive().readData(block, dataIdx);
-                if(raf.getFilePointer() + buf.length > block.fileDataSize) {
-                    raf.write(buf, 0, block.fileDataSize % dataBlockHeader.blockSize);
-                } else {
-                    raf.write(buf);
-                }
-            }
-        }
-
         public InputStream asStream() {
             return new InputStream() {
-                private final ByteBuffer buf = createBuffer();
 
                 private BlockAllocationTableEntry block;
 
-                private int dataIdx;
+                private final ByteBuffer buf = createBuffer();
 
                 private byte[] data;
+
+                private int dataIdx;
 
                 private int pointer;
 
