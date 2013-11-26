@@ -1,7 +1,7 @@
 package com.timepath.steam.io.storage;
 
 import com.timepath.steam.SteamUtils;
-import com.timepath.steam.io.VDF;
+import com.timepath.steam.io.VDF1;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -20,7 +20,7 @@ public class ACF extends Files {
     private static final HashMap<String, SoftReference<ACF>> cache = new HashMap<String, SoftReference<ACF>>();
 
     public static ACF fromManifest(File manifest) throws FileNotFoundException {
-        VDF v = new VDF();
+        VDF1 v = new VDF1();
         v.readExternal(new FileInputStream(manifest));
         File appInstallDir = new File(v.getRoot().get("AppState").get("UserConfig").get("appinstalldir")
             .getValue());

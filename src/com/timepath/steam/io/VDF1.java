@@ -1,8 +1,8 @@
 package com.timepath.steam.io;
 
 import com.timepath.io.utils.Savable;
-import com.timepath.steam.io.VDF.VDFToken.Type;
-import com.timepath.steam.io.util.VDFNode;
+import com.timepath.steam.io.VDF1.VDFToken.Type;
+import com.timepath.steam.io.util.VDFNode1;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -13,7 +13,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  *
@@ -24,11 +23,20 @@ import javax.swing.tree.DefaultMutableTreeNode;
  *
  * @author TimePath
  */
-public class VDF implements Savable {
+public class VDF1 implements Savable {
 
-    private static final Logger LOG = Logger.getLogger(VDF.class.getName());
+    private static final Logger LOG = Logger.getLogger(VDF1.class.getName());
 
-    protected VDFNode root;
+    protected VDFNode1 root;
+    
+    public static VDF1 load(InputStream is) {
+        VDF1 v = new VDF1();
+        
+        return v;
+        
+    }
+    
+    
 
     private Level logLevel = Level.FINER; // ALL == disabled
 
@@ -36,12 +44,12 @@ public class VDF implements Savable {
         this.logLevel = logLevel;
     }
 
-    public VDFNode getRoot() {
+    public VDFNode1 getRoot() {
         return root;
     }
 
-    public VDF() {
-        root = new VDFNode("VDF");
+    public VDF1() {
+        root = new VDFNode1("VDF");
     }
 
     // http://stackoverflow.com/questions/5695240/php-regex-to-ignore-escaped-quotes-within-quotes/5696141#5696141
@@ -145,7 +153,7 @@ public class VDF implements Savable {
 
     List<VDFToken> tokens = new ArrayList<VDFToken>();
 
-    protected void processAnalyze(Scanner scanner, DefaultMutableTreeNode parent) {
+    protected void processAnalyze(Scanner scanner, VDFNode1 parent) {
         List<Integer> lineEnds = new ArrayList<Integer>();
         lineEnds.add(0);
 
@@ -199,11 +207,11 @@ public class VDF implements Savable {
         VDFToken[] localtokens = this.tokens.toArray(new VDFToken[this.tokens.size()]);
         LOG.log(logLevel, "{0}:{1}", new Object[] {localtokens.length, Arrays.toString(localtokens)});
 
-        recurse(localtokens, 0, (VDFNode) parent);
+        recurse(localtokens, 0, parent);
     }
 
-    private int recurse(VDFToken[] tokens, int offset, VDFNode parent) {
-        VDFNode previous = null;
+    private int recurse(VDFToken[] tokens, int offset, VDFNode1 parent) {
+        VDFNode1 previous = null;
         for(int i = offset; i < tokens.length; i++) {
             VDFToken token = tokens[i];
             LOG.log(logLevel, "i = {0}", i);
@@ -212,7 +220,7 @@ public class VDF implements Savable {
                 case TEXT:
                     LOG.log(logLevel, token.getValue());
                     if(previous == null) {
-                        previous = new VDFNode(token);
+                        previous = new VDFNode1(token);
                         parent.add(previous);
                     } else {
                         if(previous.getValue() == null) {
@@ -280,9 +288,9 @@ public class VDF implements Savable {
             int r = rf.read();
             return (r == 0x00 || r == 0x08);
         } catch(FileNotFoundException ex) {
-            Logger.getLogger(VDF.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VDF1.class.getName()).log(Level.SEVERE, null, ex);
         } catch(IOException ex) {
-            Logger.getLogger(VDF.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VDF1.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
     }

@@ -2,7 +2,7 @@ package com.timepath.steam;
 
 import com.timepath.plaf.OS;
 import com.timepath.plaf.win.WinRegistry;
-import com.timepath.steam.io.VDF;
+import com.timepath.steam.io.VDF1;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -27,11 +27,11 @@ public class SteamUtils {
             return null;
         }
         try {
-            VDF u = new VDF();
+            VDF1 u = new VDF1();
             u.setLogLevel(Level.ALL);
             u.readExternal(new FileInputStream(autoLogin));
             String username = u.getRoot().get("SteamAppData").get("AutoLoginUser").getValue();
-            VDF i = new VDF();
+            VDF1 i = new VDF1();
             i.setLogLevel(Level.ALL);
             i.readExternal(new FileInputStream(config));
             String id64 = i.getRoot().get("InstallConfigStore").get("Software").get("Valve").get(
@@ -118,7 +118,7 @@ public class SteamUtils {
             case OSX:
                 File macReg = new File("~/Library/Application Support/Steam/registry.vdf");
                 if(macReg.exists()) {
-                    VDF v = new VDF();
+                    VDF1 v = new VDF1();
                     try {
                         v.readExternal(new FileInputStream(macReg));
                         String installPath = v.getRoot().get("Registry").get("HKLM").get("Software").get(
@@ -134,7 +134,7 @@ public class SteamUtils {
             case Linux:
                 File linReg = new File(System.getenv("HOME") + "/.steam/registry.vdf");
                 if(linReg.exists()) {
-                    VDF v = new VDF();
+                    VDF1 v = new VDF1();
                     try {
                         v.readExternal(new FileInputStream(linReg));
                         String installPath = v.getRoot().get("Registry").get("HKLM").get("Software").get(

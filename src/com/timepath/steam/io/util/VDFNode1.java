@@ -1,6 +1,6 @@
 package com.timepath.steam.io.util;
 
-import com.timepath.steam.io.VDF.VDFToken;
+import com.timepath.steam.io.VDF1.VDFToken;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.logging.Logger;
@@ -11,18 +11,18 @@ import javax.swing.tree.TreeNode;
  *
  * @author TimePath
  */
-public class VDFNode extends DefaultMutableTreeNode {
+public class VDFNode1 extends DefaultMutableTreeNode {
 
-    public VDFNode() {
+    public VDFNode1() {
     }
 
     private VDFToken key;
 
-    public VDFNode(VDFToken key) {
+    public VDFNode1(VDFToken key) {
         this.key = key;
     }
 
-    public VDFNode(String str) {
+    public VDFNode1(String str) {
         this.key = new VDFToken(str);
     }
 
@@ -34,17 +34,17 @@ public class VDFNode extends DefaultMutableTreeNode {
         return key.getValue();
     }
 
-    public VDFNode get(int index) {
-        return (VDFNode) this.getChildAt(index);
+    public VDFNode1 get(int index) {
+        return (VDFNode1) this.getChildAt(index);
     }
 
-    public VDFNode get(String key) {
-        VDFNode node;
+    public VDFNode1 get(String key) {
+        VDFNode1 node;
         for(Object o : this.children) {
-            if(!(o instanceof VDFNode)) {
+            if(!(o instanceof VDFNode1)) {
                 continue;
             }
-            node = (VDFNode) o;
+            node = (VDFNode1) o;
             if(node.getKey().equals(key)) {
                 return node;
             }
@@ -52,7 +52,7 @@ public class VDFNode extends DefaultMutableTreeNode {
         return null;
     }
 
-    public void add(VDFNode v) {
+    public void add(VDFNode1 v) {
         super.add(v);
     }
 
@@ -86,16 +86,16 @@ public class VDFNode extends DefaultMutableTreeNode {
         }
     }
 
-    private static final Logger LOG = Logger.getLogger(VDFNode.class.getName());
+    private static final Logger LOG = Logger.getLogger(VDFNode1.class.getName());
 
     public ArrayList<Property> getProperties() {
         ArrayList<Property> props = new ArrayList<Property>();
         for(int i = 0; i < this.getChildCount(); i++) {
             TreeNode tn = this.getChildAt(i);
-            if(!(tn instanceof VDFNode)) {
+            if(!(tn instanceof VDFNode1)) {
                 continue;
             }
-            VDFNode v = (VDFNode) tn;
+            VDFNode1 v = (VDFNode1) tn;
             props.add(new Property(v.getKey(), v.getValue(), ""));
         }
         return props;

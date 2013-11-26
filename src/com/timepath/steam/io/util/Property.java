@@ -1,7 +1,6 @@
 package com.timepath.steam.io.util;
 
 import java.util.logging.Logger;
-import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  *
@@ -9,7 +8,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
  *
  * @author TimePath
  */
-public class Property extends DefaultMutableTreeNode {
+public class Property {
 
     private static final Logger LOG = Logger.getLogger(Property.class.getName());
 
