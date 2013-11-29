@@ -1,11 +1,10 @@
 package com.timepath.steam.io.storage;
 
-import com.timepath.steam.io.storage.util.Archive;
-import com.timepath.steam.io.storage.util.DirectoryEntry;
+import com.timepath.steam.io.storage.util.ExtendedVFile;
+import com.timepath.vfs.SimpleVFile;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,129 +12,114 @@ import java.util.logging.Logger;
  *
  * @author TimePath
  */
-public class Files extends Archive {
+public class Files extends ExtendedVFile {
 
     private static final Logger LOG = Logger.getLogger(Files.class.getName());
 
     /**
-     * Archive to directory
+     * Archive to directory map
      */
-    private final HashMap<DirectoryEntry, DirectoryEntry> archives
-                                                          = new HashMap<DirectoryEntry, DirectoryEntry>();
+    private final HashMap<ExtendedVFile, ExtendedVFile> archives = new HashMap<ExtendedVFile, ExtendedVFile>();
 
-    File dir;
+    private final File f;
 
-    FileEntry root;
-
-    public Files() {
+    public Files(File f) {
+        this.f = f;
+        this.insert(f);
     }
 
-    public Files(File dir) {
-        this.dir = dir;
-        root = new FileEntry(dir);
-        walk(dir, root);
+    @Override
+    public Object getAttributes() {
+        return null;
+    }
+
+    @Override
+    public String getName() {
+        return f.getName();
+    }
+
+    @Override
+    public ExtendedVFile getRoot() {
+        return this;
+    }
+
+    public void insert(File f) {
+        walk(f, this);
         // TODO: additive directories to avoid this kludge
-        Set<Entry<DirectoryEntry, DirectoryEntry>> a = archives.entrySet();
-        for(Entry<DirectoryEntry, DirectoryEntry> e : a) {
-            DirectoryEntry r = e.getKey();
-            DirectoryEntry parent = e.getValue();
-            merge(r, parent);
+        for(Entry<ExtendedVFile, ExtendedVFile> e : archives.entrySet()) {
+            merge(e.getKey(), e.getValue());
         }
     }
 
     @Override
-    public DirectoryEntry getRoot() {
-        return root;
+    public boolean isComplete() {
+        return true;
+    }
+
+    @Override
+    public boolean isDirectory() {
+        return f.isDirectory();
+    }
+
+    @Override
+    public long lastModified() {
+        return f.lastModified();
+    }
+
+    @Override
+    public long length() {
+        return f.length();
+    }
+
+    @Override
+    public InputStream stream() {
+        try {
+            return new BufferedInputStream(new FileInputStream(f));
+        } catch(FileNotFoundException ex) {
+            Logger.getLogger(SimpleVFile.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     @Override
     public String toString() {
-        return dir.getName();
+        return f.getName();
     }
 
-    private void walk(File dir, FileEntry parent) {
-        File[] files = dir.listFiles();
-        if(files == null) {
-            return;
-        }
-        for(File file : files) {
-            if(file.getName().endsWith("_dir.vpk")) {
-                VPK v = VPK.loadArchive(file);
-                archives.put(v.getRoot(), parent);
-            } else if(file.getName().endsWith(".vpk")) {
-                // TODO:
-            } else {
-                FileEntry e = new FileEntry(file);
-                parent.add(e);
-                walk(file, e);
-            }
-        }
-    }
-
-    private void merge(DirectoryEntry r, DirectoryEntry parent) {
-        for(DirectoryEntry d : r.children().toArray(new DirectoryEntry[r.children().size()])) {
-            DirectoryEntry existing = null;
-            for(DirectoryEntry t : parent.children()) {
+    private void merge(SimpleVFile r, SimpleVFile parent) {
+        for(SimpleVFile d : r.children()) {
+            SimpleVFile existing = null;
+            for(SimpleVFile t : parent.children()) {
                 if(t.getName().equals(d.getName())) {
                     existing = t;
+                    break;
                 }
             }
             if(existing == null) {
-                parent.add(d);
+                parent.copy(d);
             } else {
                 merge(d, existing);
             }
         }
     }
 
-    public class FileEntry extends DirectoryEntry {
-
-        File file;
-
-        FileEntry(File f) {
-            this.file = f;
+    private void walk(File dir, Files parent) {
+        File[] ls = dir.listFiles();
+        if(ls == null) {
+            return;
         }
-
-        @Override
-        public int getItemSize() {
-            return (int) file.length();
-        }
-
-        @Override
-        public Object getAttributes() {
-            return null;
-        }
-
-        @Override
-        public boolean isDirectory() {
-            return file.isDirectory();
-        }
-
-        @Override
-        public String getName() {
-            return file.getName();
-        }
-
-        @Override
-        public Archive getArchive() {
-            return Files.this;
-        }
-
-        @Override
-        public InputStream asStream() {
-            try {
-                return new BufferedInputStream(new FileInputStream(file));
-            } catch(FileNotFoundException ex) {
-                Logger.getLogger(Files.class.getName()).log(Level.SEVERE, null, ex);
+        for(File file : ls) {
+            if(file.getName().endsWith("_dir.vpk")) {
+                VPK v = VPK.loadArchive(file);
+                archives.put(v.getRoot(), parent);
+            } else if(file.getName().endsWith(".vpk")) {
+                // TODO:
+            } else {
+                Files e = new Files(file);
+                parent.add(e);
+                walk(file, e);
             }
-            return null;
         }
-
-        @Override
-        public boolean isComplete() {
-            return true;
-        }
-
     }
 
 }

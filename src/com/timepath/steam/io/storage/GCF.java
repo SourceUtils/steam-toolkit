@@ -4,8 +4,7 @@ import com.timepath.DataUtils;
 import com.timepath.EnumFlag;
 import com.timepath.EnumFlags;
 import com.timepath.io.RandomAccessFileWrapper;
-import com.timepath.steam.io.storage.util.Archive;
-import com.timepath.steam.io.storage.util.DirectoryEntry;
+import com.timepath.steam.io.storage.util.ExtendedVFile;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -21,7 +20,7 @@ import java.util.zip.Checksum;
  *
  * @author TimePath
  */
-public class GCF extends Archive {
+public class GCF extends ExtendedVFile {
 
     private static final Logger LOG = Logger.getLogger(GCF.class.getName());
 
@@ -136,8 +135,33 @@ public class GCF extends Archive {
         dataBlockHeader = new GCF.DataBlockHeader();
     }
 
-    public DirectoryEntry getRoot() {
+    @Override
+    public Object getAttributes() {
+        return null;
+    }
+
+    @Override
+    public String getName() {
+        return this.name;
+    }
+
+    public ExtendedVFile getRoot() {
         return directoryEntries[0];
+    }
+
+    @Override
+    public boolean isComplete() {
+        return true;
+    }
+
+    @Override
+    public boolean isDirectory() {
+        return true;
+    }
+
+    @Override
+    public InputStream stream() {
+        return null;
     }
 
     @Override
@@ -727,7 +751,7 @@ public class GCF extends Archive {
 
     }
 
-    private class GCFDirectoryEntry extends DirectoryEntry {
+    private class GCFDirectoryEntry extends ExtendedVFile {
 
         /**
          * Offset to the directory item name from the end of the directory items
@@ -780,7 +804,7 @@ public class GCF extends Archive {
             return name;
         }
 
-        public GCF getArchive() {
+        public ExtendedVFile getRoot() {
             return GCF.this;
         }
 
@@ -793,7 +817,7 @@ public class GCF extends Archive {
                    || this.itemSize == 0;
         }
 
-        public InputStream asStream() {
+        public InputStream stream() {
             return new InputStream() {
 
                 private BlockAllocationTableEntry block;
@@ -862,7 +886,7 @@ public class GCF extends Archive {
             };
         }
 
-        public int getItemSize() {
+        public long length() {
             return this.itemSize;
         }
 
