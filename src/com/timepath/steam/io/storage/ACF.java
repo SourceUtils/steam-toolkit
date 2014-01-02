@@ -22,8 +22,12 @@ public class ACF extends Files {
     public static ACF fromManifest(File manifest) throws FileNotFoundException {
         VDF1 v = new VDF1();
         v.readExternal(new FileInputStream(manifest));
-        File appInstallDir = new File(v.getRoot().get("AppState").get("UserConfig").get("appinstalldir")
-            .getValue());
+        File appInstallDir = null;
+        try {
+            appInstallDir = new File(v.getRoot().get("AppState").get("UserConfig").get("appinstalldir").getValue());
+        } catch(Exception e) {
+            appInstallDir = new File(manifest.getParentFile(), "common/" + v.getRoot().get("AppState").get("installdir").getValue());
+        }
         // TODO: gameinfo.txt
 
         String key = manifest.getName();
