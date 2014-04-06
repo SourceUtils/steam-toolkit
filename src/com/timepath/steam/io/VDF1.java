@@ -286,7 +286,7 @@ public class VDF1 implements Savable {
             RandomAccessFile rf = new RandomAccessFile(f, "r");
             rf.seek(rf.length() - 1);
             int r = rf.read();
-            return (r == 0x00 || r == 0x08);
+            return (r == 0x00 || r == 0x08 || r == 0xFF);
         } catch(FileNotFoundException ex) {
             Logger.getLogger(VDF1.class.getName()).log(Level.SEVERE, null, ex);
         } catch(IOException ex) {
