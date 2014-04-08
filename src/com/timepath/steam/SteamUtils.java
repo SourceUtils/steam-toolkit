@@ -9,17 +9,52 @@ import java.io.FileNotFoundException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author TimePath
- */
 public class SteamUtils {
 
     private static final Logger LOG = Logger.getLogger(SteamUtils.class.getName());
 
-    private SteamUtils() {
+    /**
+     *
+     * @return Path to steam installation
+     */
+    public static File getSteam() {
+        switch(OS.get()) {
+            case Linux:
+                return getSteamLinux();
+            case OSX:
+                return getSteamOSX();
+            case Windows:
+                return getSteamWindows();
+            default:
+                return null;
+        }
     }
 
+    /**
+     *
+     * @return Path to Steam/SteamApps
+     */
+    public static File getSteamApps() {
+        File steam = getSteam();
+        if(steam == null) {
+            return null;
+        }
+        // TODO: libraries: Steam/config/config.vdf:InstallConfigStore/Software/Valve/Steam/BaseInstallFolder_X
+        switch(OS.get()) {
+            case Linux:
+            case OSX:
+                return new File(steam, "SteamApps");
+            case Windows:
+                return new File(steam, "steamapps");
+            default:
+                return null;
+        }
+    }
+
+    /**
+     *
+     * @return The most recently logged in steam user
+     */
     public static SteamID getUser() {
         File autoLogin = new File(SteamUtils.getSteam(), "config/SteamAppData.vdf");
         File config = new File(SteamUtils.getSteam(), "config/config.vdf");
@@ -45,6 +80,11 @@ public class SteamUtils {
         return null;
     }
 
+    /**
+     * 
+     * @param user The user
+     * @return Path to {@code user}'s <code>userdata</code>
+     */
     public static File getUserData(SteamID user) {
         if(user == null) {
             return null;
@@ -56,100 +96,83 @@ public class SteamUtils {
         return new File(steam, "userdata/" + user.getUID().split(":")[2]);
     }
 
+    /**
+     * 
+     * @return Path to {@link getUser()}'s <code>userdata</code>
+     */
     public static File getUserData() {
         return getUserData(getUser());
     }
 
-    /**
-     * Todo: libraries:
-     * Steam/config/config.vdf:InstallConfigStore/Software/Valve/Steam/BaseInstallFolder_X
-     * <p/>
-     * @return
-     */
-    public static File getSteamApps() {
-        File steam = getSteam();
-        if(steam == null) {
-            return null;
+    private static File getSteamLinux() {
+        File linReg = new File(System.getenv("HOME") + "/.steam/registry.vdf");
+        if(linReg.exists()) {
+            VDF1 v = new VDF1();
+            try {
+                v.readExternal(new FileInputStream(linReg));
+                String installPath = v.getRoot().get("Registry").get("HKLM").get("Software").get(
+                    "Valve").get("Steam").get("InstallPath").getValue();
+                LOG.log(Level.INFO, "Steam directory read from registry file: {0}",
+                        installPath);
+                return new File(installPath);
+            } catch(FileNotFoundException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+            }
         }
-        switch(OS.get()) {
-            case Windows:
-                return new File(steam, "steamapps");
-            case OSX:
-            case Linux:
-                return new File(steam, "SteamApps");
-            default:
-                return null;
-        }
+        return new File(System.getenv("HOME") + "/.steam/steam"); // shouldn't this be correct regardess?
     }
 
-    public static File getSteam() {
-        switch(OS.get()) {
-            case Windows:
-                String reg = null;
-                try {
-                    reg = WinRegistry.readString(WinRegistry.HKEY_CURRENT_USER,
-                                                 "Software\\Valve\\Steam", "SteamPath");
-                } catch(Exception ex) {
-                    LOG.log(Level.WARNING, "Windows registry read failed", ex);
-                }
-                if(reg != null) {
-                    LOG.log(Level.INFO, "Steam directory read from registry: {0}", reg);
-                    return new File(reg);
-                }
-
-                String str = System.getenv("PROGRAMFILES(x86)");
-                if(str == null) {
-                    str = System.getenv("PROGRAMFILES");
-                }
-                File f = new File(str, "Steam");
-                if(f.exists()) {
-                    return f;
-                }
-                String sourcesdk = System.getenv("sourcesdk");
-                if(sourcesdk != null) {
-                    sourcesdk = sourcesdk.toLowerCase();
-                    String scan = "steam";
-                    int idx = sourcesdk.indexOf(scan);
-                    if(idx != -1) {
-                        return new File(sourcesdk.substring(0, idx + scan.length()));
-                    }
-                }
-                return null;
-            case OSX:
-                File macReg = new File("~/Library/Application Support/Steam/registry.vdf");
-                if(macReg.exists()) {
-                    VDF1 v = new VDF1();
-                    try {
-                        v.readExternal(new FileInputStream(macReg));
-                        String installPath = v.getRoot().get("Registry").get("HKLM").get("Software").get(
-                            "Valve").get("Steam").get("InstallPath").getValue();
-                        LOG.log(Level.INFO, "Steam directory read from registry file: {0}",
-                                installPath);
-                        return new File(installPath);
-                    } catch(FileNotFoundException ex) {
-                        LOG.log(Level.SEVERE, null, ex);
-                    }
-                }
-                return new File("~/Library/Application Support/Steam");
-            case Linux:
-                File linReg = new File(System.getenv("HOME") + "/.steam/registry.vdf");
-                if(linReg.exists()) {
-                    VDF1 v = new VDF1();
-                    try {
-                        v.readExternal(new FileInputStream(linReg));
-                        String installPath = v.getRoot().get("Registry").get("HKLM").get("Software").get(
-                            "Valve").get("Steam").get("InstallPath").getValue();
-                        LOG.log(Level.INFO, "Steam directory read from registry file: {0}",
-                                installPath);
-                        return new File(installPath);
-                    } catch(FileNotFoundException ex) {
-                        LOG.log(Level.SEVERE, null, ex);
-                    }
-                }
-                return new File(System.getenv("HOME") + "/.steam/steam"); // shouldn't this be correct regardess?
-            default:
-                return null;
+    private static File getSteamOSX() {
+        File macReg = new File("~/Library/Application Support/Steam/registry.vdf");
+        if(macReg.exists()) {
+            VDF1 v = new VDF1();
+            try {
+                v.readExternal(new FileInputStream(macReg));
+                String installPath = v.getRoot().get("Registry").get("HKLM").get("Software").get(
+                    "Valve").get("Steam").get("InstallPath").getValue();
+                LOG.log(Level.INFO, "Steam directory read from registry file: {0}",
+                        installPath);
+                return new File(installPath);
+            } catch(FileNotFoundException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+            }
         }
+        return new File("~/Library/Application Support/Steam");
+    }
+
+    private static File getSteamWindows() {
+        String reg = null;
+        try {
+            reg = WinRegistry.readString(WinRegistry.HKEY_CURRENT_USER, "Software\\Valve\\Steam", "SteamPath");
+        } catch(Exception ex) {
+            LOG.log(Level.WARNING, "Windows registry read failed", ex);
+        }
+        if(reg != null) {
+            LOG.log(Level.INFO, "Steam directory read from registry: {0}", reg);
+            return new File(reg);
+        }
+
+        String str = System.getenv("PROGRAMFILES(x86)");
+        if(str == null) {
+            str = System.getenv("PROGRAMFILES");
+        }
+        File f = new File(str, "Steam");
+        if(f.exists()) {
+            return f;
+        }
+        String sourcesdk = System.getenv("sourcesdk");
+        if(sourcesdk != null) {
+            sourcesdk = sourcesdk.toLowerCase();
+            String scan = "steam";
+            int idx = sourcesdk.indexOf(scan);
+            if(idx != -1) {
+                return new File(sourcesdk.substring(0, idx + scan.length()));
+            }
+        }
+        return null;
+    }
+
+    private SteamUtils() {
     }
 
 }

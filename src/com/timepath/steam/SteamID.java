@@ -23,21 +23,21 @@ public class SteamID {
     public static final Pattern ID32 = Pattern.compile("STEAM_([0-9]):([0-9]):([0-9]{4,})");
 
     /**
-     * http://steamcommunity.com/profiles/[uid]
-     */
-    public static final Pattern UID = Pattern.compile("U:([0-9]):([0-9]{4,})");
-
-    /**
      * http://steamcommunity.com/profiles/id64
      */
     public static final Pattern ID64 = Pattern.compile("([0-9]{17,})");
 
     /**
+     * http://steamcommunity.com/profiles/[uid]
+     */
+    public static final Pattern UID = Pattern.compile("U:([0-9]):([0-9]{4,})");
+
+    private static final Logger LOG = Logger.getLogger(SteamID.class.getName());
+
+    /**
      * The 4 is because hexadecimal; sqrt 16? 2^4 = 16? Probably that
      */
     private static final BigInteger id64Offset = BigInteger.valueOf(0x01100001).shiftLeft(8 * 4);
-
-    private static final Logger LOG = Logger.getLogger(SteamID.class.getName());
 
     public static String ID32toID64(String steam) {
         return UIDtoID64(ID32toUID(steam));
@@ -50,6 +50,19 @@ public class SteamID {
         }
         BigInteger id = new BigInteger(m.group(3)).multiply(BigInteger.valueOf(2)).add(
             new BigInteger(m.group(2)));
+        return "U:1:" + id.toString();
+    }
+
+    public static String ID64toID32(String steam) {
+        return UIDtoID32(ID64toUID(steam));
+    }
+
+    public static String ID64toUID(String steam) {
+        Matcher m = ID64.matcher(steam);
+        if(!m.matches()) {
+            return null;
+        }
+        BigInteger id = new BigInteger(m.group(1)).subtract(id64Offset);
         return "U:1:" + id.toString();
     }
 
@@ -71,22 +84,9 @@ public class SteamID {
         return id.toString();
     }
 
-    public static String ID64toUID(String steam) {
-        Matcher m = ID64.matcher(steam);
-        if(!m.matches()) {
-            return null;
-        }
-        BigInteger id = new BigInteger(m.group(1)).subtract(id64Offset);
-        return "U:1:" + id.toString();
-    }
-
-    public static String ID64toID32(String steam) {
-        return UIDtoID32(ID64toUID(steam));
-    }
+    private final String id32, id64, uid;
 
     private String user;
-
-    private final String id64, uid, id32;
 
     public SteamID(String user, String id64, String uid, String id32) {
         this.user = user;
@@ -95,24 +95,24 @@ public class SteamID {
         this.id32 = id32;
     }
 
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    public String getUser() {
-        return user;
-    }
-
-    public String getUID() {
-        return uid;
+    public String getID32() {
+        return id32;
     }
 
     public String getID64() {
         return id64;
     }
 
-    public String getID32() {
-        return id32;
+    public String getUID() {
+        return uid;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
     }
 
     @Override
