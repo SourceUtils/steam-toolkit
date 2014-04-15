@@ -1,6 +1,7 @@
 package com.timepath.steam.webapi;
 
 import com.timepath.web.api.base.Connection;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.util.logging.Logger;
 
@@ -33,6 +34,11 @@ public class SteamConnection extends Connection {
     @Override
     protected long mindelay() {
         return 1000L;
+    }
+
+    @Override
+    protected void onConnect(HttpURLConnection con) {
+        
     }
 
 }

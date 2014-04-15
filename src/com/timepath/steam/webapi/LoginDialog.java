@@ -76,22 +76,31 @@ public abstract class LoginDialog extends javax.swing.JDialog {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel1 = new javax.swing.JPanel();
+        jPanel6 = new javax.swing.JPanel();
+        jPanel7 = new javax.swing.JPanel();
+        jPanel4 = new javax.swing.JPanel();
         userInput = new javax.swing.JTextField();
         passInput = new javax.swing.JPasswordField();
-        loginButton = new javax.swing.JButton();
-        messageLabel = new javax.swing.JLabel();
+        jPanel1 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
         steamguardInput = new javax.swing.JTextField();
         captchaPanel = new javax.swing.JPanel();
         captchaLabel = new javax.swing.JLabel();
         captchaInput = new javax.swing.JTextField();
+        messageLabel = new javax.swing.JLabel();
+        loginButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        getContentPane().setLayout(new java.awt.FlowLayout());
+
+        jPanel6.setLayout(new java.awt.BorderLayout());
+
+        jPanel7.setLayout(new java.awt.BorderLayout());
+
+        jPanel4.setLayout(new javax.swing.BoxLayout(jPanel4, javax.swing.BoxLayout.LINE_AXIS));
 
         userInput.setText("user");
         userInput.setMinimumSize(new java.awt.Dimension(120, 28));
-        jPanel1.add(userInput);
+        jPanel4.add(userInput);
 
         passInput.setText("pass");
         passInput.setMinimumSize(new java.awt.Dimension(120, 28));
@@ -100,18 +109,21 @@ public abstract class LoginDialog extends javax.swing.JDialog {
                 login(evt);
             }
         });
-        jPanel1.add(passInput);
+        jPanel4.add(passInput);
 
-        loginButton.setText("login");
-        jPanel1.add(loginButton);
+        jPanel7.add(jPanel4, java.awt.BorderLayout.NORTH);
 
-        messageLabel.setText("message");
-        jPanel1.add(messageLabel);
+        jPanel1.setLayout(new javax.swing.BoxLayout(jPanel1, javax.swing.BoxLayout.LINE_AXIS));
 
-        getContentPane().add(jPanel1);
+        jLabel1.setText("steamguard");
+        jPanel1.add(jLabel1);
 
         steamguardInput.setMinimumSize(new java.awt.Dimension(120, 28));
-        getContentPane().add(steamguardInput);
+        jPanel1.add(steamguardInput);
+
+        jPanel7.add(jPanel1, java.awt.BorderLayout.CENTER);
+
+        captchaPanel.setLayout(new javax.swing.BoxLayout(captchaPanel, javax.swing.BoxLayout.LINE_AXIS));
 
         captchaLabel.setText("captcha");
         captchaPanel.add(captchaLabel);
@@ -119,7 +131,22 @@ public abstract class LoginDialog extends javax.swing.JDialog {
         captchaInput.setMinimumSize(new java.awt.Dimension(120, 28));
         captchaPanel.add(captchaInput);
 
-        getContentPane().add(captchaPanel);
+        jPanel7.add(captchaPanel, java.awt.BorderLayout.SOUTH);
+
+        jPanel6.add(jPanel7, java.awt.BorderLayout.PAGE_START);
+
+        messageLabel.setText("message");
+        jPanel6.add(messageLabel, java.awt.BorderLayout.CENTER);
+
+        loginButton.setText("login");
+        loginButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                loginButtonActionPerformed(evt);
+            }
+        });
+        jPanel6.add(loginButton, java.awt.BorderLayout.SOUTH);
+
+        getContentPane().add(jPanel6, java.awt.BorderLayout.CENTER);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -127,6 +154,10 @@ public abstract class LoginDialog extends javax.swing.JDialog {
     private void login(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_login
         login();
     }//GEN-LAST:event_login
+
+    private void loginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginButtonActionPerformed
+        login();
+    }//GEN-LAST:event_loginButtonActionPerformed
 
     public abstract void login();
 
@@ -162,7 +193,11 @@ public abstract class LoginDialog extends javax.swing.JDialog {
     private javax.swing.JTextField captchaInput;
     private javax.swing.JLabel captchaLabel;
     private javax.swing.JPanel captchaPanel;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
     private javax.swing.JButton loginButton;
     private javax.swing.JLabel messageLabel;
     private javax.swing.JPasswordField passInput;
