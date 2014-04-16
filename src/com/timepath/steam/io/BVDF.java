@@ -47,7 +47,7 @@ public class BVDF implements Savable {
     public void readExternal(InputStream in) {
         try {
             new BVDFStream(in, new BVDFListener() {
-                private DefaultMutableTreeNode last = root;
+                private DataNode last = root;
 
                 @Override
                 public void emit(String key, Object val) {
@@ -56,12 +56,12 @@ public class BVDF implements Savable {
 
                 @Override
                 public void pop() {
-                    last = (DefaultMutableTreeNode) last.getParent();
+                    last = (DataNode) last.getParent();
                 }
 
                 @Override
                 public void push(Object key) {
-                    DefaultMutableTreeNode node = new DefaultMutableTreeNode(key);
+                    DataNode node = new DataNode(key);
                     last.add(node);
                     last = node;
                 }
@@ -78,9 +78,9 @@ public class BVDF implements Savable {
 
     public static class DataNode extends DefaultMutableTreeNode {
 
-        private String name;
+        public String name;
 
-        private Object value;
+        public Object value;
 
         DataNode(Object obj) {
             this.name = obj.toString();
