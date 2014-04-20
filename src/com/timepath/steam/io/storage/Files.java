@@ -4,7 +4,10 @@ import com.timepath.steam.io.storage.util.ExtendedVFile;
 import com.timepath.vfs.SimpleVFile;
 import java.io.*;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,16 +19,37 @@ public class Files extends ExtendedVFile {
 
     private static final Logger LOG = Logger.getLogger(Files.class.getName());
 
+    static final ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime()
+        .availableProcessors() * 10, new ThreadFactory() {
+
+        public Thread newThread(Runnable r) {
+            Thread t = Executors.defaultThreadFactory().newThread(r);
+            t.setDaemon(true);
+            return t;
+        }
+    });
+
     /**
      * Archive to directory map
      */
     private final HashMap<ExtendedVFile, ExtendedVFile> archives = new HashMap<ExtendedVFile, ExtendedVFile>();
 
-    private final File f;
+    private final File file;
 
     public Files(File f) {
-        this.f = f;
-        this.insert(f);
+        this(f, f.isDirectory());
+    }
+
+    /**
+     * Reserved for internal use to prevent starting more searches
+     * @param f
+     * @param recursive 
+     */
+    protected Files(File f, boolean recursive) {
+        this.file = f;
+        if(recursive) {
+            this.insert(f);
+        }
     }
 
     @Override
@@ -35,20 +59,12 @@ public class Files extends ExtendedVFile {
 
     @Override
     public String getName() {
-        return f.getName();
+        return file.getName();
     }
 
     @Override
     public ExtendedVFile getRoot() {
         return this;
-    }
-
-    public void insert(File f) {
-        walk(f, this);
-        // TODO: additive directories to avoid this kludge
-        for(Entry<ExtendedVFile, ExtendedVFile> e : archives.entrySet()) {
-            merge(e.getKey(), e.getValue());
-        }
     }
 
     @Override
@@ -58,32 +74,73 @@ public class Files extends ExtendedVFile {
 
     @Override
     public boolean isDirectory() {
-        return f.isDirectory();
+        return file.isDirectory();
     }
 
     @Override
     public long lastModified() {
-        return f.lastModified();
+        return file.lastModified();
     }
 
     @Override
     public long length() {
-        return f.length();
+        return file.length();
     }
 
     @Override
     public InputStream stream() {
         try {
-            return new BufferedInputStream(new FileInputStream(f));
+            return new BufferedInputStream(new FileInputStream(file));
         } catch(FileNotFoundException ex) {
-            Logger.getLogger(SimpleVFile.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         return null;
     }
 
     @Override
     public String toString() {
-        return f.getName();
+        return file.getName();
+    }
+
+    private void insert(File f) {
+        long start = System.currentTimeMillis();
+        final List<Future> tasks = new LinkedList<Future>();
+        visit(f, new FileVisitor() {
+
+            public void visit(final File file, final Files parent) {
+                Files e = new Files(file, false);
+                parent.add(e);
+                if(file.isDirectory()) {
+                    e.visit(file, this);
+                    return;
+                }
+                final String name = file.getName();
+                tasks.add(pool.submit(new Callable<Void>() {
+                    public Void call() throws Exception {
+                        if(name.endsWith("_dir.vpk")) {
+                            VPK v = VPK.loadArchive(file);
+                            archives.put(v.getRoot(), parent);
+                        }
+                        return null;
+                    }
+                }));
+            }
+        });
+        for(Future fut : tasks) {
+            try {
+                fut.get();
+            } catch(InterruptedException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+            } catch(ExecutionException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+            }
+        }
+        LOG.log(Level.INFO, "Recursive file load took {0}ms", System.currentTimeMillis() - start);
+
+        // TODO: additive directories to avoid this kludge
+        for(Entry<ExtendedVFile, ExtendedVFile> e : archives.entrySet()) {
+            merge(e.getKey(), e.getValue());
+        }
     }
 
     private void merge(SimpleVFile r, SimpleVFile parent) {
@@ -103,23 +160,20 @@ public class Files extends ExtendedVFile {
         }
     }
 
-    private void walk(File dir, Files parent) {
+    private void visit(File dir, FileVisitor v) {
         File[] ls = dir.listFiles();
         if(ls == null) {
             return;
         }
-        for(File file : ls) {
-            if(file.getName().endsWith("_dir.vpk")) {
-                VPK v = VPK.loadArchive(file);
-                archives.put(v.getRoot(), parent);
-            } else if(file.getName().endsWith(".vpk")) {
-                // TODO:
-            } else {
-                Files e = new Files(file);
-                parent.add(e);
-                walk(file, e);
-            }
+        for(File f : ls) {
+            v.visit(f, this);
         }
+    }
+
+    private interface FileVisitor {
+
+        void visit(File f, Files parent);
+
     }
 
 }

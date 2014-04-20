@@ -2,9 +2,8 @@ package com.timepath.steam.io.storage;
 
 import com.timepath.steam.SteamUtils;
 import com.timepath.steam.io.VDF1;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.*;
+import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.util.HashMap;
 import java.util.logging.Logger;
@@ -17,28 +16,28 @@ public class ACF extends Files {
 
     private static final Logger LOG = Logger.getLogger(ACF.class.getName());
 
-    private static final HashMap<String, SoftReference<ACF>> cache = new HashMap<String, SoftReference<ACF>>();
+    private static final HashMap<String, Reference<ACF>> cache = new HashMap<String, Reference<ACF>>();
 
-    public static ACF fromManifest(File manifest) throws FileNotFoundException {
+    public static ACF fromManifest(File mf) throws FileNotFoundException {
         VDF1 v = new VDF1();
-        v.readExternal(new FileInputStream(manifest));
-        File appInstallDir = null;
+        v.readExternal(new FileInputStream(mf));
+        File dir;
         try {
-            appInstallDir = new File(v.getRoot().get("AppState").get("UserConfig").get("appinstalldir").getValue());
+            dir = new File(v.getRoot().get("AppState").get("UserConfig").get("appinstalldir").getValue());
         } catch(Exception e) {
-            appInstallDir = new File(manifest.getParentFile(), "common/" + v.getRoot().get("AppState").get("installdir").getValue());
+            dir = new File(mf.getParentFile(), "common/" + v.getRoot().get("AppState").get("installdir").getValue());
         }
         // TODO: gameinfo.txt
 
-        String key = manifest.getName();
-        if(cache.containsKey(key)) {
-            SoftReference<ACF> ref = cache.get(key);
+        String key = mf.getName();
+        Reference<ACF> ref = cache.get(key);
+        if(ref != null) {
             ACF a = ref.get();
             if(a != null) {
                 return a;
             }
         }
-        ACF a = new ACF(appInstallDir);
+        ACF a = new ACF(dir);
         cache.put(key, new SoftReference<ACF>(a));
         return a;
     }

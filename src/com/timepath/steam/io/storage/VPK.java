@@ -3,10 +3,15 @@ package com.timepath.steam.io.storage;
 import com.timepath.DataUtils;
 import com.timepath.StringUtils;
 import com.timepath.io.ByteBufferInputStream;
+import com.timepath.io.struct.StructField;
 import com.timepath.steam.io.storage.util.ExtendedVFile;
 import com.timepath.vfs.SimpleVFile;
 import java.io.*;
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.CRC32;
@@ -21,12 +26,24 @@ public class VPK extends ExtendedVFile {
     private static int HEADER = 0x55AA1234;
 
     private static final Logger LOG = Logger.getLogger(VPK.class.getName());
+    
+    /**
+     * Previously loaded VPKs stored as references
+     */
+    private static Map<File, Reference<VPK>> cache = new HashMap<File, Reference<VPK>>();
 
     public static VPK loadArchive(final File file) {
-        return loadArchive(new VPK(), file);
-    }
-
-    public static VPK loadArchive(final VPK v, final File file) {
+        LOG.log(Level.INFO, "Loading {0}", file);
+        
+        Reference<VPK> ref = cache.get(file);
+        VPK cached = ref != null ? ref.get() : null;
+        if(cached != null) {
+            LOG.log(Level.INFO, "Loaded {0} from cache", file);
+            return cached;
+        }
+        final VPK v = new VPK();
+        cache.put(file, new SoftReference<VPK>(v));
+        
         //<editor-fold defaultstate="collapsed" desc="Map extra archives">
         v.name = file.getName();
         v.name = v.name.substring(0, v.name.length() - 4); // Strip '.vkp'
@@ -115,11 +132,6 @@ public class VPK extends ExtendedVFile {
     }
 
     @Override
-    public ExtendedVFile getRoot() {
-        return this;
-    }
-
-    @Override
     public Object getAttributes() {
         return null;
     }
@@ -127,6 +139,11 @@ public class VPK extends ExtendedVFile {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public ExtendedVFile getRoot() {
+        return this;
     }
 
     @Override
@@ -186,26 +203,17 @@ public class VPK extends ExtendedVFile {
     }
 
     private void parseTree(ByteBuffer b) {
-        for(;;) { // Extensions
-            String ext = DataUtils.readZeroString(b);
-            if(ext.length() == 0) { // End of data
-                break;
-            }
+        // Extensions
+        for(String ext; !(ext = DataUtils.readZeroString(b)).isEmpty();) {
             if(ext.equals(" ")) { // No extension
                 ext = null;
             }
-            for(;;) { // Paths
-                String path = DataUtils.readZeroString(b);
-                if(path.length() == 0) {
-                    break;
-                }
-                SimpleVFile p = nodeForPath(path);
-                for(;;) { // File names
-                    String name = DataUtils.readZeroString(b);
-                    if(name.length() == 0) {
-                        break;
-                    }
-                    VPKDirectoryEntry e = readFileInfo(b, name + (ext != null ? ("." + ext) : ""));
+            // Paths
+            for(String dir; !(dir = DataUtils.readZeroString(b)).isEmpty();) {
+                SimpleVFile p = nodeForPath(dir);
+                // File names
+                for(String basename; !(basename = DataUtils.readZeroString(b)).isEmpty();) {
+                    VPKDirectoryEntry e = readFileInfo(b, basename + (ext != null ? ("." + ext) : ""));
                     p.add(e);
                 }
             }
@@ -215,7 +223,7 @@ public class VPK extends ExtendedVFile {
     private VPKDirectoryEntry readFileInfo(ByteBuffer b, String name) {
         VPKDirectoryEntry e = new VPKDirectoryEntry(name);
 
-        e.CRC = (long) b.getInt() & 0xFFFFFFFFL;
+        e.CRC = b.getInt();
         e.preloadBytes = b.getShort();
         e.archiveIndex = b.getShort();
         e.entryOffset = b.getInt();
@@ -232,22 +240,22 @@ public class VPK extends ExtendedVFile {
      * If a file contains preload data, the preload data immediately follows the
      * above structure. The entire size of a file is PreloadBytes + EntryLength.
      */
-    public class VPKDirectoryEntry extends ExtendedVFile {
+    private class VPKDirectoryEntry extends ExtendedVFile {
 
         /**
          * A 32bit CRC of the file's data.
          */
-        long CRC;
+        @StructField(index = 0) int CRC;
 
-        short preloadBytes;
+        @StructField(index = 1) short preloadBytes;
 
-        short archiveIndex;
+        @StructField(index = 2) short archiveIndex;
 
-        int entryOffset;
+        @StructField(index = 3) int entryOffset;
 
-        int entryLength;
+        @StructField(index = 4) int entryLength;
 
-        private ByteBuffer localdata;
+        private Reference<ByteBuffer> localdata;
 
         String name;
 
@@ -261,11 +269,14 @@ public class VPK extends ExtendedVFile {
         }
 
         public ByteBuffer localData() {
-            if(localdata == null) {
-                getSource().position(entryOffset);
-                localdata = DataUtils.getSlice(getSource(), entryLength);
+            ByteBuffer buf = localdata != null ? localdata.get() : null;
+            if(buf == null) {
+                ByteBuffer src = getSource();
+                src.position(entryOffset);
+                buf = DataUtils.getSlice(src, entryLength);
+                localdata = new SoftReference<ByteBuffer>(buf);
             }
-            return localdata;
+            return buf;
         }
 
         VPKDirectoryEntry() {
