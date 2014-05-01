@@ -151,12 +151,13 @@ public class VDF2 extends Node<VDFProperty, VDF2> {
             VDF2 match = this.getNamedNode(v.custom);
             if(match == null) { // Not in this copy
                 added.addNode(v);
-            } else {
-                Diff<VDFProperty> diff = v.diff(same.getNamedNode(v.custom));
-                if(diff.added.size() + diff.removed.size() + diff.modified.size() >= 0) { // Something was changed
-                    // This could be a mixture of additions, removals or modifications, as well as unchanged values
-                }
             }
+//            else {
+//                Diff<VDFProperty> diff = v.diff(same.getNamedNode(v.custom));
+//                if(diff.added.size() + diff.removed.size() + diff.modified.size() >= 0) { // Something was changed
+//                    // This could be a mixture of additions, removals or modifications, as well as unchanged values
+//                }
+//            }
         }
 
         d.removed = Arrays.asList(removed);

@@ -15,6 +15,6 @@ public interface ServerListener {
      *
      * @param update
      */
-    public void inform(String update);
+    void inform(String update);
 
 }

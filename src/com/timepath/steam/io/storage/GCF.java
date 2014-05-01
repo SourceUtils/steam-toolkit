@@ -173,9 +173,8 @@ public class GCF extends ExtendedVFile {
     private BlockAllocationTableEntry getBlock(int i) throws IOException {
         BlockAllocationTableEntry bae = blocks[i];
         if(bae == null) {
-            raf.seek(
-                (blockAllocationTableHeader.pos + BlockAllocationTableHeader.SIZE) + (i
-                                                                                      * BlockAllocationTableEntry.SIZE));
+            raf.seek((blockAllocationTableHeader.pos + BlockAllocationTableHeader.SIZE)
+                     + (i * BlockAllocationTableEntry.SIZE));
             bae = new BlockAllocationTableEntry();
             blocks[i] = bae;
         }

@@ -136,6 +136,7 @@ public class BVDFStream {
                     break;
 
                 case TYPE_INT:
+                case TYPE_PTR:
                     listener.emit(key, is.readInt());
                     break;
 
@@ -154,17 +155,12 @@ public class BVDFStream {
                     listener.emit(key, color);
                     break;
 
-                case TYPE_PTR:
-                    listener.emit(key, is.readInt());
-                    break;
-
                 default:
                     LOG.log(Level.SEVERE, "Unhandled data type {0}", type);
                     break;
             }
         }
     }
-
 
     private enum ValueType {
 

@@ -26,6 +26,9 @@ public class Main {
 
     private static final Logger LOG = Logger.getLogger(Main.class.getName());
 
+    private static final Logger LOG_CONNECTION = Logger.getLogger(com.timepath.web.api.base.Connection.class
+        .getName());
+
     public static void main(String... args) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -152,14 +155,14 @@ public class Main {
                                                       }
                                                   ).toString());
                 for(;;) {
-                    Logger.getLogger(com.timepath.web.api.base.Connection.class.getName()).setLevel(Level.WARNING);
+                    LOG_CONNECTION.setLevel(Level.WARNING);
                     System.out.println(login.postget("ISteamWebUserPresenceOAuth/Poll/v0001", RequestBuilder
-                                  .fromArray(
-                                      new Object[][] {
-                                          {"access_token", dict.getString("oauth_token")},
-                                          {"umqid", umqid}
-                                      }
-                                  ).toString()));
+                                                     .fromArray(
+                                                         new Object[][] {
+                                                             {"access_token", dict.getString("oauth_token")},
+                                                             {"umqid", umqid}
+                                                         }
+                                                     ).toString()));
                     Thread.sleep(1000);
                 }
             } else if(ret.has("transfer_url")) {
