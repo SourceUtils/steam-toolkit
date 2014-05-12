@@ -1,10 +1,10 @@
 package com.timepath.steam.io.storage.gcf;
 
 import com.timepath.io.RandomAccessFileWrapper;
+
 import java.io.IOException;
 
 /**
- *
  * @author TimePath
  */
 class tagGCFDIRECTORYINFO1ENTRY {
@@ -13,8 +13,7 @@ class tagGCFDIRECTORYINFO1ENTRY {
      * 1 * 4
      */
     static final long SIZE = 4;
-
-    final int Dummy0;
+    private final int Dummy0;
 
     tagGCFDIRECTORYINFO1ENTRY(RandomAccessFileWrapper raf) throws IOException {
         Dummy0 = raf.readULEInt();
@@ -22,7 +21,6 @@ class tagGCFDIRECTORYINFO1ENTRY {
 
     @Override
     public String toString() {
-        return "" + Dummy0;
+        return String.valueOf(Dummy0);
     }
-    
 }

@@ -1,29 +1,30 @@
 package com.timepath.steam.io.util;
 
-import java.util.logging.Logger;
 import javax.swing.tree.DefaultMutableTreeNode;
+import java.util.logging.Logger;
 
 /**
- *
  * @author TimePath
+ * @deprecated Blob files are no longer in use
  */
 public class BlobNode extends DefaultMutableTreeNode {
+
+    private static final Logger LOG = Logger.getLogger(BlobNode.class.getName());
+    private String name;
+    private int dataType = -1;
+    private int meta;
 
     public BlobNode() {
     }
 
     public BlobNode(Object obj) {
-        this.setUserObject(obj);
+        setUserObject(obj);
     }
 
-    public BlobNode(String name, Object obj) {
+    private BlobNode(String name, Object obj) {
         this.name = name;
-        this.setUserObject(obj);
+        setUserObject(obj);
     }
-
-    private String name;
-
-    private int dataType = -1;
 
     public int getDataType() {
         return dataType;
@@ -35,17 +36,15 @@ public class BlobNode extends DefaultMutableTreeNode {
 
     @Override
     public String toString() {
-        Object o = this.getUserObject();
+        Object o = getUserObject();
         if(o == null) {
             return "unnamed";
-        } else if(o instanceof String) {
-            return (String) o;
         } else {
-            return (name != null ? name : o.getClass().getSimpleName()) + ": " + o;
+            return ( o instanceof String )
+                   ? (String) o
+                   : ( ( ( name != null ) ? name : o.getClass().getSimpleName() ) + ": " + o );
         }
     }
-
-    private int meta;
 
     public boolean isMeta() {
         return meta != 0;
@@ -58,7 +57,4 @@ public class BlobNode extends DefaultMutableTreeNode {
     public void setMeta(int meta) {
         this.meta = meta;
     }
-
-    private static final Logger LOG = Logger.getLogger(BlobNode.class.getName());
-
 }

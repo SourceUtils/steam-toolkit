@@ -1,10 +1,10 @@
 package com.timepath.steam.io.storage.gcf;
 
 import com.timepath.io.RandomAccessFileWrapper;
+
 import java.io.IOException;
 
 /**
- *
  * @author TimePath
  */
 class ChecksumHeader {
@@ -13,12 +13,11 @@ class ChecksumHeader {
      * The number of bytes in the checksum section (excluding this structure
      * and the following LatestApplicationVersion structure).
      */
-    final int checksumSize;
-
+    private final int checksumSize;
     /**
      * Always 0x00000001.
      */
-    final int headerVersion;
+    private final int headerVersion;
 
     ChecksumHeader(RandomAccessFileWrapper raf) throws IOException {
         headerVersion = raf.readULEInt();
@@ -29,5 +28,4 @@ class ChecksumHeader {
     public String toString() {
         return "headerVersion:" + headerVersion + ", ChecksumSize:" + checksumSize;
     }
-
 }

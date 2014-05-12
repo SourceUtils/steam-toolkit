@@ -10,70 +10,51 @@ public class BVDFConstants {
     private BVDFConstants() {
     }
 
-    public static enum Universe {
-
+    public enum Universe {
         INVALID(0),
         PUBLIC(1),
         BETA(2),
         INTERNAL(3),
         DEV(4);
+        private final int id;
 
         Universe(int i) {
-            this.id = i;
-        }
-
-        private final int id;
-
-        public int ID() {
-            return id;
+            id = i;
         }
 
         public static String getName(int i) {
-            Universe[] search = Universe.values();
-            for(Universe search1 : search) {
-                if(search1.ID() == i) {
+            Universe[] search = Universe.values(); for(Universe search1 : search) {
+                if(search1.id == i) {
                     return search1.name();
                 }
-            }
-            return "UNKNOWN (" + i + ")";
+            } return "UNKNOWN (" + i + ')';
         }
-
     }
 
-    public static enum AppInfoState {
-
+    public enum AppInfoState {
         UNAVAILBALE(1),
         AVAILABLE(2);
-
-        AppInfoState(int i) {
-            this.id = i;
-        }
-
         private final int id;
 
-        public int ID() {
-            return id;
+        AppInfoState(int i) {
+            id = i;
         }
 
         public static String getName(int i) {
-            AppInfoState[] search = AppInfoState.values();
-            for(AppInfoState search1 : search) {
-                if(search1.ID() == i) {
+            AppInfoState[] search = AppInfoState.values(); for(AppInfoState search1 : search) {
+                if(search1.id == i) {
                     return search1.name();
                 }
-            }
-            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] {
-                AppInfoState.class.getSimpleName(), i});
-            return "UNKNOWN (" + i + ")";
+            } LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] {
+                    AppInfoState.class.getSimpleName(), i
+            }); return "UNKNOWN (" + i + ')';
         }
-
     }
 
     /**
      * Can be found in steamclient native library, EAppInfoSection
      */
-    public static enum Section {
-
+    public enum Section {
         UNKNOWN(0),
         ALL(1),
         COMMON(2),
@@ -92,31 +73,22 @@ public class BVDFConstants {
         COMMUNITY(15),
         SERVERONLY(16),
         SERVERANDWGONLY(17);
-
-        Section(int i) {
-            this.id = i;
-        }
-
         private final int id;
 
-        public int ID() {
-            return id;
+        Section(int i) {
+            id = i;
         }
 
         public static String get(int i) {
-            Section[] search = Section.values();
-            for(Section search1 : search) {
-                if(search1.ID() == i) {
+            Section[] search = Section.values(); for(Section search1 : search) {
+                if(search1.id == i) {
                     return search1.name();
                 }
-            }
-            return "UNKNOWN (" + i + ")";
+            } return "UNKNOWN (" + i + ')';
         }
-
     }
 
-    public static enum SteamAppState {
-
+    public enum SteamAppState {
         Invalid(0x00000000),
         Uninstalled(0x00000001),
         UpdateRequired(0x00000002),
@@ -137,56 +109,40 @@ public class BVDFConstants {
         Comitting(0x00010000),
         Validating(0x00020000),
         UpdateStopping(0x00040000);
-
-        SteamAppState(int i) {
-            this.id = i;
-        }
-
         private final int id;
 
-        public int ID() {
-            return id;
+        SteamAppState(int i) {
+            id = i;
         }
 
         public static String get(int i) {
             for(SteamAppState s : SteamAppState.values()) {
-                if(s.ID() == i) {
+                if(s.id == i) {
                     return s.name();
                 }
-            }
-            return "UNKNOWN (" + i + ")";
+            } return "UNKNOWN (" + i + ')';
         }
+    }
 
-    };
-
-    public static enum AppInfoSectionPropagationType {
-
+    public enum AppInfoSectionPropagationType {
         Invalid(0),
         Public(1),
         OwnersOnly(2),
         ServerOnly(3),
         ClientOnly(4),
         ServerAndWGOnly(5);
-
-        AppInfoSectionPropagationType(int i) {
-            this.id = i;
-        }
-
         private final int id;
 
-        public int ID() {
-            return id;
+        AppInfoSectionPropagationType(int i) {
+            id = i;
         }
 
         public static String get(int i) {
             for(AppInfoSectionPropagationType s : AppInfoSectionPropagationType.values()) {
-                if(s.ID() == i) {
+                if(s.id == i) {
                     return s.name();
                 }
-            }
-            return "UNKNOWN (" + i + ")";
+            } return "UNKNOWN (" + i + ')';
         }
-
-    };
-
+    }
 }

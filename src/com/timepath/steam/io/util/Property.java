@@ -3,7 +3,6 @@ package com.timepath.steam.io.util;
 import java.util.logging.Logger;
 
 /**
- *
  * aka KeyValue
  *
  * @author TimePath
@@ -11,14 +10,11 @@ import java.util.logging.Logger;
 public class Property {
 
     private static final Logger LOG = Logger.getLogger(Property.class.getName());
-
     private String key;
-
     private String value;
-
     private String info;
 
-    public Property() {
+    private Property() {
     }
 
     public Property(String key, String value, String info) {
@@ -53,7 +49,6 @@ public class Property {
 
     @Override
     public String toString() {
-        return key + ":" + value + ":" + info;
+        return key + ':' + value + ':' + info;
     }
-
 }

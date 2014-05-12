@@ -2,13 +2,16 @@ package com.timepath.steam.io.storage.util;
 
 import com.timepath.swing.TreeUtils;
 import com.timepath.vfs.SimpleVFile;
+
 import javax.swing.tree.DefaultMutableTreeNode;
+import java.util.logging.Logger;
 
 /**
- *
  * @author TimePath
  */
 public abstract class ExtendedVFile extends SimpleVFile {
+
+    private static final Logger LOG = Logger.getLogger(ExtendedVFile.class.getName());
 
     public void analyze(DefaultMutableTreeNode top, boolean leaves) {
         if(top.getUserObject() instanceof ExtendedVFile) { // the root node has been added
@@ -51,5 +54,4 @@ public abstract class ExtendedVFile extends SimpleVFile {
     public String toString() {
         return getName();
     }
-
 }

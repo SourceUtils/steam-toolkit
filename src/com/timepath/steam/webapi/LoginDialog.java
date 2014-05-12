@@ -1,207 +1,134 @@
 package com.timepath.steam.webapi;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 /**
- *
  * @author TimePath
  */
-public abstract class LoginDialog extends javax.swing.JDialog {
+public abstract class LoginDialog extends JDialog {
+
+    private JTextField     captchaInput;
+    private JLabel         captchaLabel;
+    private JPanel         captchaPanel;
+    private JLabel         jLabel1;
+    private JPanel         jPanel1;
+    private JPanel         jPanel4;
+    private JPanel         jPanel6;
+    private JPanel         jPanel7;
+    private JButton        loginButton;
+    private JLabel         messageLabel;
+    private JPasswordField passInput;
+    private JTextField     steamguardInput;
+    private JTextField     userInput;
 
     /**
      * Creates new form LoginDialog
-     * <p>
+     *
      * @param parent
      * @param modal
      */
-    public LoginDialog(java.awt.Frame parent, boolean modal) {
-        super(parent, modal);
-        initComponents();
+    public LoginDialog(Frame parent, boolean modal) {
+        super(parent, modal); initComponents();
+    }
+
+    private void initComponents() {
+        jPanel6 = new JPanel(); jPanel7 = new JPanel(); jPanel4 = new JPanel(); userInput = new JTextField();
+        passInput = new JPasswordField(); jPanel1 = new JPanel(); jLabel1 = new JLabel(); steamguardInput = new JTextField();
+        captchaPanel = new JPanel(); captchaLabel = new JLabel(); captchaInput = new JTextField(); messageLabel = new JLabel();
+        loginButton = new JButton(); setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        jPanel6.setLayout(new BorderLayout()); jPanel7.setLayout(new BorderLayout());
+        jPanel4.setLayout(new BoxLayout(jPanel4, BoxLayout.LINE_AXIS)); userInput.setText("user");
+        userInput.setMinimumSize(new Dimension(120, 28)); jPanel4.add(userInput); passInput.setText("pass");
+        passInput.setMinimumSize(new Dimension(120, 28)); passInput.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                login();
+            }
+        }); jPanel4.add(passInput); jPanel7.add(jPanel4, BorderLayout.NORTH);
+        jPanel1.setLayout(new BoxLayout(jPanel1, BoxLayout.LINE_AXIS)); jLabel1.setText("steamguard"); jPanel1.add(jLabel1);
+        steamguardInput.setMinimumSize(new Dimension(120, 28)); jPanel1.add(steamguardInput);
+        jPanel7.add(jPanel1, BorderLayout.CENTER); captchaPanel.setLayout(new BoxLayout(captchaPanel, BoxLayout.LINE_AXIS));
+        captchaLabel.setText("captcha"); captchaPanel.add(captchaLabel); captchaInput.setMinimumSize(new Dimension(120, 28));
+        captchaPanel.add(captchaInput); jPanel7.add(captchaPanel, BorderLayout.SOUTH);
+        jPanel6.add(jPanel7, BorderLayout.PAGE_START); messageLabel.setText("message");
+        jPanel6.add(messageLabel, BorderLayout.CENTER); loginButton.setText("login");
+        loginButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                login();
+            }
+        }); jPanel6.add(loginButton, BorderLayout.SOUTH); getContentPane().add(jPanel6, BorderLayout.CENTER); pack();
+    }
+
+    public abstract void login();
+
+    /**
+     * @param args
+     *         the command line arguments
+     */
+    public static void main(String... args) {
+        /*
+         * Create and display the dialog
+         */
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                LoginDialog dialog = new LoginDialog(new JFrame(), true) {
+                    @Override
+                    public void login() {
+                    }
+                }; dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE); dialog.setVisible(true);
+            }
+        });
     }
 
     /**
      * @return the captchaInput
      */
-    public javax.swing.JTextField getCaptchaInput() {
+    public JTextField getCaptchaInput() {
         return captchaInput;
     }
 
     /**
      * @return the captchaLabel
      */
-    public javax.swing.JLabel getCaptchaLabel() {
+    public JLabel getCaptchaLabel() {
         return captchaLabel;
     }
 
     /**
      * @return the loginButton
      */
-    public javax.swing.JButton getLoginButton() {
+    public JButton getLoginButton() {
         return loginButton;
     }
 
     /**
      * @return the messageLabel
      */
-    public javax.swing.JLabel getMessageLabel() {
+    public JLabel getMessageLabel() {
         return messageLabel;
     }
 
     /**
      * @return the passInput
      */
-    public javax.swing.JPasswordField getPassInput() {
+    public JPasswordField getPassInput() {
         return passInput;
     }
 
     /**
      * @return the steamguardInput
      */
-    public javax.swing.JTextField getSteamguardInput() {
+    public JTextField getSteamguardInput() {
         return steamguardInput;
     }
 
     /**
      * @return the userInput
      */
-    public javax.swing.JTextField getUserInput() {
+    public JTextField getUserInput() {
         return userInput;
     }
-
-    /**
-     * This method is called from within the constructor to
-     * initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is
-     * always regenerated by the Form Editor.
-     */
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
-    private void initComponents() {
-
-        jPanel6 = new javax.swing.JPanel();
-        jPanel7 = new javax.swing.JPanel();
-        jPanel4 = new javax.swing.JPanel();
-        userInput = new javax.swing.JTextField();
-        passInput = new javax.swing.JPasswordField();
-        jPanel1 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        steamguardInput = new javax.swing.JTextField();
-        captchaPanel = new javax.swing.JPanel();
-        captchaLabel = new javax.swing.JLabel();
-        captchaInput = new javax.swing.JTextField();
-        messageLabel = new javax.swing.JLabel();
-        loginButton = new javax.swing.JButton();
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-
-        jPanel6.setLayout(new java.awt.BorderLayout());
-
-        jPanel7.setLayout(new java.awt.BorderLayout());
-
-        jPanel4.setLayout(new javax.swing.BoxLayout(jPanel4, javax.swing.BoxLayout.LINE_AXIS));
-
-        userInput.setText("user");
-        userInput.setMinimumSize(new java.awt.Dimension(120, 28));
-        jPanel4.add(userInput);
-
-        passInput.setText("pass");
-        passInput.setMinimumSize(new java.awt.Dimension(120, 28));
-        passInput.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                login(evt);
-            }
-        });
-        jPanel4.add(passInput);
-
-        jPanel7.add(jPanel4, java.awt.BorderLayout.NORTH);
-
-        jPanel1.setLayout(new javax.swing.BoxLayout(jPanel1, javax.swing.BoxLayout.LINE_AXIS));
-
-        jLabel1.setText("steamguard");
-        jPanel1.add(jLabel1);
-
-        steamguardInput.setMinimumSize(new java.awt.Dimension(120, 28));
-        jPanel1.add(steamguardInput);
-
-        jPanel7.add(jPanel1, java.awt.BorderLayout.CENTER);
-
-        captchaPanel.setLayout(new javax.swing.BoxLayout(captchaPanel, javax.swing.BoxLayout.LINE_AXIS));
-
-        captchaLabel.setText("captcha");
-        captchaPanel.add(captchaLabel);
-
-        captchaInput.setMinimumSize(new java.awt.Dimension(120, 28));
-        captchaPanel.add(captchaInput);
-
-        jPanel7.add(captchaPanel, java.awt.BorderLayout.SOUTH);
-
-        jPanel6.add(jPanel7, java.awt.BorderLayout.PAGE_START);
-
-        messageLabel.setText("message");
-        jPanel6.add(messageLabel, java.awt.BorderLayout.CENTER);
-
-        loginButton.setText("login");
-        loginButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                loginButtonActionPerformed(evt);
-            }
-        });
-        jPanel6.add(loginButton, java.awt.BorderLayout.SOUTH);
-
-        getContentPane().add(jPanel6, java.awt.BorderLayout.CENTER);
-
-        pack();
-    }// </editor-fold>//GEN-END:initComponents
-
-    private void login(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_login
-        login();
-    }//GEN-LAST:event_login
-
-    private void loginButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginButtonActionPerformed
-        login();
-    }//GEN-LAST:event_loginButtonActionPerformed
-
-    public abstract void login();
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /*
-         * Create and display the dialog
-         */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                LoginDialog dialog = new LoginDialog(new javax.swing.JFrame(), true) {
-
-                    @Override
-                    public void login() {
-
-                    }
-
-                };
-                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-                    @Override
-                    public void windowClosing(java.awt.event.WindowEvent e) {
-                        System.exit(0);
-                    }
-                });
-                dialog.setVisible(true);
-            }
-        });
-    }
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JTextField captchaInput;
-    private javax.swing.JLabel captchaLabel;
-    private javax.swing.JPanel captchaPanel;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel4;
-    private javax.swing.JPanel jPanel6;
-    private javax.swing.JPanel jPanel7;
-    private javax.swing.JButton loginButton;
-    private javax.swing.JLabel messageLabel;
-    private javax.swing.JPasswordField passInput;
-    private javax.swing.JTextField steamguardInput;
-    private javax.swing.JTextField userInput;
     // End of variables declaration//GEN-END:variables
 }

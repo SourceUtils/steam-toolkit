@@ -1,10 +1,10 @@
 package com.timepath.steam.io.storage.gcf;
 
 import com.timepath.io.RandomAccessFileWrapper;
+
 import java.io.IOException;
 
 /**
- *
  * @author TimePath
  */
 class FileAllocationTableEntry {
@@ -13,7 +13,6 @@ class FileAllocationTableEntry {
      * 1 * 4
      */
     static final long SIZE = 4;
-
     /**
      * The index of the next data block.
      * If == FileAllocationTableHeader.isLongTerminator, there are no more clusters in the file
@@ -28,5 +27,4 @@ class FileAllocationTableEntry {
     public String toString() {
         return "nextDataBlockIndex:" + nextClusterIndex;
     }
-    
 }

@@ -3,6 +3,7 @@ package com.timepath.steam;
 import com.timepath.plaf.OS;
 import com.timepath.plaf.win.WinRegistry;
 import com.timepath.steam.io.VDF1;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -13,25 +14,10 @@ public class SteamUtils {
 
     private static final Logger LOG = Logger.getLogger(SteamUtils.class.getName());
 
-    /**
-     *
-     * @return Path to steam installation
-     */
-    public static File getSteam() {
-        switch(OS.get()) {
-            case Linux:
-                return getSteamLinux();
-            case OSX:
-                return getSteamOSX();
-            case Windows:
-                return getSteamWindows();
-            default:
-                return null;
-        }
+    private SteamUtils() {
     }
 
     /**
-     *
      * @return Path to Steam/SteamApps
      */
     public static File getSteamApps() {
@@ -52,56 +38,19 @@ public class SteamUtils {
     }
 
     /**
-     *
-     * @return The most recently logged in steam user
+     * @return Path to steam installation
      */
-    public static SteamID getUser() {
-        File autoLogin = new File(SteamUtils.getSteam(), "config/SteamAppData.vdf");
-        File config = new File(SteamUtils.getSteam(), "config/config.vdf");
-        if(!autoLogin.exists() || !config.exists()) {
-            return null;
+    public static File getSteam() {
+        switch(OS.get()) {
+            case Linux:
+                return getSteamLinux();
+            case OSX:
+                return getSteamOSX();
+            case Windows:
+                return getSteamWindows();
+            default:
+                return null;
         }
-        try {
-            VDF1 u = new VDF1();
-            u.setLogLevel(Level.ALL);
-            u.readExternal(new FileInputStream(autoLogin));
-            String username = u.getRoot().get("SteamAppData").get("AutoLoginUser").getValue();
-            VDF1 i = new VDF1();
-            i.setLogLevel(Level.ALL);
-            i.readExternal(new FileInputStream(config));
-            String id64 = i.getRoot().get("InstallConfigStore").get("Software").get("Valve").get(
-                "Steam").get("Accounts").get(username).get("SteamID").getValue();
-            String uid = SteamID.ID64toUID(id64);
-            String sid = SteamID.UIDtoID32(uid);
-            return new SteamID(username, id64, uid, sid);
-        } catch(FileNotFoundException ex) {
-            Logger.getLogger(SteamUtils.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
-    }
-
-    /**
-     * 
-     * @param user The user
-     * @return Path to {@code user}'s <code>userdata</code>
-     */
-    public static File getUserData(SteamID user) {
-        if(user == null) {
-            return null;
-        }
-        File steam = getSteam();
-        if(steam == null) {
-            return null;
-        }
-        return new File(steam, "userdata/" + user.getUID().split(":")[2]);
-    }
-
-    /**
-     * 
-     * @return Path to {@link getUser()}'s <code>userdata</code>
-     */
-    public static File getUserData() {
-        return getUserData(getUser());
     }
 
     private static File getSteamLinux() {
@@ -110,10 +59,15 @@ public class SteamUtils {
             VDF1 v = new VDF1();
             try {
                 v.readExternal(new FileInputStream(linReg));
-                String installPath = v.getRoot().get("Registry").get("HKLM").get("Software").get(
-                    "Valve").get("Steam").get("InstallPath").getValue();
-                LOG.log(Level.INFO, "Steam directory read from registry file: {0}",
-                        installPath);
+                String installPath = v.getRoot()
+                                      .get("Registry")
+                                      .get("HKLM")
+                                      .get("Software")
+                                      .get("Valve")
+                                      .get("Steam")
+                                      .get("InstallPath")
+                                      .getValue();
+                LOG.log(Level.INFO, "Steam directory read from registry file: {0}", installPath);
                 return new File(installPath);
             } catch(FileNotFoundException ex) {
                 LOG.log(Level.SEVERE, null, ex);
@@ -128,10 +82,15 @@ public class SteamUtils {
             VDF1 v = new VDF1();
             try {
                 v.readExternal(new FileInputStream(macReg));
-                String installPath = v.getRoot().get("Registry").get("HKLM").get("Software").get(
-                    "Valve").get("Steam").get("InstallPath").getValue();
-                LOG.log(Level.INFO, "Steam directory read from registry file: {0}",
-                        installPath);
+                String installPath = v.getRoot()
+                                      .get("Registry")
+                                      .get("HKLM")
+                                      .get("Software")
+                                      .get("Valve")
+                                      .get("Steam")
+                                      .get("InstallPath")
+                                      .getValue();
+                LOG.log(Level.INFO, "Steam directory read from registry file: {0}", installPath);
                 return new File(installPath);
             } catch(FileNotFoundException ex) {
                 LOG.log(Level.SEVERE, null, ex);
@@ -151,7 +110,6 @@ public class SteamUtils {
             LOG.log(Level.INFO, "Steam directory read from registry: {0}", reg);
             return new File(reg);
         }
-
         String str = System.getenv("PROGRAMFILES(x86)");
         if(str == null) {
             str = System.getenv("PROGRAMFILES");
@@ -172,7 +130,62 @@ public class SteamUtils {
         return null;
     }
 
-    private SteamUtils() {
+    /**
+     * @return The most recently logged in steam user
+     */
+    public static SteamID getUser() {
+        File autoLogin = new File(getSteam(), "config/SteamAppData.vdf");
+        File config = new File(getSteam(), "config/config.vdf");
+        if(!autoLogin.exists() || !config.exists()) {
+            return null;
+        }
+        try {
+            VDF1 vdf1 = new VDF1();
+            vdf1.setLogLevel(Level.ALL);
+            vdf1.readExternal(new FileInputStream(autoLogin));
+            String username = vdf1.getRoot().get("SteamAppData").get("AutoLoginUser").getValue();
+            VDF1 vdf2 = new VDF1();
+            vdf2.setLogLevel(Level.ALL);
+            vdf2.readExternal(new FileInputStream(config));
+            String id64 = vdf2.getRoot()
+                              .get("InstallConfigStore")
+                              .get("Software")
+                              .get("Valve")
+                              .get("Steam")
+                              .get("Accounts")
+                              .get(username)
+                              .get("SteamID")
+                              .getValue();
+            String uid = SteamID.ID64toUID(id64);
+            String sid = SteamID.UIDtoID32(uid);
+            return new SteamID(username, id64, uid, sid);
+        } catch(FileNotFoundException ex) {
+            Logger.getLogger(SteamUtils.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
+    /**
+     * @param user
+     *         The user
+     *
+     * @return Path to {@code user}'s {@code userdata}
+     */
+    private static File getUserData(SteamID user) {
+        if(user == null) {
+            return null;
+        }
+        File steam = getSteam();
+        if(steam == null) {
+            return null;
+        }
+        return new File(steam, "userdata/" + user.getUID().split(":")[2]);
+    }
+
+    /**
+     * @return Path to {@link #getUser()}'s {@code userdata}
+     */
+    public static File getUserData() {
+        return getUserData(getUser());
+    }
 }

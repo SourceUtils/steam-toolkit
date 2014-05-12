@@ -2,10 +2,10 @@ package com.timepath.steam.io.storage.gcf;
 
 import com.timepath.DataUtils;
 import com.timepath.io.RandomAccessFileWrapper;
+
 import java.io.IOException;
 
 /**
- *
  * @author Timepath
  */
 class FileAllocationTableHeader {
@@ -14,30 +14,25 @@ class FileAllocationTableHeader {
      * 4 * 4
      */
     static final long SIZE = 16;
-
+    final         long pos;
     /**
      * Header checksum.
      */
-    final int checksum;
-
+    private final int  checksum;
     /**
      * Number of data blocks.
      */
-    final int clusterCount;
-
+    private final int  clusterCount;
     /**
      * Index of 1st unused GCFFRAGMAP entry.
      */
-    final int firstUnusedEntry;
-
+    private final int  firstUnusedEntry;
     /**
      * Defines the end of block chain terminator.
      * If the value is 0, then the terminator is 0x0000FFFF; if the value is 1, then the
      * terminator is 0xFFFFFFFF
      */
-    final int isLongTerminator;
-
-    final long pos;
+    private final int  isLongTerminator;
 
     FileAllocationTableHeader(GCF g) throws IOException {
         RandomAccessFileWrapper raf = g.raf;
@@ -53,9 +48,9 @@ class FileAllocationTableHeader {
     @Override
     public String toString() {
         int checked = check();
-        String checkState = (checksum == checked) ? "OK" : checksum + "vs" + checked;
-        return "blockCount:" + clusterCount + ", firstUnusedEntry:" + firstUnusedEntry + ", isLongTerminator:"
-               + isLongTerminator + ", checksum:" + checkState;
+        String checkState = checksum == checked ? "OK" : checksum + "vs" + checked;
+        return "blockCount:" + clusterCount + ", firstUnusedEntry:" + firstUnusedEntry + ", isLongTerminator:" +
+               isLongTerminator + ", checksum:" + checkState;
     }
 
     int check() {
@@ -65,5 +60,4 @@ class FileAllocationTableHeader {
         checked += DataUtils.updateChecksumAdd(isLongTerminator);
         return checked;
     }
-
 }
