@@ -20,6 +20,7 @@ import java.util.logging.Logger;
  * @author TimePath
  * @deprecated GCF files no longer in use
  */
+@Deprecated
 public class GCF extends ExtendedVFile {
 
     private static final Logger LOG = Logger.getLogger(GCF.class.getName());

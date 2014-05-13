@@ -58,7 +58,7 @@ class BlockAllocationTableHeader {
 
     @Override
     public String toString() {
-        int checked = check(); String checkState = checksum == checked ? "OK" : checksum + " vs " + checked;
+        int checked = check(); String checkState = ( checksum == checked ) ? "OK" : ( checksum + " vs " + checked );
         return "blockCount:" + blockCount + ", blocksUsed:" + blocksUsed + ", check:" + checkState;
     }
 

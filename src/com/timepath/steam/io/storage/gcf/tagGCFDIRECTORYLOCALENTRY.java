@@ -9,4 +9,6 @@ class tagGCFDIRECTORYLOCALENTRY {
      * Index of the directory item.
      */
     int DirectoryIndex;
+
+    tagGCFDIRECTORYLOCALENTRY() {}
 }

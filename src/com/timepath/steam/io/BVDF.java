@@ -49,33 +49,45 @@ public class BVDF implements Savable {
         }
 
         DataNode(String name, Object obj) {
-            this.name = name; value = obj;
+            this.name = name;
+            value = obj;
         }
 
         DataNode() {
         }
 
         public DataNode get(String key) {
-            DataNode node; for(Object o : children) {
+            for(Object o : children) {
                 if(!( o instanceof DataNode )) {
                     continue;
-                } node = (DataNode) o; if(node.name.equals(key)) {
+                }
+                DataNode node = (DataNode) o;
+                if(node.name.equals(key)) {
                     return node;
                 }
-            } return null;
+            }
+            return null;
         }
 
         @Override
         public String toString() {
-            String nameStr = ""; if(name != null) {
+            String nameStr = "";
+            if(name != null) {
                 nameStr = name;
-            } String splitStr = ""; if(( name != null ) && ( value != null )) {
+            }
+            String splitStr = "";
+            if(( name != null ) && ( value != null )) {
                 splitStr = ": ";
-            } String valStr = ""; if(value != null) {
-                valStr = value.toString(); if(value instanceof byte[]) {
+            }
+            String valStr = "";
+            if(value != null) {
+                valStr = value.toString();
+                if(value instanceof byte[]) {
                     valStr = Arrays.toString((byte[]) value);
-                } valStr += " [" + value.getClass().getSimpleName() + ']';
-            } return MessageFormat.format("{0}{1}{2}", nameStr, splitStr, valStr);
+                }
+                valStr += " [" + value.getClass().getSimpleName() + ']';
+            }
+            return MessageFormat.format("{0}{1}{2}", nameStr, splitStr, valStr);
         }
     }
 
@@ -102,7 +114,9 @@ public class BVDF implements Savable {
 
                 @Override
                 public void push(Object index) {
-                    DataNode node = new DataNode(index); last.add(node); last = node;
+                    DataNode node = new DataNode(index);
+                    last.add(node);
+                    last = node;
                 }
             }).read();
         } catch(IOException ex) {

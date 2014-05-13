@@ -37,7 +37,10 @@ public class SteamID {
     private String user;
 
     public SteamID(String user, String id64, String uid, String id32) {
-        this.user = user; this.id64 = id64; this.uid = uid; this.id32 = id32;
+        this.user = user;
+        this.id64 = id64;
+        this.uid = uid;
+        this.id32 = id32;
     }
 
     public static String ID32toID64(CharSequence steam) {
@@ -45,16 +48,21 @@ public class SteamID {
     }
 
     private static CharSequence ID32toUID(CharSequence steam) {
-        Matcher matcher = ID32.matcher(steam); if(!matcher.matches()) {
+        Matcher matcher = ID32.matcher(steam);
+        if(!matcher.matches()) {
             return null;
-        } BigInteger id = new BigInteger(matcher.group(3)).multiply(BigInteger.valueOf(2)).add(new BigInteger(matcher.group(2)));
+        }
+        BigInteger id = new BigInteger(matcher.group(3)).multiply(BigInteger.valueOf(2)).add(new BigInteger(matcher.group(2)));
         return "U:1:" + id;
     }
 
     private static String UIDtoID64(CharSequence steam) {
-        Matcher matcher = UID.matcher(steam); if(!matcher.matches()) {
+        Matcher matcher = UID.matcher(steam);
+        if(!matcher.matches()) {
             return null;
-        } BigInteger id = new BigInteger(matcher.group(2)).add(ID_64_OFFSET); return id.toString();
+        }
+        BigInteger id = new BigInteger(matcher.group(2)).add(ID_64_OFFSET);
+        return id.toString();
     }
 
     public static String ID64toID32(CharSequence steam) {
@@ -62,15 +70,20 @@ public class SteamID {
     }
 
     public static String ID64toUID(CharSequence steam) {
-        Matcher matcher = ID64.matcher(steam); if(!matcher.matches()) {
+        Matcher matcher = ID64.matcher(steam);
+        if(!matcher.matches()) {
             return null;
-        } BigInteger id = new BigInteger(matcher.group(1)).subtract(ID_64_OFFSET); return "U:1:" + id;
+        }
+        BigInteger id = new BigInteger(matcher.group(1)).subtract(ID_64_OFFSET);
+        return "U:1:" + id;
     }
 
     public static String UIDtoID32(CharSequence steam) {
-        Matcher matcher = UID.matcher(steam); if(!matcher.matches()) {
+        Matcher matcher = UID.matcher(steam);
+        if(!matcher.matches()) {
             return null;
-        } BigInteger[] id = new BigInteger(matcher.group(2)).divideAndRemainder(BigInteger.valueOf(2));
+        }
+        BigInteger[] id = new BigInteger(matcher.group(2)).divideAndRemainder(BigInteger.valueOf(2));
         return "STEAM_0:" + id[1] + ':' + id[0];
     }
 

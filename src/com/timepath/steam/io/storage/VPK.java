@@ -28,12 +28,12 @@ import java.util.zip.Checksum;
  */
 public class VPK extends ExtendedVFile {
 
-    private static final int                       HEADER = 0x55AA1234;
-    private static final Logger                    LOG    = Logger.getLogger(VPK.class.getName());
+    private static final int                       HEADER        = 0x55AA1234;
+    private static final Logger                    LOG           = Logger.getLogger(VPK.class.getName());
     /**
      * Previously loaded VPKs stored as references.
      */
-    private static final Map<File, Reference<VPK>> cache  = new HashMap<>(0);
+    private static final Map<File, Reference<VPK>> REFERENCE_MAP = new HashMap<>(0);
     private final ByteBuffer   globaldata;
     private final ByteBuffer[] mappings;
     private final File[]       store;
@@ -42,102 +42,141 @@ public class VPK extends ExtendedVFile {
 
     private VPK(final File file) throws IOException {
         LOG.log(Level.INFO, "Loading {0}", file);
-        //<editor-fold defaultstate="collapsed" desc="Map extra archives">
-        name = file.getName(); name = name.substring(0, name.length() - 4); // Strip '.vkp'
+        // Map extra archives
+        name = file.getName();
+        name = name.substring(0, name.length() - 4); // Strip '.vkp'
         if(name.endsWith("_dir")) {
-            multiPart = true; name = name.substring(0, name.length() - 4); // Strip '_dir'
-        } File[] parts = file.getParentFile().listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File f) {
-                if(f.equals(file)) {
-                    return false;
-                } return f.getName().startsWith(name) && ( f.getName().length() == ( name.length() + 8 ) );
-            }
-        }); store = new File[parts.length]; mappings = new ByteBuffer[store.length]; for(File f : parts) {
-            String[] split = f.getName().split("_"); int idx = Integer.parseInt(split[split.length - 1].replaceAll(".vpk", ""));
-            store[idx] = f;
+            multiPart = true;
+            name = name.substring(0, name.length() - 4); // Strip '_dir'
         }
-        //</editor-fold>
-        ByteBuffer b = DataUtils.mapFile(file); int signature = b.getInt(); if(signature != HEADER) {
+        File[] parts = file.getParentFile().listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                if(pathname.equals(file)) {
+                    return false;
+                }
+                return pathname.getName().startsWith(name) && ( pathname.getName().length() == ( name.length() + 8 ) );
+            }
+        });
+        store = new File[parts.length];
+        mappings = new ByteBuffer[store.length];
+        for(File part : parts) {
+            String[] split = part.getName().split("_");
+            int idx = Integer.parseInt(split[split.length - 1].replaceAll(".vpk", ""));
+            store[idx] = part;
+        }
+        ByteBuffer buffer = DataUtils.mapFile(file);
+        int signature = buffer.getInt();
+        if(signature != HEADER) {
             throw new IOException("Not a VPK file");
-        } int ver = b.getInt(); int treeLength = b.getInt(); // Unsigned length of directory slice
-        int dataLength = 0; int v2 = 0; int v3 = 0; // 48 in most
-        int v4 = 0; if(ver >= 2) {
-            dataLength = b.getInt(); v2 = b.getInt(); v3 = b.getInt(); v4 = b.getInt();
-        } ByteBuffer directoryInfo = DataUtils.getSlice(b, treeLength); globaldata = DataUtils.getSlice(b, dataLength);
-        b.get(new byte[v2]); // Directory
-        b.get(new byte[v3]); // Single + Directory
-        b.get(new byte[v4]); // Directory
+        }
+        int ver = buffer.getInt();
+        int treeLength = buffer.getInt(); // Unsigned length of directory slice
+        int dataLength = 0;
+        int v2 = 0;
+        int v3 = 0; // 48 in most
+        int v4 = 0;
+        if(ver >= 2) {
+            dataLength = buffer.getInt();
+            v2 = buffer.getInt();
+            v3 = buffer.getInt();
+            v4 = buffer.getInt();
+        }
+        ByteBuffer directoryInfo = DataUtils.getSlice(buffer, treeLength);
+        globaldata = DataUtils.getSlice(buffer, dataLength);
+        buffer.get(new byte[v2]); // Directory
+        buffer.get(new byte[v3]); // Single + Directory
+        buffer.get(new byte[v4]); // Directory
         Object[][] debug = {
                 { "dataLength = ", dataLength },
                 { "v2 = ", v2 },
                 { "v3 = ", v3 },
                 { "v4 = ", v4 },
-                { "Underflow = ", b.remaining() },
-        }; LOG.info(StringUtils.fromDoubleArray(debug, "Debug:")); parseTree(directoryInfo);
+                { "Underflow = ", buffer.remaining() },
+        };
+        LOG.info(StringUtils.fromDoubleArray(debug, "Debug:"));
+        parseTree(directoryInfo);
     }
 
-    private void parseTree(ByteBuffer b) {
+    private void parseTree(ByteBuffer buffer) {
         // Extensions
-        for(String ext; !( ext = DataUtils.readZeroString(b) ).isEmpty(); ) {
+        for(String ext; !( ext = DataUtils.readZeroString(buffer) ).isEmpty(); ) {
             if(" ".equals(ext)) { // No extension
                 ext = null;
             }
             // Paths
-            for(String dir; !( dir = DataUtils.readZeroString(b) ).isEmpty(); ) {
+            for(String dir; !( dir = DataUtils.readZeroString(buffer) ).isEmpty(); ) {
                 SimpleVFile p = nodeForPath(dir);
                 // File names
-                for(String basename; !( basename = DataUtils.readZeroString(b) ).isEmpty(); ) {
-                    VPKDirectoryEntry e = readFileInfo(b, basename + ( ( ext != null ) ? ( '.' + ext ) : "" )); p.add(e);
+                for(String basename; !( basename = DataUtils.readZeroString(buffer) ).isEmpty(); ) {
+                    VPKDirectoryEntry e = readFileInfo(buffer, basename + ( ( ext != null ) ? ( '.' + ext ) : "" ));
+                    p.add(e);
                 }
             }
         }
     }
 
     private SimpleVFile nodeForPath(String path) {
-        SimpleVFile node = getRoot(); if(!" ".equals(path)) {
-            String[] components = path.split("/"); for(String dir : components) {
-                SimpleVFile match = null; for(SimpleVFile e : node.list()) {
+        SimpleVFile node = getRoot();
+        if(!" ".equals(path)) {
+            String[] components = path.split("/");
+            for(String dir : components) {
+                SimpleVFile match = null;
+                for(SimpleVFile e : node.list()) {
                     if(e.isDirectory() && e.getName().equalsIgnoreCase(dir)) {
-                        match = e; break;
+                        match = e;
+                        break;
                     }
-                } if(match == null) {
-                    VPKDirectoryEntry dirEntry = new VPKDirectoryEntry(dir); dirEntry.isDirectory = true; match = dirEntry;
+                }
+                if(match == null) {
+                    VPKDirectoryEntry dirEntry = new VPKDirectoryEntry(dir);
+                    dirEntry.isDirectory = true;
+                    match = dirEntry;
                     node.add(match);
-                } node = match;
+                }
+                node = match;
             }
-        } return node;
+        }
+        return node;
     }
 
-    private VPKDirectoryEntry readFileInfo(ByteBuffer b, String name) {
-        VPKDirectoryEntry e = new VPKDirectoryEntry(name); e.crc = b.getInt(); e.preloadBytes = b.getShort();
-        e.archiveIndex = b.getShort(); e.entryOffset = b.getInt(); e.entryLength = b.getInt();
-        b.position(b.position() + e.preloadBytes); // TODO: load preload bytes
-        short term = b.getShort(); assert term == 0xFFFF : "VPK directory reading failed"; return e;
+    private VPKDirectoryEntry readFileInfo(ByteBuffer buffer, String name) {
+        VPKDirectoryEntry e = new VPKDirectoryEntry(name);
+        e.crc = buffer.getInt();
+        e.preloadBytes = buffer.getShort();
+        e.archiveIndex = buffer.getShort();
+        e.entryOffset = buffer.getInt();
+        e.entryLength = buffer.getInt();
+        buffer.position(buffer.position() + e.preloadBytes); // TODO: load preload bytes
+        short term = buffer.getShort();
+        assert term == 0xFFFF : "VPK directory reading failed";
+        return e;
     }
 
     public static VPK loadArchive(File file) {
-        Reference<VPK> ref = cache.get(file); VPK cached = ( ref != null ) ? ref.get() : null; if(cached != null) {
-            LOG.log(Level.INFO, "Loaded {0} from cache", file); return cached;
-        } try {
-            VPK v = new VPK(file); cache.put(file, new SoftReference<>(v)); return v;
+        Reference<VPK> ref = REFERENCE_MAP.get(file);
+        VPK cached = ( ref != null ) ? ref.get() : null;
+        if(cached != null) {
+            LOG.log(Level.INFO, "Loaded {0} from cache", file);
+            return cached;
+        }
+        try {
+            VPK v = new VPK(file);
+            REFERENCE_MAP.put(file, new SoftReference<>(v));
+            return v;
         } catch(IOException ex) {
-            LOG.log(Level.SEVERE, null, ex); return null;
+            LOG.log(Level.SEVERE, null, ex);
+            return null;
         }
     }
 
-    public InputStream get(int index) {
+    public static InputStream get(int index) {
         return null;
     }
 
     @Override
     public String getName() {
         return name;
-    }
-
-    @Override
-    public Object getAttributes() {
-        return null;
     }
 
     @Override
@@ -149,10 +188,17 @@ public class VPK extends ExtendedVFile {
         try {
             if(mappings[i] == null) {
                 mappings[i] = DataUtils.mapFile(store[i]);
-            } return mappings[i];
+            }
+            return mappings[i];
         } catch(IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
-        } return null;
+        }
+        return null;
+    }
+
+    @Override
+    public Object getAttributes() {
+        return null;
     }
 
     /**
@@ -189,11 +235,16 @@ public class VPK extends ExtendedVFile {
         public long calculateChecksum() {
             if(localData() == null) {
                 return 0;
-            } Checksum crc = new CRC32(); byte[] buf = new byte[4096]; localData().position(0);
+            }
+            Checksum checksum = new CRC32();
+            localData().position(0);
+            byte[] buf = new byte[4096];
             while(localData().hasRemaining()) {
-                int bsize = Math.min(buf.length, localData().remaining()); localData().get(buf, 0, bsize);
-                crc.update(buf, 0, bsize);
-            } return crc.getValue();
+                int bsize = Math.min(buf.length, localData().remaining());
+                localData().get(buf, 0, bsize);
+                checksum.update(buf, 0, bsize);
+            }
+            return checksum.getValue();
         }
 
         @Override
@@ -219,12 +270,15 @@ public class VPK extends ExtendedVFile {
         public ByteBuffer getSource() {
             if(archiveIndex == 0x7FFF) { // This archive
                 return globaldata;
-            } return getData(archiveIndex);
+            }
+            return getData(archiveIndex);
         }
 
         @Override
         public boolean isComplete() {
-            long theoretical = crc; long real = calculateChecksum(); return theoretical == real;
+            long theoretical = crc;
+            long real = calculateChecksum();
+            return theoretical == real;
         }
 
         @Override
@@ -238,10 +292,14 @@ public class VPK extends ExtendedVFile {
         }
 
         public ByteBuffer localData() {
-            ByteBuffer buf = ( localdata != null ) ? localdata.get() : null; if(buf == null) {
-                ByteBuffer src = getSource(); src.position(entryOffset); buf = DataUtils.getSlice(src, entryLength);
+            ByteBuffer buf = ( localdata != null ) ? localdata.get() : null;
+            if(buf == null) {
+                ByteBuffer src = getSource();
+                src.position(entryOffset);
+                buf = DataUtils.getSlice(src, entryLength);
                 localdata = new SoftReference<>(buf);
-            } return buf;
+            }
+            return buf;
         }
 
         @Override

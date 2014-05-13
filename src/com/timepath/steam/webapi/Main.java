@@ -48,18 +48,30 @@ public class Main {
 
             @Override
             public void login() {
-                LOG.info("Logging in"); try {
-                    String u = getUserInput().getText(); byte[] p = new String(getPassInput().getPassword()).getBytes();
+                LOG.info("Logging in");
+                try {
+                    String u = getUserInput().getText();
+                    byte[] p = new String(getPassInput().getPassword()).getBytes();
                     if(( prevattempt == null ) || !prevattempt.toLowerCase().equals(u.toLowerCase())) {
-                        prevattempt = u; enc = encrypt(u, p);
-                    } boolean loggedin = tryLogin(u, gid, enc); if(loggedin) {
-                        dispose(); byte nul = 0; Arrays.fill(p, 0, Math.min(0, p.length - 1), nul); return;
+                        prevattempt = u;
+                        enc = encrypt(u, p);
+                    }
+                    boolean loggedin = tryLogin(u, gid, enc);
+                    if(loggedin) {
+                        dispose();
+                        byte nul = 0;
+                        Arrays.fill(p, 0, Math.min(0, p.length - 1), nul);
+                        return;
                     }
                 } catch(Exception ex) {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-                } LOG.info("Login failed");
+                }
+                LOG.info("Login failed");
             }
-        }; dlg.pack(); dlg.setLocationRelativeTo(null); dlg.setVisible(true);
+        };
+        dlg.pack();
+        dlg.setLocationRelativeTo(null);
+        dlg.setVisible(true);
         dlg.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
     }
 
@@ -83,9 +95,12 @@ public class Main {
         JSONObject ret = new JSONObject(login.postget("login/getrsakey", rb.toString()));
         BigInteger mod = new BigInteger(ret.getString("publickey_mod"), 16);
         BigInteger exp = new BigInteger(ret.getString("publickey_exp"), 16);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA"); KeySpec pubKeySpec = new RSAPublicKeySpec(mod, exp);
-        Key key = keyFactory.generatePublic(pubKeySpec); Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.ENCRYPT_MODE, key); return new Object[] { cipher.doFinal(password), ret.getString("timestamp") };
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        KeySpec pubKeySpec = new RSAPublicKeySpec(mod, exp);
+        Key key = keyFactory.generatePublic(pubKeySpec);
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        return new Object[] { cipher.doFinal(password), ret.getString("timestamp") };
     }
 
     /**
@@ -102,8 +117,11 @@ public class Main {
      * @throws JSONException
      */
     private boolean tryLogin(String u, long g, Object... enc) throws MalformedURLException, IOException, InterruptedException {
-        String captcha = dlg.getCaptchaInput().getText(); String eauth = dlg.getSteamguardInput().getText();
-        byte[] cipherData = (byte[]) enc[0]; Connection login = new SteamConnection(); String mobile = "mobile";
+        String captcha = dlg.getCaptchaInput().getText();
+        String eauth = dlg.getSteamguardInput().getText();
+        byte[] cipherData = (byte[]) enc[0];
+        Connection login = new SteamConnection();
+        String mobile = "mobile";
         String req1 = RequestBuilder.fromArray(new Object[][] {
                                                        // Credentials
                                                        {
@@ -146,20 +164,22 @@ public class Main {
                                                        },
                                                }
                                               ).toString();
-        JSONObject ret = new JSONObject(login.postget(mobile + "login/dologin", req1)); if(ret.getBoolean("success")) {
+        JSONObject ret = new JSONObject(login.postget(mobile + "login/dologin", req1));
+        if(ret.getBoolean("success")) {
             if(ret.has("oauth")) {
-                long umqid = (long) ( Math.random() * Long.MAX_VALUE ); JSONObject dict = new JSONObject(ret.getString("oauth"));
-                LOG.info(String.valueOf(dict)); String req2 = RequestBuilder.fromArray(new Object[][] {
-                                                                                               {
-                                                                                                       "access_token",
-                                                                                                       dict.getString(
-                                                                                                               "oauth_token")
-                                                                                               }, {
-                                                                                                       "umqid", umqid
-                                                                                               }
-                                                                                       }
-                                                                                      ).toString();
-                String ret2 = login.postget("ISteamWebUserPresenceOAuth/Logon/v0001", req2); while(true) {
+                long umqid = (long) ( Math.random() * Long.MAX_VALUE );
+                JSONObject dict = new JSONObject(ret.getString("oauth"));
+                LOG.info(String.valueOf(dict));
+                String req2 = RequestBuilder.fromArray(new Object[][] {
+                                                               {
+                                                                       "access_token", dict.getString("oauth_token")
+                                                               }, {
+                                                                       "umqid", umqid
+                                                               }
+                                                       }
+                                                      ).toString();
+                String ret2 = login.postget("ISteamWebUserPresenceOAuth/Logon/v0001", req2);
+                while(true) {
                     LOG_CONNECTION.setLevel(Level.WARNING);
                     LOG.info(login.postget("ISteamWebUserPresenceOAuth/Poll/v0001", RequestBuilder.fromArray(new Object[][] {
                                                                                                                      {
@@ -172,21 +192,32 @@ public class Main {
                                                                                                                      }
                                                                                                              }
                                                                                                             ).toString()
-                                          )); Thread.sleep(1000);
+                                          ));
+                    Thread.sleep(1000);
                 }
-            } if(ret.has("transfer_url")) {
-                RequestBuilder rb = new RequestBuilder(); String trans = ret.getString("transfer_url");
-                JSONObject arr = ret.getJSONObject("transfer_parameters"); Object[] keys = arr.keySet().toArray();
+            }
+            if(ret.has("transfer_url")) {
+                RequestBuilder rb = new RequestBuilder();
+                String trans = ret.getString("transfer_url");
+                JSONObject arr = ret.getJSONObject("transfer_parameters");
+                Object[] keys = arr.keySet().toArray();
                 for(Object key : keys) {
-                    String keyStr = key.toString(); rb.append(keyStr, arr.get(keyStr).toString());
-                } LOG.info(trans + '?' + rb);
-            } return true;
-        } dlg.getMessageLabel().setText(ret.getString("message")); if(ret.optBoolean("emailauth_needed")) {
+                    String keyStr = key.toString();
+                    rb.append(keyStr, arr.get(keyStr).toString());
+                }
+                LOG.info(trans + '?' + rb);
+            }
+            return true;
+        }
+        dlg.getMessageLabel().setText(ret.getString("message"));
+        if(ret.optBoolean("emailauth_needed")) {
             emailsteamid = ret.getString("emailsteamid");
         } else if(ret.optBoolean("captcha_needed")) {
-            gid = ret.getLong("captcha_gid"); String address = "https://steamcommunity.com/public/captcha.php?gid=" + gid;
+            gid = ret.getLong("captcha_gid");
+            String address = "https://steamcommunity.com/public/captcha.php?gid=" + gid;
             dlg.getCaptchaLabel().setIcon(new ImageIcon(ImageIO.read(URI.create(address).toURL())));
-        } return false;
+        }
+        return false;
     }
 
     @SuppressWarnings("MethodNamesDifferingOnlyByCase")

@@ -9,4 +9,6 @@ class tagGCFDIRECTORYCOPYENTRY {
      * Index of the directory item.
      */
     int DirectoryIndex;
+
+    tagGCFDIRECTORYCOPYENTRY() {}
 }

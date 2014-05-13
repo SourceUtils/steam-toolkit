@@ -25,6 +25,7 @@ import java.util.zip.Inflater;
  * @author TimePath
  * @deprecated Blob files are no longer in use
  */
+@Deprecated
 public class Blob implements Savable {
 
     private static final Logger LOG = Logger.getLogger(Blob.class.getName());
@@ -35,14 +36,18 @@ public class Blob implements Savable {
     }
 
     private static void parsePayload(ByteBuffer parentbuf, BlobNode parent, boolean rawData) {
-        ByteBuffer buf = DataUtils.getSlice(parentbuf); if(buf.remaining() < 2) {
+        ByteBuffer buf = DataUtils.getSlice(parentbuf);
+        if(buf.remaining() < 2) {
             return;
-        } short id = buf.getShort(); BlobNode d = new BlobNode("Payload: 0x" + Integer.toHexString(id)); switch(id) {
-            //<editor-fold defaultstate="collapsed" desc="Compressed">
+        }
+        short id = buf.getShort();
+        BlobNode d = new BlobNode("Payload: 0x" + Integer.toHexString(id));
+        switch(id) {
+            // Compressed
             /*
              * case 0x4301:
              * ByteBuffer decompressed = decompress(buf);
-             * //<editor-fold defaultstate="collapsed" desc="Debug">
+             * // Debug
              * int stride = 20;
              * byte[] data = new byte[stride];
              * File f = new File("binout.blob");
@@ -68,72 +73,100 @@ public class Blob implements Savable {
              * LOG.info(Utils.hex(data));
              * }
              * decompressed.position(0);
-             * //</editor-fold>
              * parsePayload(decompressed, d, false);
              * break;
              */
-            //</editor-fold>
-            case 0x5001: int length = buf.getInt(); int padding = buf.getInt(); int limit = buf.position() - 10 + length +
-                                                                                            padding; // 10 because is relative
-                                                                                            // to when this section started
+            case 0x5001:
+                int length = buf.getInt();
+                int padding = buf.getInt();
+                int limit = ( buf.position() - 10 ) + length +
+                            padding; // 10 because is relative
+                // to when this section started
                 //                limit = Math.min(limit, buf.position() + buf.remaining()); // workaround for decompressed
-                LOG.log(Level.FINE, "limit: {0}", limit); buf.limit(limit); ByteBuffer payload = DataUtils.getSlice(buf);
-                //<editor-fold defaultstate="collapsed" desc="Payload">
-                BlobNode children = d; while(payload.remaining() > padding) {
-                BlobNode child = new BlobNode(); short descLength = payload.getShort(); int payloadLength = payload.getInt();
-                ByteBuffer childDesc = DataUtils.getSlice(payload, descLength); String name = DataUtils.getText(childDesc);
-                if("\1\0\0\0".equals(name) || "\2\0\0\0".equals(name)) {
-                    childDesc.position(0); child.setMeta(childDesc.getInt());
-                } name = name.replaceAll("\1\0\0\0", "<Folder>"); name = name.replaceAll("\2\0\0\0", "<File>");
-                child.setUserObject(name); ByteBuffer childPayload = DataUtils.getSlice(payload, payloadLength);
-                if(payloadLength == 10) {
-                    continue;
-                } BlobNode nextup = child; if(!child.isMeta()) {
-                    children.add(child);
-                } else {
-                    nextup = parent;
-                } if(child.getMeta() == 1 && payloadLength == 4) {
-                    parent.setDataType(childPayload.getInt());//parent.add(new BlobNode("Payload type: " + parent.dataType));
-                } else {
-                    int dataType = parent.getDataType(); if(dataType != -1) {
-                        switch(dataType) {
-                            case 0: // Text
-                                String str = DataUtils.getString(childPayload); String date = DateUtils.parse(str); if(date !=
-                                                                                                                       null) {
-                                str = "Date: " + date;
-                            } LOG.log(Level.FINE, "String: {0}", str); parent.add(new BlobNode("String: " + str)); break;
-                            case 1: // Dword
-                                int val = childPayload.getInt(); LOG.log(Level.FINE, "DWORD: {0}", val); parent.add(new BlobNode(
-                                    "DWORD: " + val)); break; case 2: // Raw
-                                int remaining = childPayload.remaining(); int max = 10; byte[] data = new byte[Math.min(
-                                        childPayload.remaining(),
-                                        max)]; childPayload.get(data); childPayload.position(0); BlobNode raw = new BlobNode(
-                                        "Raw data: " + Utils.hex(data) +
-                                        ( ( remaining > max ) ? " ..." : "" )); parent.add(raw); parsePayload(childPayload,
-                                                                                                              raw,
-                                                                                                              true); break;
-                            default: if(!rawData) {
-                                parent.add(new BlobNode("Unhandled data type: " + dataType));
-                            }
-                                //                                LOG.log(Level.WARNING, "Unhandled data type {0}", dataType);
-                                break;
-                        }
+                LOG.log(Level.FINE, "limit: {0}", limit);
+                buf.limit(limit);
+                ByteBuffer payload = DataUtils.getSlice(buf);
+                // Payload
+                while(payload.remaining() > padding) {
+                    BlobNode child = new BlobNode();
+                    short descLength = payload.getShort();
+                    int payloadLength = payload.getInt();
+                    ByteBuffer childDesc = DataUtils.getSlice(payload, descLength);
+                    String name = DataUtils.getText(childDesc);
+                    if("\1\0\0\0".equals(name) || "\2\0\0\0".equals(name)) {
+                        childDesc.position(0);
+                        child.setMeta(childDesc.getInt());
+                    }
+                    name = name.replaceAll("\1\0\0\0", "<Folder>");
+                    name = name.replaceAll("\2\0\0\0", "<File>");
+                    child.setUserObject(name);
+                    ByteBuffer childPayload = DataUtils.getSlice(payload, payloadLength);
+                    if(payloadLength == 10) {
+                        continue;
+                    }
+                    BlobNode nextup = child;
+                    if(!child.isMeta()) {
+                        d.add(child);
                     } else {
-                        parsePayload(childPayload, nextup, false);
+                        nextup = parent;
+                    }
+                    if(( child.getMeta() == 1 ) && ( payloadLength == 4 )) {
+                        parent.setDataType(childPayload.getInt());//parent.add(new BlobNode("Payload type: " + parent.dataType));
+                    } else {
+                        int dataType = parent.getDataType();
+                        if(dataType != -1) {
+                            switch(dataType) {
+                                case 0: // Text
+                                    String str = DataUtils.getString(childPayload);
+                                    String date = DateUtils.parse(str);
+                                    if(date != null) {
+                                        str = "Date: " + date;
+                                    }
+                                    LOG.log(Level.FINE, "String: {0}", str);
+                                    parent.add(new BlobNode("String: " + str));
+                                    break;
+                                case 1: // Dword
+                                    int val = childPayload.getInt();
+                                    LOG.log(Level.FINE, "DWORD: {0}", val);
+                                    parent.add(new BlobNode("DWORD: " + val));
+                                    break;
+                                case 2: // Raw
+                                    int remaining = childPayload.remaining();
+                                    int max = 10;
+                                    byte[] data = new byte[Math.min(childPayload.remaining(), max)];
+                                    childPayload.get(data);
+                                    childPayload.position(0);
+                                    BlobNode raw = new BlobNode("Raw data: " + Utils.hex(data) +
+                                                                ( ( remaining > max ) ? " ..." : "" )
+                                    );
+                                    parent.add(raw);
+                                    parsePayload(childPayload, raw, true);
+                                    break;
+                                default:
+                                    if(!rawData) {
+                                        parent.add(new BlobNode("Unhandled data type: " + dataType));
+                                    }
+                                    //                                LOG.log(Level.WARNING, "Unhandled data type {0}", dataType);
+                                    break;
+                            }
+                        } else {
+                            parsePayload(childPayload, nextup, false);
+                        }
                     }
                 }
-            } payload.get(new byte[padding]); if(buf.remaining() > 0) {
-                LOG.log(Level.INFO, "Underflow: {0}", buf.remaining()); return;
-            }
-                //</editor-fold>
-                break; default: if(!rawData) {
-                LOG.log(Level.WARNING, "Unhandled {0}", id);
-            } break;
-        } TreeUtils.moveChildren(d, parent);
-    }
-
-    public BlobNode getRoot() {
-        return root;
+                payload.get(new byte[padding]);
+                if(buf.remaining() > 0) {
+                    LOG.log(Level.INFO, "Underflow: {0}", buf.remaining());
+                    return;
+                }
+                break;
+            default:
+                if(!rawData) {
+                    LOG.log(Level.WARNING, "Unhandled {0}", id);
+                }
+                break;
+        }
+        TreeUtils.moveChildren(d, parent);
     }
 
     /**
@@ -147,35 +180,54 @@ public class Blob implements Savable {
      *
      * @return the originalBufffer decompressed
      */
-    private ByteBuffer decompress(ByteBuffer originalBuffer) {
+    private static ByteBuffer decompress(ByteBuffer originalBuffer) {
         LOG.log(Level.INFO,
                 "Inflating a compressed binary section, initial length (including header) is {0}",
-                originalBuffer.remaining()); int headerSkip = 2; Inflater inflater = new Inflater(true);
+                originalBuffer.remaining());
+        Inflater inflater = new Inflater(true);
         ByteBuffer mybuf = DataUtils.getSlice(originalBuffer);
         // Includes length of magic header etc?
         int wholeLen = mybuf.getInt(); // Includes bytes starting with itself
-        int compressedLen = wholeLen - 20; int x1 = mybuf.getInt(); int decompressedLen = mybuf.getInt(); int x2 = mybuf.getInt();
-        int compLevel = mybuf.getShort(); LOG.log(Level.FINE,
-                                                  "Header claims payload compressed length is {0}, deflated length is {1}, " +
-                                                  "compression level {2}",
-                                                  new Object[] { compressedLen, decompressedLen, compLevel });
+        int compressedLen = wholeLen - 20;
+        int x1 = mybuf.getInt();
+        int decompressedLen = mybuf.getInt();
+        int x2 = mybuf.getInt();
+        int compLevel = mybuf.getShort();
+        LOG.log(Level.FINE,
+                "Header claims payload compressed length is {0}, deflated length is {1}, " + "compression level {2}",
+                new Object[] { compressedLen, decompressedLen, compLevel });
         if(mybuf.remaining() < compressedLen) {
             LOG.log(Level.WARNING,
                     "The buffer remainder is too small ({0}) to contain the amount of data the header specifies ({1}).",
                     new Object[] { mybuf.remaining(), compressedLen });
-        } mybuf.limit(mybuf.position() + compressedLen); byte[] compressed = new byte[mybuf.remaining()]; mybuf.get(compressed);
+        }
+        mybuf.limit(mybuf.position() + compressedLen);
+        byte[] compressed = new byte[mybuf.remaining()];
+        mybuf.get(compressed);
+        int headerSkip = 2;
         inflater.setInput(compressed, headerSkip, compressed.length - headerSkip);
-        byte[] decompressed = new byte[decompressedLen]; LOG.fine("Beginning decompression"); try {
-            inflater.inflate(decompressed); LOG.fine("Decompression successful");
+        byte[] decompressed = new byte[decompressedLen];
+        LOG.fine("Beginning decompression");
+        try {
+            inflater.inflate(decompressed);
+            LOG.fine("Decompression successful");
         } catch(DataFormatException ex) {
             LOG.log(Level.SEVERE, null, ex);
-        } ByteBuffer newBuf = ByteBuffer.wrap(decompressed); newBuf.order(ByteOrder.LITTLE_ENDIAN); return newBuf;
+        }
+        ByteBuffer newBuf = ByteBuffer.wrap(decompressed);
+        newBuf.order(ByteOrder.LITTLE_ENDIAN);
+        return newBuf;
+    }
+
+    public BlobNode getRoot() {
+        return root;
     }
 
     @Override
     public void readExternal(InputStream in) {
         try {
-            byte[] buf = new byte[in.available()]; readExternal(ByteBuffer.wrap(buf));
+            byte[] buf = new byte[in.available()];
+            readExternal(ByteBuffer.wrap(buf));
         } catch(IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
@@ -183,7 +235,8 @@ public class Blob implements Savable {
 
     @Override
     public void readExternal(ByteBuffer buf) {
-        buf.order(ByteOrder.LITTLE_ENDIAN); parsePayload(buf, root, false);
+        buf.order(ByteOrder.LITTLE_ENDIAN);
+        parsePayload(buf, root, false);
     }
 
     @Override

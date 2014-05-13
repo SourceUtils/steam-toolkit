@@ -69,7 +69,6 @@ class ManifestHeader {
      * Number of files in the directory.
      */
     private final int                     fileCount;
-    private final int                     fingerprint;
     /**
      * Always 0x00000004.
      */
@@ -77,20 +76,31 @@ class ManifestHeader {
     private final long                    pos;
 
     ManifestHeader(RandomAccessFileWrapper raf) throws IOException {
-        this.raf = raf; pos = raf.getFilePointer(); headerVersion = raf.readULEInt(); applicationID = raf.readULEInt();
-        applicationVersion = raf.readULEInt(); nodeCount = raf.readULEInt(); fileCount = raf.readULEInt();
-        compressionBlockSize = raf.readULEInt(); binarySize = raf.readULEInt(); nameSize = raf.readULEInt();
-        hashTableKeyCount = raf.readULEInt(); minimumFootprintCount = raf.readULEInt(); userConfigCount = raf.readULEInt();
+        this.raf = raf;
+        pos = raf.getFilePointer();
+        headerVersion = raf.readULEInt();
+        applicationID = raf.readULEInt();
+        applicationVersion = raf.readULEInt();
+        nodeCount = raf.readULEInt();
+        fileCount = raf.readULEInt();
+        compressionBlockSize = raf.readULEInt();
+        binarySize = raf.readULEInt();
+        nameSize = raf.readULEInt();
+        hashTableKeyCount = raf.readULEInt();
+        minimumFootprintCount = raf.readULEInt();
+        userConfigCount = raf.readULEInt();
         //            bitmask = ManifestHeaderBitmask.get(raf.readULEInt());
-        bitmask = raf.readULEInt(); fingerprint = raf.readULEInt(); checksum = raf.readULEInt();
+        bitmask = raf.readULEInt();
+        int fingerprint = raf.readULEInt();
+        checksum = raf.readULEInt();
     }
 
     @Override
     public String toString() {
-        int checked = check(); String checkState = checksum == checked
-                                                   ? "OK"
-                                                   : DataUtils.toBinaryString(checksum) + " vs " +
-                                                     DataUtils.toBinaryString(checked); return MessageFormat.format(
+        int checked = check();
+        String checkState = ( checksum == checked ) ? "OK" : ( DataUtils.toBinaryString(checksum) + " vs " +
+                                                               DataUtils.toBinaryString(checked) );
+        return MessageFormat.format(
                 "{0} : id:{1}, ver:{2}, bitmask:0x{3}, items:{4}, files:{5}, dsize:{6}, nsize:{7}, info1:{8}, " +
                 "copy:{9}, local:{10}, check:{11}",
                 Long.toHexString(pos),
@@ -105,21 +115,43 @@ class ManifestHeader {
                 minimumFootprintCount,
                 userConfigCount,
                 checkState
-                                                                                                                   );
+                                   );
     }
 
     int check() {
         try {
-            ByteBuffer bbh = ByteBuffer.allocate(SIZE); bbh.order(ByteOrder.LITTLE_ENDIAN); bbh.putInt(headerVersion);
-            bbh.putInt(applicationID); bbh.putInt(applicationVersion); bbh.putInt(nodeCount); bbh.putInt(fileCount);
-            bbh.putInt(compressionBlockSize); bbh.putInt(binarySize); bbh.putInt(nameSize); bbh.putInt(hashTableKeyCount);
-            bbh.putInt(minimumFootprintCount); bbh.putInt(userConfigCount); bbh.putInt(bitmask); bbh.putInt(0); bbh.putInt(0);
-            bbh.flip(); byte[] bytes1 = bbh.array(); raf.seek(pos + SIZE); ByteBuffer bb = ByteBuffer.allocate(binarySize);
-            bb.order(ByteOrder.LITTLE_ENDIAN); bb.put(bytes1); bb.put(raf.readBytes(binarySize - SIZE)); bb.flip();
-            byte[] bytes = bb.array(); Checksum adler32 = new Adler32(); adler32.update(bytes, 0, bytes.length);
-            int checked = (int) adler32.getValue(); return checked;
+            ByteBuffer bbh = ByteBuffer.allocate(SIZE);
+            bbh.order(ByteOrder.LITTLE_ENDIAN);
+            bbh.putInt(headerVersion);
+            bbh.putInt(applicationID);
+            bbh.putInt(applicationVersion);
+            bbh.putInt(nodeCount);
+            bbh.putInt(fileCount);
+            bbh.putInt(compressionBlockSize);
+            bbh.putInt(binarySize);
+            bbh.putInt(nameSize);
+            bbh.putInt(hashTableKeyCount);
+            bbh.putInt(minimumFootprintCount);
+            bbh.putInt(userConfigCount);
+            bbh.putInt(bitmask);
+            bbh.putInt(0);
+            bbh.putInt(0);
+            bbh.flip();
+            byte[] bytes1 = bbh.array();
+            raf.seek(pos + SIZE);
+            ByteBuffer bb = ByteBuffer.allocate(binarySize);
+            bb.order(ByteOrder.LITTLE_ENDIAN);
+            bb.put(bytes1);
+            bb.put(raf.readBytes(binarySize - SIZE));
+            bb.flip();
+            byte[] bytes = bb.array();
+            Checksum adler32 = new Adler32();
+            adler32.update(bytes, 0, bytes.length);
+            int checked = (int) adler32.getValue();
+            return checked;
         } catch(IOException ex) {
             Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
-        } return 0;
+        }
+        return 0;
     }
 }

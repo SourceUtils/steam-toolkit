@@ -9,8 +9,7 @@ import java.io.File;
  */
 public class NCF extends Files {
 
-    public NCF(final File f) {
-        super(f);
-        throw new UnsupportedOperationException("Not supported yet.");
+    public NCF(File f) {
+        super(f); throw new UnsupportedOperationException("Not supported yet.");
     }
 }

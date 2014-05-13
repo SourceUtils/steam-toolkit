@@ -13,6 +13,8 @@ public abstract class ExtendedVFile extends SimpleVFile {
 
     private static final Logger LOG = Logger.getLogger(ExtendedVFile.class.getName());
 
+    protected ExtendedVFile() {}
+
     public void analyze(DefaultMutableTreeNode top, boolean leaves) {
         if(top.getUserObject() instanceof ExtendedVFile) { // the root node has been added
             ExtendedVFile e = (ExtendedVFile) top.getUserObject();

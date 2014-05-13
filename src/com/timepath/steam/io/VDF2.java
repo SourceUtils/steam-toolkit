@@ -16,11 +16,13 @@ import java.util.logging.Logger;
 public class VDF2 extends Node<VDF2.VDFProperty, VDF2> {
 
     private static final Comparator<VDFProperty> COMPARATOR_KEY   = new Comparator<VDFProperty>() {
+        @Override
         public int compare(VDFProperty o1, VDFProperty o2) {
             return o1.getKey().compareTo(o2.getKey());
         }
     };
     private static final Comparator<VDFProperty> COMPARATOR_VALUE = new Comparator<VDFProperty>() {
+        @Override
         public int compare(VDFProperty o1, VDFProperty o2) {
             return o1.getValue().hashCode() - o2.getValue().hashCode();
         }
@@ -74,7 +76,7 @@ public class VDF2 extends Node<VDF2.VDFProperty, VDF2> {
         for(VDF2 v : potential.getNodes()) {
             VDF2 v2 = potential2.getNamedNode(v.custom);
             Diff<VDFProperty> diff = v2.diff(v); // FIXME: backwards for some reason
-            if(diff.added.size() + diff.removed.size() + diff.modified.size() > 0) { // Something was changed
+            if(( diff.added.size() + diff.removed.size() + diff.modified.size() ) > 0) { // Something was changed
                 VDF2 na = new VDF2(v.custom);
                 VDF2 nr = new VDF2(v.custom);
                 for(VDFProperty a : diff.added) {
@@ -118,6 +120,7 @@ public class VDF2 extends Node<VDF2.VDFProperty, VDF2> {
      *
      * @return
      */
+    @Override
     public Diff<VDF2> rdiff(VDF2 other) {
         Diff<VDF2> d = new Diff<>();
         d.in = this;

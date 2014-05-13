@@ -21,9 +21,12 @@ public class Files extends ExtendedVFile {
     private static final ExecutorService                   pool     = Executors.newFixedThreadPool(
             Runtime.getRuntime().availableProcessors() * 10,
             new ThreadFactory() {
+                @Override
                 public Thread newThread(Runnable r) {
                     Thread t = Executors.defaultThreadFactory()
-                                        .newThread(r); t.setDaemon(true); return t;
+                                        .newThread(r);
+                    t.setDaemon(true);
+                    return t;
                 }
             }
                                                                                                   );
@@ -44,8 +47,26 @@ public class Files extends ExtendedVFile {
      * @param recursive
      */
     private Files(File f, boolean recursive) {
-        file = f; if(recursive) {
+        file = f;
+        if(recursive) {
             insert(f);
+        }
+    }
+
+    private static void merge(SimpleVFile r, SimpleVFile parent) {
+        for(SimpleVFile d : r.children()) {
+            SimpleVFile existing = null;
+            for(SimpleVFile t : parent.children()) {
+                if(t.getName().equals(d.getName())) {
+                    existing = t;
+                    break;
+                }
+            }
+            if(existing == null) {
+                parent.copy(d);
+            } else {
+                merge(d, existing);
+            }
         }
     }
 
@@ -80,7 +101,8 @@ public class Files extends ExtendedVFile {
             return new BufferedInputStream(new FileInputStream(file));
         } catch(FileNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
-        } return null;
+        }
+        return null;
     }
 
     @Override
@@ -99,49 +121,50 @@ public class Files extends ExtendedVFile {
     }
 
     private void insert(File f) {
-        long start = System.currentTimeMillis(); final Collection<Future> tasks = new LinkedList<>(); visit(f, new FileVisitor() {
+        long start = System.currentTimeMillis();
+        final Collection<Future> tasks = new LinkedList<>();
+        visit(f, new FileVisitor() {
+            @Override
             public void visit(final File file, final Files parent) {
-                Files e = new Files(file, false); parent.add(e); if(file.isDirectory()) {
-                    e.visit(file, this); return;
-                } final String name = file.getName(); tasks.add(pool.submit(new Callable<Void>() {
+                Files e = new Files(file, false);
+                parent.add(e);
+                if(file.isDirectory()) {
+                    e.visit(file, this);
+                    return;
+                }
+                final String name = file.getName();
+                tasks.add(pool.submit(new Callable<Void>() {
+                    @Override
                     public Void call() throws Exception {
                         if(name.endsWith("_dir.vpk")) {
-                            VPK v = VPK.loadArchive(file); archives.put(v.getRoot(), parent);
-                        } return null;
+                            VPK v = VPK.loadArchive(file);
+                            archives.put(v.getRoot(), parent);
+                        }
+                        return null;
                     }
                 }));
             }
-        }); for(Future fut : tasks) {
+        });
+        for(Future fut : tasks) {
             try {
                 fut.get();
             } catch(InterruptedException | ExecutionException ex) {
                 LOG.log(Level.SEVERE, null, ex);
             }
-        } LOG.log(Level.INFO, "Recursive file load took {0}ms", System.currentTimeMillis() - start);
+        }
+        LOG.log(Level.INFO, "Recursive file load took {0}ms", System.currentTimeMillis() - start);
         // TODO: additive directories to avoid this kludge
         for(Map.Entry<ExtendedVFile, ExtendedVFile> e : archives.entrySet()) {
             merge(e.getKey(), e.getValue());
         }
     }
 
-    private void merge(SimpleVFile r, SimpleVFile parent) {
-        for(SimpleVFile d : r.children()) {
-            SimpleVFile existing = null; for(SimpleVFile t : parent.children()) {
-                if(t.getName().equals(d.getName())) {
-                    existing = t; break;
-                }
-            } if(existing == null) {
-                parent.copy(d);
-            } else {
-                merge(d, existing);
-            }
-        }
-    }
-
     private void visit(File dir, FileVisitor v) {
-        File[] ls = dir.listFiles(); if(ls == null) {
+        File[] ls = dir.listFiles();
+        if(ls == null) {
             return;
-        } for(File f : ls) {
+        }
+        for(File f : ls) {
             v.visit(f, this);
         }
     }

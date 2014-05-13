@@ -5,10 +5,7 @@ import com.timepath.steam.io.util.VDFNode1;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -48,8 +45,7 @@ public class VDF1 implements Savable {
     }
 
     public static VDF1 load(InputStream is) {
-        VDF1 v = new VDF1();
-        return v;
+        return new VDF1();
     }
 
     public static boolean isBinary(File f) {
@@ -57,7 +53,7 @@ public class VDF1 implements Savable {
             RandomAccessFile rf = new RandomAccessFile(f, "r");
             rf.seek(rf.length() - 1);
             int r = rf.read();
-            return r == 0x00 || r == 0x08 || r == 0xFF;
+            return ( r == 0x00 ) || ( r == 0x08 ) || ( r == 0xFF );
         } catch(IOException ex) {
             Logger.getLogger(VDF1.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -73,7 +69,7 @@ public class VDF1 implements Savable {
     }
 
     void processAnalyze(Scanner scanner, VDFNode1 parent) {
-        List<Integer> lineEnds = new ArrayList<>();
+        List<Integer> lineEnds = new LinkedList<>();
         lineEnds.add(0);
         StringBuilder sb = new StringBuilder();
         while(scanner.hasNext()) {
@@ -84,7 +80,6 @@ public class VDF1 implements Savable {
         }
         String str = sb.toString();
         Matcher matcher = regex.matcher(str);
-        String leading;
         int previous = 0;
         while(matcher.find()) {
             int globalIndex = matcher.start();
@@ -99,7 +94,7 @@ public class VDF1 implements Savable {
                 }
                 lineIndex++;
             }
-            leading = str.substring(previous, matcher.start());
+            String leading = str.substring(previous, matcher.start());
             previous = matcher.end();
             if(matcher.group(1) != null) {
                 tokens.add(new VDFToken(VDFToken.Type.COMMENT, matcher.group(1), leading, lineIndex));
@@ -228,18 +223,18 @@ public class VDF1 implements Savable {
         public String toString() {
             StringBuilder sb = new StringBuilder();
             sb.append(leading);
-            if(getType() == Type.COMMENT) {
+            if(type == Type.COMMENT) {
                 sb.append("//");
             }
-            if(getType() == Type.QUOTED) {
+            if(type == Type.QUOTED) {
                 sb.append('"');
-            } else if(getType() == Type.CONDITION) {
+            } else if(type == Type.CONDITION) {
                 sb.append('[');
             }
-            sb.append(getValue());
-            if(getType() == Type.QUOTED) {
+            sb.append(value);
+            if(type == Type.QUOTED) {
                 sb.append('"');
-            } else if(getType() == Type.CONDITION) {
+            } else if(type == Type.CONDITION) {
                 sb.append(']');
             }
             return sb.toString();

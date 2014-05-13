@@ -118,7 +118,7 @@ public class SourceServer extends Server {
         if(l == null) {
             l = ServerListener.DUMMY;
         }
-        //<editor-fold defaultstate="collapsed" desc="Get a challenge key">
+        // Get a challenge key
         ByteArrayOutputStream challengeOut = new ByteArrayOutputStream();
         challengeOut.write(new byte[] { (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF });
         challengeOut.write(0x56);
@@ -137,7 +137,6 @@ public class SourceServer extends Server {
         }
         byte[] challengeKey = new byte[4];
         challengeGet.get(challengeKey);
-        //</editor-fold>
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write(new byte[] { (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF });
         baos.write(0x56);
@@ -146,7 +145,7 @@ public class SourceServer extends Server {
         ByteBuffer ruleBuf = ByteBuffer.allocate(4000);
         ruleBuf.order(ByteOrder.LITTLE_ENDIAN);
         int ruleCount = 0;
-        for(; ; ) {
+        while(true) {
             send.rewind();
             send(send);
             ByteBuffer buf = get();
@@ -181,7 +180,7 @@ public class SourceServer extends Server {
         ruleBuf.flip();
         LOG.log(Level.INFO, "Rules: {0}", ruleCount);
         LOG.log(Level.INFO, "Remaining: {0}", ruleBuf.remaining());
-        for(int ruleIndex = 1; ruleIndex < ruleCount + 1; ruleIndex++) {
+        for(int ruleIndex = 1; ruleIndex < ( ruleCount + 1 ); ruleIndex++) {
             if(ruleBuf.remaining() == 0) {
                 break;
             }

@@ -15,6 +15,7 @@ enum DirectoryEntryAttributes implements EnumFlag {
         this.id = id;
     }
 
+    @Override
     public int getId() {
         return id;
     }

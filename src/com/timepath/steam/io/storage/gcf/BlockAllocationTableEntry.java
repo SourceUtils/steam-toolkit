@@ -46,8 +46,12 @@ class BlockAllocationTableEntry {
     private final int previousBlockEntryIndex;
 
     BlockAllocationTableEntry(RandomAccessFileWrapper raf) throws IOException {
-        entryType = raf.readULEInt(); fileDataOffset = raf.readULEInt(); fileDataSize = raf.readULEInt();
-        firstClusterIndex = raf.readULEInt(); nextBlockEntryIndex = raf.readULEInt(); previousBlockEntryIndex = raf.readULEInt();
+        entryType = raf.readULEInt();
+        fileDataOffset = raf.readULEInt();
+        fileDataSize = raf.readULEInt();
+        firstClusterIndex = raf.readULEInt();
+        nextBlockEntryIndex = raf.readULEInt();
+        previousBlockEntryIndex = raf.readULEInt();
         manifestIndex = raf.readULEInt();
     }
 

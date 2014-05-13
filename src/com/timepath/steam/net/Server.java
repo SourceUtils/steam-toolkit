@@ -32,8 +32,11 @@ public class Server {
 
     Server(String hostname, int port) {
         try {
-            address = InetAddress.getByName(hostname); this.port = port;
-            InetSocketAddress sock = new InetSocketAddress(address, port); chan = DatagramChannel.open(); chan.connect(sock);
+            address = InetAddress.getByName(hostname);
+            this.port = port;
+            InetSocketAddress sock = new InetSocketAddress(address, port);
+            chan = DatagramChannel.open();
+            chan.connect(sock);
         } catch(IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
@@ -46,7 +49,8 @@ public class Server {
     void send(ByteBuffer buf) throws IOException {
         LOG.log(LEVEL_SEND, "Sending {0} bytes\nPayload: {1}\nAddress: {2}", new Object[] {
                 buf.limit(), DataUtils.hexDump(buf), address
-        }); chan.write(buf);
+        });
+        chan.write(buf);
     }
 
     InetAddress getAddress() {
@@ -54,11 +58,17 @@ public class Server {
     }
 
     ByteBuffer get() throws IOException {
-        ByteBuffer buf = ByteBuffer.allocate(1392); buf.order(ByteOrder.LITTLE_ENDIAN); int bytesRead = chan.read(buf);
+        ByteBuffer buf = ByteBuffer.allocate(1392);
+        buf.order(ByteOrder.LITTLE_ENDIAN);
+        int bytesRead = chan.read(buf);
         if(bytesRead > 0) {
-            buf.rewind(); buf.limit(bytesRead); buf = buf.slice();
-        } LOG.log(LEVEL_GET, "Receiving {0} bytes\nPayload: {1}\nAddress: {2}", new Object[] {
+            buf.rewind();
+            buf.limit(bytesRead);
+            buf = buf.slice();
+        }
+        LOG.log(LEVEL_GET, "Receiving {0} bytes\nPayload: {1}\nAddress: {2}", new Object[] {
                 buf.limit(), DataUtils.hexDump(buf), address
-        }); return buf;
+        });
+        return buf;
     }
 }

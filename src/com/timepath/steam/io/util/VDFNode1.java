@@ -36,12 +36,11 @@ public class VDFNode1 extends DefaultMutableTreeNode {
     }
 
     public VDFNode1 get(String key) {
-        VDFNode1 node;
         for(Object o : children) {
             if(!( o instanceof VDFNode1 )) {
                 continue;
             }
-            node = (VDFNode1) o;
+            VDFNode1 node = (VDFNode1) o;
             if(node.getKey().equals(key)) {
                 return node;
             }
@@ -112,10 +111,6 @@ public class VDFNode1 extends DefaultMutableTreeNode {
             fileName = null;
             return;
         }
-        if(name.contains(".")) {
-            fileName = name.split("\\.")[0];
-        } else {
-            fileName = name;
-        }
+        fileName = name.contains(".") ? name.split("\\.")[0] : name;
     }
 }

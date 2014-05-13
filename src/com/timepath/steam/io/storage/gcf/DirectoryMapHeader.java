@@ -24,8 +24,11 @@ class DirectoryMapHeader {
     private final int  headerVersion;
 
     DirectoryMapHeader(GCF g) throws IOException {
-        RandomAccessFileWrapper raf = g.raf; pos = raf.getFilePointer(); headerVersion = raf.readULEInt();
-        dummy0 = raf.readULEInt(); g.directoryMapEntries = new DirectoryMapEntry[g.manifestHeader.nodeCount];
+        RandomAccessFileWrapper raf = g.raf;
+        pos = raf.getFilePointer();
+        headerVersion = raf.readULEInt();
+        dummy0 = raf.readULEInt();
+        g.directoryMapEntries = new DirectoryMapEntry[g.manifestHeader.nodeCount];
         raf.skipBytes(g.directoryMapEntries.length * DirectoryMapEntry.SIZE);
     }
 

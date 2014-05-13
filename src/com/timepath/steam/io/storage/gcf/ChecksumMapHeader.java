@@ -31,9 +31,14 @@ class ChecksumMapHeader {
     private final int itemCount;
 
     ChecksumMapHeader(GCF g) throws IOException {
-        RandomAccessFileWrapper raf = g.raf; formatCode = raf.readULEInt(); dummy0 = raf.readULEInt();
-        itemCount = raf.readULEInt(); checksumCount = raf.readULEInt(); g.checksumMapEntries = new ChecksumMapEntry[itemCount];
+        RandomAccessFileWrapper raf = g.raf;
+        formatCode = raf.readULEInt();
+        dummy0 = raf.readULEInt();
+        itemCount = raf.readULEInt();
+        checksumCount = raf.readULEInt();
+        g.checksumMapEntries = new ChecksumMapEntry[itemCount];
         raf.skipBytes(g.checksumMapEntries.length * ChecksumMapEntry.SIZE);
-        g.checksumEntries = new ChecksumEntry[checksumCount + 0x20]; raf.skipBytes(g.checksumEntries.length * ChecksumEntry.SIZE);
+        g.checksumEntries = new ChecksumEntry[checksumCount + 0x20];
+        raf.skipBytes(g.checksumEntries.length * ChecksumEntry.SIZE);
     }
 }

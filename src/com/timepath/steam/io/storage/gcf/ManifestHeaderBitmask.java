@@ -13,7 +13,6 @@ enum ManifestHeaderBitmask {
     }
 
     static ManifestHeaderBitmask get(int mask) {
-        ManifestHeaderBitmask m = flags[mask];
-        return m;
+        return flags[mask];
     }
 }

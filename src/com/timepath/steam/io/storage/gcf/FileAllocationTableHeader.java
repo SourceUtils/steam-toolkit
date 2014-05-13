@@ -48,7 +48,7 @@ class FileAllocationTableHeader {
     @Override
     public String toString() {
         int checked = check();
-        String checkState = checksum == checked ? "OK" : checksum + "vs" + checked;
+        String checkState = ( checksum == checked ) ? "OK" : ( checksum + "vs" + checked );
         return "blockCount:" + clusterCount + ", firstUnusedEntry:" + firstUnusedEntry + ", isLongTerminator:" +
                isLongTerminator + ", checksum:" + checkState;
     }

@@ -7,6 +7,7 @@ import java.util.logging.Logger;
  * @author TimePath
  * @deprecated Blob files are no longer in use
  */
+@Deprecated
 public class BlobNode extends DefaultMutableTreeNode {
 
     private static final Logger LOG = Logger.getLogger(BlobNode.class.getName());
