@@ -6,7 +6,6 @@ import com.timepath.Utils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.text.MessageFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,7 +68,7 @@ public class MasterServer extends Server {
                 octet[2] = buf.get() & 0xFF;
                 octet[3] = buf.get() & 0xFF;
                 int serverPort = buf.getShort() & 0xFFFF;
-                lastAddress = MessageFormat.format("{0}.{1}.{2}.{3}:{4}", octet[0], octet[1], octet[2], octet[3], serverPort);
+                lastAddress = String.format("%d.%d.%d.%d:%d", octet[0], octet[1], octet[2], octet[3], serverPort);
                 //noinspection AssignmentUsedAsCondition
                 if(looping = !initialAddress.equals(lastAddress)) {
                     l.inform(lastAddress);

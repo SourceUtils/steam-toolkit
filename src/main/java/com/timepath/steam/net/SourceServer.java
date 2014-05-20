@@ -72,11 +72,11 @@ public class SourceServer extends Server {
         String version = DataUtils.getString(buf);
         listener.inform("Version: '" + version + '\'');
         byte edf = buf.get();
-        boolean edfPort = ( edf & 0x80 ) != 0;
-        boolean edfSteamID = ( edf & 0x10 ) != 0;
-        boolean edfSTV = ( edf & 0x40 ) != 0;
-        boolean edfTags = ( edf & 0x20 ) != 0;
-        boolean edfGameID = ( edf & 0x01 ) != 0;
+        boolean edfPort = ( edf & 0b10000000 ) != 0;
+        boolean edfSTV = ( edf & 0b1000000 ) != 0;
+        boolean edfTags = ( edf & 0b100000 ) != 0;
+        boolean edfSteamID = ( edf & 0b10000 ) != 0;
+        boolean edfGameID = ( edf & 0b1 ) != 0;
         if(edfPort) {
             short portLocal = buf.getShort();
             listener.inform("Port: '" + portLocal + '\'');
@@ -93,7 +93,7 @@ public class SourceServer extends Server {
         }
         if(edfSTV) {
             short stvPort = buf.getShort();
-            listener.inform("STV Port: '" + port + '\'');
+            listener.inform("STV Port: '" + stvPort + '\'');
             String stvName = DataUtils.getString(buf);
             listener.inform("STV Name: '" + stvName + '\'');
         }
@@ -116,9 +116,9 @@ public class SourceServer extends Server {
         }
         // Get a challenge key
         ByteArrayOutputStream challengeOut = new ByteArrayOutputStream();
-        challengeOut.write(new byte[] { (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF });
+        challengeOut.write(HEADER);
         challengeOut.write(0x56);
-        challengeOut.write(new byte[] { (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF });
+        challengeOut.write(HEADER);
         ByteBuffer challengeSend = ByteBuffer.wrap(challengeOut.toByteArray());
         send(challengeSend);
         ByteBuffer challengeGet = get();
@@ -134,7 +134,7 @@ public class SourceServer extends Server {
         byte[] challengeKey = new byte[4];
         challengeGet.get(challengeKey);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        baos.write(new byte[] { (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF });
+        baos.write(HEADER);
         baos.write(0x56);
         baos.write(challengeKey);
         ByteBuffer send = ByteBuffer.wrap(baos.toByteArray());
@@ -165,7 +165,7 @@ public class SourceServer extends Server {
                 }
                 ruleCount = buf.getShort();
             }
-            LOG.log(Level.INFO, "{0} / {1}", new Object[] { id, fragments });
+            LOG.log(Level.FINE, "{0} / {1}", new Object[] { id, fragments });
             byte[] data = new byte[buf.remaining()];
             buf.get(data);
             ruleBuf.put(data);
@@ -174,8 +174,8 @@ public class SourceServer extends Server {
             }
         }
         ruleBuf.flip();
-        LOG.log(Level.INFO, "Rules: {0}", ruleCount);
-        LOG.log(Level.INFO, "Remaining: {0}", ruleBuf.remaining());
+        LOG.log(Level.FINE, "Rules: {0}", ruleCount);
+        LOG.log(Level.FINE, "Remaining: {0}", ruleBuf.remaining());
         for(int ruleIndex = 1; ruleIndex < ( ruleCount + 1 ); ruleIndex++) {
             if(ruleBuf.remaining() == 0) {
                 break;
@@ -184,7 +184,7 @@ public class SourceServer extends Server {
             String value = DataUtils.getString(ruleBuf);
             l.inform("[" + ruleIndex + '/' + ruleCount + "] " + '\'' + key + "' = '" + value + '\'');
         }
-        LOG.info("Received");
+        LOG.log(Level.FINE, "Underflow: {0}", ruleBuf.remaining());
     }
 
     private enum ServerType {
