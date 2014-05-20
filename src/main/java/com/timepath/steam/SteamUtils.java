@@ -10,6 +10,11 @@ import java.io.FileNotFoundException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Utility class for accessing local steam file locations
+ *
+ * @author TimePath
+ */
 public class SteamUtils {
 
     private static final Logger LOG = Logger.getLogger(SteamUtils.class.getName());
@@ -18,7 +23,7 @@ public class SteamUtils {
     }
 
     /**
-     * @return Path to Steam/SteamApps
+     * @return Path to /Steam/SteamApps/
      */
     public static File getSteamApps() {
         File steam = getSteam();
@@ -38,7 +43,7 @@ public class SteamUtils {
     }
 
     /**
-     * @return Path to steam installation
+     * @return Path to /Steam/ installation
      */
     public static File getSteam() {
         switch(OS.get()) {
@@ -73,7 +78,7 @@ public class SteamUtils {
                 LOG.log(Level.SEVERE, null, ex);
             }
         }
-        return new File(System.getenv("HOME") + "/.steam/steam"); // shouldn't this be correct regardess?
+        return new File(System.getenv("HOME") + "/.steam/steam"); // TODO: Shouldn't this be correct regardess?
     }
 
     private static File getSteamOSX() {
@@ -107,33 +112,37 @@ public class SteamUtils {
             LOG.log(Level.WARNING, "Windows registry read failed", ex);
         }
         if(reg != null) {
-            LOG.log(Level.INFO, "Steam directory read from registry: {0}", reg);
+            LOG.log(Level.FINE, "Steam directory read from registry: {0}", reg);
             return new File(reg);
         }
-        String str = System.getenv("PROGRAMFILES(x86)");
-        if(str == null) {
-            str = System.getenv("PROGRAMFILES");
+        String programFiles = System.getenv("PROGRAMFILES(x86)");
+        if(programFiles == null) { // Not a 64 bit machine
+            programFiles = System.getenv("PROGRAMFILES");
         }
-        File f = new File(str, "Steam");
+        File f = new File(programFiles, "Steam");
         if(f.exists()) {
             return f;
         }
+        // Still haven't found steam
+        LOG.log(Level.WARNING, "Steam directory not found, trying alternate detection methods");
         String sourcesdk = System.getenv("sourcesdk");
         if(sourcesdk != null) {
             sourcesdk = sourcesdk.toLowerCase();
             String scan = "steam";
             int idx = sourcesdk.indexOf(scan);
             if(idx != -1) {
-                return new File(sourcesdk.substring(0, idx + scan.length()));
+                File ret = new File(sourcesdk.substring(0, idx + scan.length()));
+                LOG.log(Level.INFO, "Found steam via sourcesdk env var: {0}", ret);
+                return ret;
             }
         }
         return null;
     }
 
     /**
-     * @return The most recently logged in steam user
+     * @return The most recently logged in steam user, or null
      */
-    public static SteamID getUser() {
+    public static com.timepath.steam.SteamID getUser() {
         File autoLogin = new File(getSteam(), "config/SteamAppData.vdf");
         File config = new File(getSteam(), "config/config.vdf");
         if(!autoLogin.exists() || !config.exists()) {
@@ -156,11 +165,11 @@ public class SteamUtils {
                               .get(username)
                               .get("SteamID")
                               .getValue();
-            String uid = SteamID.ID64toUID(id64);
-            String sid = SteamID.UIDtoID32(uid);
-            return new SteamID(username, id64, uid, sid);
+            String uid = com.timepath.steam.SteamID.ID64toUID(id64);
+            String sid = com.timepath.steam.SteamID.UIDtoID32(uid);
+            return new com.timepath.steam.SteamID(username, id64, uid, sid);
         } catch(FileNotFoundException ex) {
-            Logger.getLogger(SteamUtils.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
         return null;
     }
@@ -169,11 +178,14 @@ public class SteamUtils {
      * @param user
      *         The user
      *
-     * @return Path to {@code user}'s {@code userdata}
+     * @return Path to {@code user}'s {@code userdata}, or null
+     *
+     * @throws IllegalArgumentException
+     *         If {@code user} is null
      */
-    private static File getUserData(SteamID user) {
+    public static File getUserData(com.timepath.steam.SteamID user) {
         if(user == null) {
-            return null;
+            throw new IllegalArgumentException("User cannot be null");
         }
         File steam = getSteam();
         if(steam == null) {

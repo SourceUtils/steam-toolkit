@@ -37,12 +37,12 @@ public class Main {
 
     private static final Logger LOG            = Logger.getLogger(Main.class.getName());
     private static final Logger LOG_CONNECTION = Logger.getLogger(Connection.class.getName());
-    private final LoginDialog dlg;
+    private final com.timepath.steam.webapi.LoginDialog dlg;
     private String emailsteamid = "";
     private long   gid          = -1L;
 
     private Main() {
-        dlg = new LoginDialog(null, true) {
+        dlg = new com.timepath.steam.webapi.LoginDialog(null, true) {
             String prevattempt;
             private Object[] enc;
 
@@ -51,7 +51,7 @@ public class Main {
                 LOG.info("Logging in");
                 try {
                     String u = getUserInput().getText();
-                    byte[] p = new String(getPassInput().getPassword()).getBytes();
+                    byte[] p = new String(getPassInput().getPassword()).getBytes("UTF-8");
                     if(( prevattempt == null ) || !prevattempt.toLowerCase().equals(u.toLowerCase())) {
                         prevattempt = u;
                         enc = encrypt(u, p);
@@ -90,7 +90,7 @@ public class Main {
                                                                        NoSuchPaddingException,
                                                                        BadPaddingException
     {
-        Connection login = new SteamConnection();
+        Connection login = new com.timepath.steam.webapi.SteamConnection();
         RequestBuilder rb = RequestBuilder.fromArray(new String[][] { { "username", username } });
         JSONObject ret = new JSONObject(login.postget("login/getrsakey", rb.toString()));
         BigInteger mod = new BigInteger(ret.getString("publickey_mod"), 16);
@@ -120,7 +120,7 @@ public class Main {
         String captcha = dlg.getCaptchaInput().getText();
         String eauth = dlg.getSteamguardInput().getText();
         byte[] cipherData = (byte[]) enc[0];
-        Connection login = new SteamConnection();
+        Connection login = new com.timepath.steam.webapi.SteamConnection();
         String mobile = "mobile";
         String req1 = RequestBuilder.fromArray(new Object[][] {
                                                        // Credentials

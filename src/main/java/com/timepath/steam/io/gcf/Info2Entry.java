@@ -1,4 +1,4 @@
-package com.timepath.steam.io.storage.gcf;
+package com.timepath.steam.io.gcf;
 
 import com.timepath.io.RandomAccessFileWrapper;
 
@@ -7,7 +7,7 @@ import java.io.IOException;
 /**
  * @author TimePath
  */
-class tagGCFDIRECTORYINFO2ENTRY {
+class Info2Entry {
 
     /**
      * 1 * 4
@@ -15,7 +15,7 @@ class tagGCFDIRECTORYINFO2ENTRY {
     static final long SIZE = 4;
     private final int Dummy0;
 
-    tagGCFDIRECTORYINFO2ENTRY(RandomAccessFileWrapper raf) throws IOException {
+    Info2Entry(RandomAccessFileWrapper raf) throws IOException {
         Dummy0 = raf.readULEInt();
     }
 

@@ -1,4 +1,4 @@
-package com.timepath.steam.io;
+package com.timepath.steam.io.bvdf;
 
 import com.timepath.io.ByteBufferInputStream;
 import com.timepath.io.utils.Savable;
@@ -14,15 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * https://github.com/harvimt/steam_launcher/blob/master/binvdf.py
- * https://github.com/barneygale/bvdf/blob/master/bvdf.py
- * https://github.com/DHager/hl2parse
- * http://cs.rin.ru/forum/viewtopic.php?f=20&t=61506&hilit=appinfo
- * http://cs.rin.ru/forum/viewtopic.php?f=20&t=62438&hilit=packageinfo
- * http://media.steampowered.com/steamcommunity/public/images/apps/[appID]/[sha].[ext]
- * http://cdr.xpaw.ru/app/5/#section_info
- * http://hlssmod.net/he_code/public/tier1/KeyValues.h
- * http://hpmod.googlecode.com/svn/trunk/tier1/KeyValues.cpp
+ * Creates a swing tree from a binary VDF file
  *
  * @author TimePath
  */
@@ -51,9 +43,6 @@ public class BVDF implements Savable {
         DataNode(String name, Object obj) {
             this.name = name;
             value = obj;
-        }
-
-        DataNode() {
         }
 
         public DataNode get(String key) {
@@ -103,8 +92,8 @@ public class BVDF implements Savable {
                 private DataNode last = root;
 
                 @Override
-                public void emit(String key, Object val) {
-                    last.add(new DataNode(key, val));
+                public void emit(String key, Object value) {
+                    last.add(new DataNode(key, value));
                 }
 
                 @Override
@@ -113,17 +102,20 @@ public class BVDF implements Savable {
                 }
 
                 @Override
-                public void push(Object index) {
-                    DataNode node = new DataNode(index);
+                public void push(Object section) {
+                    DataNode node = new DataNode(section);
                     last.add(node);
                     last = node;
                 }
             }).read();
         } catch(IOException ex) {
-            Logger.getLogger(BVDF.class.getName()).log(Level.SEVERE, null, ex);
+            LOG.log(Level.SEVERE, null, ex);
         }
     }
 
+    /**
+     * Not supported yet
+     */
     @Override
     public void writeExternal(OutputStream out) {
         throw new UnsupportedOperationException("Not supported yet.");

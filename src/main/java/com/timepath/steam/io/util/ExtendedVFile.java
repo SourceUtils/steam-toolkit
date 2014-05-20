@@ -1,4 +1,4 @@
-package com.timepath.steam.io.storage.util;
+package com.timepath.steam.io.util;
 
 import com.timepath.swing.TreeUtils;
 import com.timepath.vfs.SimpleVFile;

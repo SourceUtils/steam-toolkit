@@ -1,10 +1,9 @@
-package com.timepath.steam.io;
+package com.timepath.steam.io.blob;
 
 import com.timepath.DataUtils;
 import com.timepath.DateUtils;
 import com.timepath.Utils;
 import com.timepath.io.utils.Savable;
-import com.timepath.steam.io.util.BlobNode;
 import com.timepath.swing.TreeUtils;
 
 import java.io.IOException;
@@ -18,11 +17,12 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
 /**
- * https://github.com/DHager/hl2parse/blob/master/hl2parse-binary/src/main/java/com/technofovea/hl2parse/registry/RegParser.java
  * Nodes of name \1\0\0\0 contain 'folders', \2\0\0\0 contain 'files'
  * Leaf \1\0\0\0 directories the data type used in the following \2\0\0\0 node's payload
  *
  * @author TimePath
+ * @see <a>https://github.com/DHager/hl2parse/blob/master/hl2parse-binary/src/main/java/com/technofovea/hl2parse/registry
+ * /RegParser.java</a>
  * @deprecated Blob files are no longer in use
  */
 @Deprecated
@@ -79,9 +79,7 @@ public class Blob implements Savable {
             case 0x5001:
                 int length = buf.getInt();
                 int padding = buf.getInt();
-                int limit = ( buf.position() - 10 ) + length +
-                            padding; // 10 because is relative
-                // to when this section started
+                int limit = ( buf.position() - 10 ) + length + padding; // 10 because is relative to when this section started
                 //                limit = Math.min(limit, buf.position() + buf.remaining()); // workaround for decompressed
                 LOG.log(Level.FINE, "limit: {0}", limit);
                 buf.limit(limit);

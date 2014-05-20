@@ -4,7 +4,7 @@ import com.timepath.DataUtils;
 import com.timepath.StringUtils;
 import com.timepath.io.ByteBufferInputStream;
 import com.timepath.io.struct.StructField;
-import com.timepath.steam.io.storage.util.ExtendedVFile;
+import com.timepath.steam.io.util.ExtendedVFile;
 import com.timepath.vfs.SimpleVFile;
 
 import java.io.File;
@@ -22,9 +22,10 @@ import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
 /**
- * Loads _dir.vpk files https://developer.valvesoftware.com/wiki/VPK_File_Format
+ * Loads _dir.vpk files
  *
  * @author TimePath
+ * @see <a>https://developer.valvesoftware.com/wiki/VPK_File_Format</a>
  */
 public class VPK extends ExtendedVFile {
 
@@ -37,7 +38,6 @@ public class VPK extends ExtendedVFile {
     private final ByteBuffer   globaldata;
     private final ByteBuffer[] mappings;
     private final File[]       store;
-    private       boolean      multiPart;
     private       String       name;
 
     private VPK(final File file) throws IOException {
@@ -46,16 +46,13 @@ public class VPK extends ExtendedVFile {
         name = file.getName();
         name = name.substring(0, name.length() - 4); // Strip '.vkp'
         if(name.endsWith("_dir")) {
-            multiPart = true;
             name = name.substring(0, name.length() - 4); // Strip '_dir'
         }
         File[] parts = file.getParentFile().listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {
-                if(pathname.equals(file)) {
-                    return false;
-                }
-                return pathname.getName().startsWith(name) && ( pathname.getName().length() == ( name.length() + 8 ) );
+                return !pathname.equals(file) && pathname.getName().startsWith(name) &&
+                       ( pathname.getName().length() == ( name.length() + 8 ) );
             }
         });
         store = new File[parts.length];
@@ -101,15 +98,13 @@ public class VPK extends ExtendedVFile {
     private void parseTree(ByteBuffer buffer) {
         // Extensions
         for(String ext; !( ext = DataUtils.readZeroString(buffer) ).isEmpty(); ) {
-            if(" ".equals(ext)) { // No extension
-                ext = null;
-            }
+            ext = " ".equals(ext) ? "" : '.' + ext;
             // Paths
             for(String dir; !( dir = DataUtils.readZeroString(buffer) ).isEmpty(); ) {
                 SimpleVFile p = nodeForPath(dir);
                 // File names
                 for(String basename; !( basename = DataUtils.readZeroString(buffer) ).isEmpty(); ) {
-                    VPKDirectoryEntry e = readFileInfo(buffer, basename + ( ( ext != null ) ? ( '.' + ext ) : "" ));
+                    VPKDirectoryEntry e = readFileInfo(buffer, basename + ext);
                     p.add(e);
                 }
             }
@@ -118,24 +113,25 @@ public class VPK extends ExtendedVFile {
 
     private SimpleVFile nodeForPath(String path) {
         SimpleVFile node = getRoot();
-        if(!" ".equals(path)) {
-            String[] components = path.split("/");
-            for(String dir : components) {
-                SimpleVFile match = null;
-                for(SimpleVFile e : node.list()) {
-                    if(e.isDirectory() && e.getName().equalsIgnoreCase(dir)) {
-                        match = e;
-                        break;
-                    }
+        if(" ".equals(path)) {
+            return node;
+        }
+        String[] components = path.replace('\\', '/').split("/");
+        for(String dir : components) {
+            SimpleVFile match = null;
+            for(SimpleVFile e : node.list()) {
+                if(e.isDirectory() && e.getName().equalsIgnoreCase(dir)) {
+                    match = e;
+                    break;
                 }
-                if(match == null) {
-                    VPKDirectoryEntry dirEntry = new VPKDirectoryEntry(dir);
-                    dirEntry.isDirectory = true;
-                    match = dirEntry;
-                    node.add(match);
-                }
-                node = match;
             }
+            if(match == null) {
+                VPKDirectoryEntry dirEntry = new VPKDirectoryEntry(dir);
+                dirEntry.isDirectory = true;
+                match = dirEntry;
+                node.add(match);
+            }
+            node = match;
         }
         return node;
     }
@@ -170,10 +166,6 @@ public class VPK extends ExtendedVFile {
         }
     }
 
-    public static InputStream get(int index) {
-        return null;
-    }
-
     @Override
     public String getName() {
         return name;
@@ -193,11 +185,6 @@ public class VPK extends ExtendedVFile {
         } catch(IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-        return null;
-    }
-
-    @Override
-    public Object getAttributes() {
         return null;
     }
 
@@ -223,9 +210,6 @@ public class VPK extends ExtendedVFile {
         @StructField(index = 1)
         short preloadBytes;
         private Reference<ByteBuffer> localdata;
-
-        VPKDirectoryEntry() {
-        }
 
         VPKDirectoryEntry(String name) {
             this.name = name;
@@ -306,6 +290,11 @@ public class VPK extends ExtendedVFile {
         public InputStream stream() {
             return new ByteBufferInputStream(localData());
         }
+    }
+
+    @Override
+    public Object getAttributes() {
+        return null;
     }
 
     @Override

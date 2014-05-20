@@ -5,7 +5,7 @@ package com.timepath.steam.net;
  */
 public interface ServerListener {
 
-    ServerListener DUMMY = new ServerListener() {
+    static ServerListener NULL = new ServerListener() {
         @Override
         public void inform(String update) {
         }

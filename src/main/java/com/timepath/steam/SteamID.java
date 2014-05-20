@@ -1,18 +1,20 @@
 package com.timepath.steam;
 
 import java.math.BigInteger;
+import java.text.MessageFormat;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * https://developer.valvesoftware.com/wiki/SteamID
- * http://api.steampowered.com/ISteamWebAPIUtil/GetSupportedAPIList/v0001/?key=303E8E7C12216D62FD8F522602CE141C&format=vdf
- * http://forums.alliedmods.net/showthread.php?t=60899
- * http://forums.alliedmods.net/showthread.php?p=750532
- * http://sapi.techieanalyst.net/
+ * Utility class for converting Steam IDs
  *
  * @author TimePath
+ * @see <a>https://developer.valvesoftware.com/wiki/SteamID</a>
+ * @see <a>http://api.steampowered.com/ISteamWebAPIUtil/GetSupportedAPIList/v0001/?format=vdf&key=...</a>
+ * @see <a>http://forums.alliedmods.net/showthread.php?t=60899</a>
+ * @see <a>http://forums.alliedmods.net/showthread.php?p=750532</a>
+ * @see <a>http://sapi.techieanalyst.net/</a>
  */
 public class SteamID {
 
@@ -20,13 +22,7 @@ public class SteamID {
      * Steam_# 0 from HL to TF2, 1 from L4D to CS:GO
      */
     private static final Pattern    ID32         = Pattern.compile("STEAM_([0-9]):([0-9]):([0-9]{4,})");
-    /**
-     * http://steamcommunity.com/profiles/id64
-     */
     private static final Pattern    ID64         = Pattern.compile("([0-9]{17,})");
-    /**
-     * http://steamcommunity.com/profiles/[uid]
-     */
     private static final Pattern    UID          = Pattern.compile("U:([0-9]):([0-9]{4,})");
     private static final Logger     LOG          = Logger.getLogger(SteamID.class.getName());
     /**
@@ -109,6 +105,6 @@ public class SteamID {
 
     @Override
     public String toString() {
-        return '[' + user + ", " + id64 + ", " + uid + ", " + id32 + ']';
+        return MessageFormat.format("[{0}, {1}, {2}, {3}]", user, id64, uid, id32);
     }
 }

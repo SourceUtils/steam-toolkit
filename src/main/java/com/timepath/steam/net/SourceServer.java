@@ -11,32 +11,28 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * https://developer.valvesoftware.com/wiki/Server_Queries
- *
  * @author TimePath
+ * @see <a>https://developer.valvesoftware.com/wiki/Server_Queries</a>
  */
 public class SourceServer extends Server {
 
-    private static final Logger LOG = Logger.getLogger(SourceServer.class.getName());
-
-    private SourceServer(String hostname) {
-        super(hostname);
-    }
+    private static final Logger LOG    = Logger.getLogger(SourceServer.class.getName());
+    private static final byte[] HEADER = new byte[] { (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF };
 
     public SourceServer(String hostname, int port) {
         super(hostname, port);
     }
 
-    public void getInfo(ServerListener listener) throws IOException {
+    public void getInfo(com.timepath.steam.net.ServerListener listener) throws IOException {
         if(listener == null) {
-            listener = ServerListener.DUMMY;
+            listener = com.timepath.steam.net.ServerListener.NULL;
         }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        baos.write(new byte[] { (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF });
+        baos.write(HEADER);
+        // A2S_INFO
         baos.write(0x54);
-        baos.write(( "Source Engine Query" + '\0' ).getBytes());
-        ByteBuffer send = ByteBuffer.wrap(baos.toByteArray());
-        send(send);
+        baos.write(( "Source Engine Query" + '\0' ).getBytes("UTF-8"));
+        send(ByteBuffer.wrap(baos.toByteArray()));
         ByteBuffer buf = get();
         buf.order(ByteOrder.LITTLE_ENDIAN);
         int packHeader = buf.getInt();
@@ -114,9 +110,9 @@ public class SourceServer extends Server {
         }
     }
 
-    public void getRules(ServerListener l) throws IOException {
+    public void getRules(com.timepath.steam.net.ServerListener l) throws IOException {
         if(l == null) {
-            l = ServerListener.DUMMY;
+            l = com.timepath.steam.net.ServerListener.NULL;
         }
         // Get a challenge key
         ByteArrayOutputStream challengeOut = new ByteArrayOutputStream();

@@ -1,8 +1,8 @@
-package com.timepath.steam.io.storage.gcf;
+package com.timepath.steam.io.gcf;
 
 import com.timepath.EnumFlags;
 import com.timepath.io.RandomAccessFileWrapper;
-import com.timepath.steam.io.storage.util.ExtendedVFile;
+import com.timepath.steam.io.util.ExtendedVFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -20,6 +20,7 @@ import java.util.logging.Logger;
  * @author TimePath
  * @deprecated GCF files no longer in use
  */
+@SuppressWarnings("FieldCanBeLocal")
 @Deprecated
 public class GCF extends ExtendedVFile {
 
@@ -42,20 +43,20 @@ public class GCF extends ExtendedVFile {
     /**
      * TODO
      */
-    private tagGCFDIRECTORYCOPYENTRY[]  copyEntries;
-    private GCFDirectoryEntry[]         directoryEntries;
+    private CopyEntry[]         copyEntries;
+    private GCFDirectoryEntry[] directoryEntries;
     /**
      * Name table
      */
-    private tagGCFDIRECTORYINFO1ENTRY[] info1Entries;
+    private Info1Entry[]        info1Entries;
     /**
      * Hash table
      */
-    private tagGCFDIRECTORYINFO2ENTRY[] info2Entries;
+    private Info2Entry[]        info2Entries;
     /**
      * TODO
      */
-    private tagGCFDIRECTORYLOCALENTRY[] localEntries;
+    private LocalEntry[]        localEntries;
 
     public GCF(File file) throws IOException {
         name = file.getName();
@@ -80,29 +81,29 @@ public class GCF extends ExtendedVFile {
                     s.write(ls[off]);
                     off++;
                 }
-                de.name = new String(s.toByteArray());
+                de.name = new String(s.toByteArray(), "UTF-8");
                 if(de.parentIndex != 0xFFFFFFFF) {
                     de.setParent(directoryEntries[de.parentIndex]);
                 }
             }
             directoryEntries[0].name = name;
-            info1Entries = new tagGCFDIRECTORYINFO1ENTRY[manifestHeader.hashTableKeyCount];
+            info1Entries = new Info1Entry[manifestHeader.hashTableKeyCount];
             for(int i = 0; i < manifestHeader.hashTableKeyCount; i++) {
-                info1Entries[i] = new tagGCFDIRECTORYINFO1ENTRY(raf);
+                info1Entries[i] = new Info1Entry(raf);
             }
-            info2Entries = new tagGCFDIRECTORYINFO2ENTRY[manifestHeader.nodeCount];
+            info2Entries = new Info2Entry[manifestHeader.nodeCount];
             for(int i = 0; i < manifestHeader.nodeCount; i++) {
-                info2Entries[i] = new tagGCFDIRECTORYINFO2ENTRY(raf);
+                info2Entries[i] = new Info2Entry(raf);
             }
-            copyEntries = new tagGCFDIRECTORYCOPYENTRY[manifestHeader.minimumFootprintCount];
+            copyEntries = new CopyEntry[manifestHeader.minimumFootprintCount];
             for(int i = 0; i < manifestHeader.minimumFootprintCount; i++) {
-                tagGCFDIRECTORYCOPYENTRY f = new tagGCFDIRECTORYCOPYENTRY();
+                CopyEntry f = new CopyEntry();
                 f.DirectoryIndex = raf.readULEInt();
                 copyEntries[i] = f;
             }
-            localEntries = new tagGCFDIRECTORYLOCALENTRY[manifestHeader.userConfigCount];
+            localEntries = new LocalEntry[manifestHeader.userConfigCount];
             for(int i = 0; i < manifestHeader.userConfigCount; i++) {
-                tagGCFDIRECTORYLOCALENTRY f = new tagGCFDIRECTORYLOCALENTRY();
+                LocalEntry f = new LocalEntry();
                 f.DirectoryIndex = raf.readULEInt();
                 localEntries[i] = f;
             }

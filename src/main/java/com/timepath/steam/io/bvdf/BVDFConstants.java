@@ -1,4 +1,4 @@
-package com.timepath.steam.io;
+package com.timepath.steam.io.bvdf;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -10,7 +10,7 @@ public class BVDFConstants {
     private BVDFConstants() {
     }
 
-    public enum Universe {
+    public static enum Universe {
         INVALID(0),
         PUBLIC(1),
         BETA(2),
@@ -18,43 +18,47 @@ public class BVDFConstants {
         DEV(4);
         private final int id;
 
-        Universe(int i) {
+        private Universe(int i) {
             id = i;
         }
 
         public static String getName(int i) {
-            Universe[] search = Universe.values(); for(Universe search1 : search) {
+            Universe[] search = Universe.values();
+            for(Universe search1 : search) {
                 if(search1.id == i) {
                     return search1.name();
                 }
-            } return "UNKNOWN (" + i + ')';
+            }
+            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] { Universe.class.getSimpleName(), i });
+            return "UNKNOWN (" + i + ')';
         }
     }
 
-    public enum AppInfoState {
+    public static enum AppInfoState {
         UNAVAILBALE(1),
         AVAILABLE(2);
         private final int id;
 
-        AppInfoState(int i) {
+        private AppInfoState(int i) {
             id = i;
         }
 
         public static String getName(int i) {
-            AppInfoState[] search = AppInfoState.values(); for(AppInfoState search1 : search) {
+            AppInfoState[] search = AppInfoState.values();
+            for(AppInfoState search1 : search) {
                 if(search1.id == i) {
                     return search1.name();
                 }
-            } LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] {
-                    AppInfoState.class.getSimpleName(), i
-            }); return "UNKNOWN (" + i + ')';
+            }
+            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] { AppInfoState.class.getSimpleName(), i });
+            return "UNKNOWN (" + i + ')';
         }
     }
 
     /**
      * Can be found in steamclient native library, EAppInfoSection
      */
-    public enum Section {
+    public static enum Section {
         UNKNOWN(0),
         ALL(1),
         COMMON(2),
@@ -75,20 +79,23 @@ public class BVDFConstants {
         SERVERANDWGONLY(17);
         private final int id;
 
-        Section(int i) {
+        private Section(int i) {
             id = i;
         }
 
         public static String get(int i) {
-            Section[] search = Section.values(); for(Section search1 : search) {
+            Section[] search = Section.values();
+            for(Section search1 : search) {
                 if(search1.id == i) {
                     return search1.name();
                 }
-            } return "UNKNOWN (" + i + ')';
+            }
+            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] { Section.class.getSimpleName(), i });
+            return "UNKNOWN (" + i + ')';
         }
     }
 
-    public enum SteamAppState {
+    public static enum SteamAppState {
         Invalid(0x00000000),
         Uninstalled(0x00000001),
         UpdateRequired(0x00000002),
@@ -111,7 +118,7 @@ public class BVDFConstants {
         UpdateStopping(0x00040000);
         private final int id;
 
-        SteamAppState(int i) {
+        private SteamAppState(int i) {
             id = i;
         }
 
@@ -120,11 +127,13 @@ public class BVDFConstants {
                 if(s.id == i) {
                     return s.name();
                 }
-            } return "UNKNOWN (" + i + ')';
+            }
+            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] { SteamAppState.class.getSimpleName(), i });
+            return "UNKNOWN (" + i + ')';
         }
     }
 
-    public enum AppInfoSectionPropagationType {
+    public static enum AppInfoSectionPropagationType {
         Invalid(0),
         Public(1),
         OwnersOnly(2),
@@ -133,7 +142,7 @@ public class BVDFConstants {
         ServerAndWGOnly(5);
         private final int id;
 
-        AppInfoSectionPropagationType(int i) {
+        private AppInfoSectionPropagationType(int i) {
             id = i;
         }
 
@@ -142,7 +151,9 @@ public class BVDFConstants {
                 if(s.id == i) {
                     return s.name();
                 }
-            } return "UNKNOWN (" + i + ')';
+            }
+            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] { AppInfoSectionPropagationType.class.getSimpleName(), i });
+            return "UNKNOWN (" + i + ')';
         }
     }
 }

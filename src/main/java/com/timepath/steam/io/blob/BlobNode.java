@@ -1,4 +1,4 @@
-package com.timepath.steam.io.util;
+package com.timepath.steam.io.blob;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.logging.Logger;

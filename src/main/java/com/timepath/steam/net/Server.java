@@ -16,21 +16,14 @@ import java.util.logging.Logger;
  */
 public class Server {
 
-    private static final Level  LEVEL_SEND = Level.INFO;
-    private static final Level  LEVEL_GET  = Level.INFO;
+    private static final Level  LEVEL_SEND = Level.FINE;
+    private static final Level  LEVEL_GET  = Level.FINE;
     private static final Logger LOG        = Logger.getLogger(Server.class.getName());
-    int port;
-    private DatagramChannel chan;
-    private InetAddress     address;
+    protected int             port;
+    protected DatagramChannel chan;
+    protected InetAddress     address;
 
-    Server() {
-    }
-
-    Server(String hostname) {
-        this(hostname, 27011); // TODO: split
-    }
-
-    Server(String hostname, int port) {
+    public Server(String hostname, int port) {
         try {
             address = InetAddress.getByName(hostname);
             this.port = port;
@@ -46,18 +39,18 @@ public class Server {
         return port;
     }
 
-    void send(ByteBuffer buf) throws IOException {
+    protected void send(ByteBuffer buf) throws IOException {
         LOG.log(LEVEL_SEND, "Sending {0} bytes\nPayload: {1}\nAddress: {2}", new Object[] {
                 buf.limit(), DataUtils.hexDump(buf), address
         });
         chan.write(buf);
     }
 
-    InetAddress getAddress() {
+    public InetAddress getAddress() {
         return address;
     }
 
-    ByteBuffer get() throws IOException {
+    protected ByteBuffer get() throws IOException {
         ByteBuffer buf = ByteBuffer.allocate(1392);
         buf.order(ByteOrder.LITTLE_ENDIAN);
         int bytesRead = chan.read(buf);

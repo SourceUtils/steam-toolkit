@@ -1,4 +1,4 @@
-package com.timepath.steam.io;
+package com.timepath.steam.io.bvdf;
 
 import com.timepath.DateUtils;
 import com.timepath.io.OrderedInputStream;
@@ -10,6 +10,20 @@ import java.nio.ByteOrder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Tokenizes binary BDF files and notifies a listener
+ *
+ * @author TimePath
+ * @see <a>https://github.com/harvimt/steam_launcher/blob/master/binvdf.py</a>
+ * @see <a>https://github.com/barneygale/bvdf/blob/master/bvdf.py</a>
+ * @see <a>https://github.com/DHager/hl2parse</a>
+ * @see <a>http://cs.rin.ru/forum/viewtopic.php?f=20&t=61506&hilit=appinfo</a>
+ * @see <a>http://cs.rin.ru/forum/viewtopic.php?f=20&t=62438&hilit=packageinfo</a>
+ * @see <a>http://media.steampowered.com/steamcommunity/public/images/apps/[appID]/[sha].[ext]</a>
+ * @see <a>http://cdr.xpaw.ru/app/5/#section_info</a>
+ * @see <a>http://hlssmod.net/he_code/public/tier1/KeyValues.h</a>
+ * @see <a>http://hpmod.googlecode.com/svn/trunk/tier1/KeyValues.cpp</a>
+ */
 public class BVDFStream {
 
     private static final Logger LOG = Logger.getLogger(BVDFStream.class.getName());
@@ -29,7 +43,7 @@ public class BVDFStream {
         while(true) {
             ValueType type = ValueType.read(is);
             if(type == null) { // Parsing error
-                LOG.log(Level.SEVERE, "Type: {0}, position: {1}", new Object[] { type, is.position() });
+                LOG.log(Level.SEVERE, "Type: {0}, position: {1}", new Object[] { type, is.position() }); // TODO: pushback header
                 return;
             }
             switch(type) {
@@ -65,7 +79,7 @@ public class BVDFStream {
                                     }
                                     listener.push(BVDFConstants.Section.get(section));
                                     {
-                                        // read regular data recursively from here
+                                        // Read regular data recursively from here
                                         read();
                                     }
                                     listener.pop();

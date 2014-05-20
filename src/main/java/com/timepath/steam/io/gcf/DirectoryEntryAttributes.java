@@ -1,4 +1,4 @@
-package com.timepath.steam.io.storage.gcf;
+package com.timepath.steam.io.gcf;
 
 import com.timepath.EnumFlag;
 

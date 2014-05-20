@@ -1,6 +1,6 @@
 package com.timepath.steam.io.storage;
 
-import com.timepath.steam.io.storage.util.ExtendedVFile;
+import com.timepath.steam.io.util.ExtendedVFile;
 import com.timepath.vfs.SimpleVFile;
 
 import java.io.*;

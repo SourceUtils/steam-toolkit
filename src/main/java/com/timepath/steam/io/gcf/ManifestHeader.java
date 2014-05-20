@@ -1,4 +1,4 @@
-package com.timepath.steam.io.storage.gcf;
+package com.timepath.steam.io.gcf;
 
 import com.timepath.DataUtils;
 import com.timepath.io.RandomAccessFileWrapper;
@@ -147,10 +147,9 @@ class ManifestHeader {
             byte[] bytes = bb.array();
             Checksum adler32 = new Adler32();
             adler32.update(bytes, 0, bytes.length);
-            int checked = (int) adler32.getValue();
-            return checked;
+            return (int) adler32.getValue();
         } catch(IOException ex) {
-            Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(com.timepath.steam.io.gcf.GCF.class.getName()).log(Level.SEVERE, null, ex);
         }
         return 0;
     }

@@ -3,7 +3,6 @@ package com.timepath.steam.io.util;
 import com.timepath.steam.io.VDF1;
 
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
 import java.io.File;
 import java.util.LinkedList;
@@ -54,11 +53,6 @@ public class VDFNode1 extends DefaultMutableTreeNode {
 
     public void setKey(String key) {
         this.key.setValue(key);
-    }
-
-    @Override
-    public void add(MutableTreeNode v) {
-        super.add(v);
     }
 
     @Override
