@@ -86,11 +86,6 @@ public class Files extends ExtendedVFile {
     }
 
     @Override
-    public String toString() {
-        return file.getName();
-    }
-
-    @Override
     public String getName() {
         return file.getName();
     }

@@ -51,9 +51,4 @@ public abstract class ExtendedVFile extends SimpleVFile {
     public abstract ExtendedVFile getRoot();
 
     public abstract boolean isComplete();
-
-    @Override
-    public String toString() {
-        return getName();
-    }
 }

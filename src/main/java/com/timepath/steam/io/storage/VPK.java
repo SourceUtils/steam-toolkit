@@ -316,9 +316,4 @@ public class VPK extends ExtendedVFile {
     public InputStream stream() {
         return null;
     }
-
-    @Override
-    public String toString() {
-        return name;
-    }
 }

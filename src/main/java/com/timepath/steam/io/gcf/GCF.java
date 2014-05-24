@@ -343,9 +343,4 @@ public class GCF extends ExtendedVFile {
     public InputStream stream() {
         return null;
     }
-
-    @Override
-    public String toString() {
-        return name;
-    }
 }
