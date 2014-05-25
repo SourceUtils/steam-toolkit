@@ -266,7 +266,7 @@ public class GCF extends ExtendedVFile {
         }
 
         @Override
-        public InputStream stream() {
+        public InputStream openStream() {
             return new InputStream() {
                 private BlockAllocationTableEntry block;
                 private final ByteBuffer buf = createBuffer();
@@ -340,7 +340,7 @@ public class GCF extends ExtendedVFile {
     }
 
     @Override
-    public InputStream stream() {
+    public InputStream openStream() {
         return null;
     }
 }

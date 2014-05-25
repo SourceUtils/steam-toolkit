@@ -54,16 +54,16 @@ public class Files extends ExtendedVFile {
     }
 
     private static void merge(SimpleVFile r, SimpleVFile parent) {
-        for(SimpleVFile d : r.children()) {
+        for(SimpleVFile d : r.list()) {
             SimpleVFile existing = null;
-            for(SimpleVFile t : parent.children()) {
+            for(SimpleVFile t : parent.list()) {
                 if(t.getName().equals(d.getName())) {
                     existing = t;
                     break;
                 }
             }
             if(existing == null) {
-                parent.copy(d);
+                parent.add(d);
             } else {
                 merge(d, existing);
             }
@@ -91,7 +91,7 @@ public class Files extends ExtendedVFile {
     }
 
     @Override
-    public InputStream stream() {
+    public InputStream openStream() {
         try {
             return new BufferedInputStream(new FileInputStream(file));
         } catch(FileNotFoundException ex) {

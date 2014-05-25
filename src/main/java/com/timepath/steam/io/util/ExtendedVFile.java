@@ -18,7 +18,7 @@ public abstract class ExtendedVFile extends SimpleVFile {
     public void analyze(DefaultMutableTreeNode top, boolean leaves) {
         if(top.getUserObject() instanceof ExtendedVFile) { // the root node has been added
             ExtendedVFile e = (ExtendedVFile) top.getUserObject();
-            for(SimpleVFile n : e.children()) {
+            for(SimpleVFile n : e.list()) {
                 DefaultMutableTreeNode ret = new DefaultMutableTreeNode(n);
                 if(n.isDirectory()) {
                     analyze(ret, leaves);

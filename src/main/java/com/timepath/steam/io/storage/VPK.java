@@ -287,7 +287,7 @@ public class VPK extends ExtendedVFile {
         }
 
         @Override
-        public InputStream stream() {
+        public InputStream openStream() {
             return new ByteBufferInputStream(localData());
         }
     }
@@ -313,7 +313,7 @@ public class VPK extends ExtendedVFile {
     }
 
     @Override
-    public InputStream stream() {
+    public InputStream openStream() {
         return null;
     }
 }
