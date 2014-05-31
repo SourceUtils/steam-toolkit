@@ -3,10 +3,21 @@ package com.timepath.steam.io;
 import com.timepath.Diff;
 import com.timepath.Node;
 import com.timepath.Pair;
+import com.timepath.steam.io.VDFParser.NodeContext;
+import com.timepath.steam.io.VDFParser.PairContext;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Standard KeyValues format loader
@@ -35,6 +46,43 @@ public class VDF2 extends Node<VDF2.VDFProperty, VDF2> {
 
     public VDF2(Object name) {
         super(name);
+    }
+
+    public static VDF2 load(InputStream is) throws IOException {
+        VDFLexer lexer = new VDFLexer(new ANTLRInputStream(is));
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        VDFParser parser = new VDFParser(tokens);
+        VDF2 v = new VDF2();
+        final Deque<VDF2> stack = new LinkedList<>();
+        stack.push(v);
+        ParseTreeWalker.DEFAULT.walk(new VDFBaseListener() {
+            private final Pattern UNQUOTE = Pattern.compile("\"((?:\\\\\"|.)*?)\"");
+
+            @Override
+            public void enterNode(NodeContext ctx) {
+                stack.push(new VDF2(u(ctx.name.getText())));
+            }
+
+            @Override
+            public void exitNode(NodeContext ctx) {
+                VDF2 current = stack.pop();
+                stack.peek().addNode(current);
+            }
+
+            @Override
+            public void exitPair(PairContext ctx) {
+                stack.peek().addProperty(new VDFProperty(u(ctx.key.getText()), u(ctx.value.getText())));
+            }
+
+            private String u(String s) {
+                if(s.startsWith("\"")) {
+                    Matcher m = UNQUOTE.matcher(s);
+                    if(m.find()) return m.group(1);
+                }
+                return s;
+            }
+        }, parser.parse());
+        return v;
     }
 
     VDF2 deepClone() {
