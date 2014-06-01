@@ -4,7 +4,7 @@ grammar VDF;
 parse
     :   (node | pair)* EOF ;
 node
-    :   name=STRING '{' (node | pair)* '}' ;
+    :   name=STRING (QUALIFIER)? '{' (node | pair)* '}' ;
 pair
     :   key=STRING (EQUALS)? value=STRING (QUALIFIER)? ;
 

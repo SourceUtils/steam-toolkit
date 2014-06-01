@@ -48,18 +48,6 @@ public class VDF1 implements Savable {
         return new VDF1();
     }
 
-    public static boolean isBinary(File f) {
-        try {
-            RandomAccessFile rf = new RandomAccessFile(f, "r");
-            rf.seek(rf.length() - 1);
-            int r = rf.read();
-            return ( r == 0x00 ) || ( r == 0x08 ) || ( r == 0xFF );
-        } catch(IOException ex) {
-            Logger.getLogger(VDF1.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return false;
-    }
-
     public void setLogLevel(Level logLevel) {
         this.logLevel = logLevel;
     }

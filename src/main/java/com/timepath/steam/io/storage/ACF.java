@@ -1,11 +1,11 @@
 package com.timepath.steam.io.storage;
 
 import com.timepath.steam.SteamUtils;
-import com.timepath.steam.io.VDF1;
+import com.timepath.steam.io.VDF;
+import com.timepath.steam.io.VDFNode;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.util.HashMap;
@@ -24,18 +24,17 @@ public class ACF extends Files {
         super(root);
     }
 
-    public static ACF fromManifest(int appID) throws FileNotFoundException {
+    public static ACF fromManifest(int appID) throws IOException {
         return fromManifest(new File(SteamUtils.getSteamApps(), "appmanifest_" + appID + ".acf"));
     }
 
-    private static ACF fromManifest(File mf) throws FileNotFoundException {
-        VDF1 v = new VDF1();
-        v.readExternal(new FileInputStream(mf));
+    private static ACF fromManifest(File mf) throws IOException {
+        VDFNode v = VDF.load(mf);
         File dir;
         try {
-            dir = new File(v.getRoot().get("AppState").get("UserConfig").get("appinstalldir").getValue());
+            dir = new File((String) v.get("AppState", "UserConfig").getValue("appinstalldir"));
         } catch(Exception ignored) {
-            dir = new File(mf.getParentFile(), "common/" + v.getRoot().get("AppState").get("installdir").getValue());
+            dir = new File(mf.getParentFile(), "common/" + v.get("AppState").getValue("installdir"));
         }
         // TODO: gameinfo.txt
         String key = mf.getName();

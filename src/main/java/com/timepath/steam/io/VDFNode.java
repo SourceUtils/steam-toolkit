@@ -3,28 +3,17 @@ package com.timepath.steam.io;
 import com.timepath.Diff;
 import com.timepath.Node;
 import com.timepath.Pair;
-import com.timepath.steam.io.VDFParser.NodeContext;
-import com.timepath.steam.io.VDFParser.PairContext;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Deque;
-import java.util.LinkedList;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Standard KeyValues format loader
  *
  * @author TimePath
  */
-public class VDF2 extends Node<VDF2.VDFProperty, VDF2> {
+public class VDFNode extends Node<VDFNode.VDFProperty, VDFNode> {
 
     private static final Comparator<VDFProperty> COMPARATOR_KEY   = new Comparator<VDFProperty>() {
         @Override
@@ -38,95 +27,47 @@ public class VDF2 extends Node<VDF2.VDFProperty, VDF2> {
             return o1.getValue().hashCode() - o2.getValue().hashCode();
         }
     };
-    private static final Logger                  LOG              = Logger.getLogger(VDF2.class.getName());
+    private static final Logger                  LOG              = Logger.getLogger(VDFNode.class.getName());
 
-    private VDF2() {
+    VDFNode() {
         this("VDF");
     }
 
-    public VDF2(Object name) {
+    public VDFNode(Object name) {
         super(name);
     }
 
-    public static VDF2 load(InputStream is) throws IOException {
-        VDFLexer lexer = new VDFLexer(new ANTLRInputStream(is));
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        VDFParser parser = new VDFParser(tokens);
-        VDF2 v = new VDF2();
-        final Deque<VDF2> stack = new LinkedList<>();
-        stack.push(v);
-        ParseTreeWalker.DEFAULT.walk(new VDFBaseListener() {
-            private final Pattern UNQUOTE = Pattern.compile("\"((?:\\\\\"|.)*?)\"");
-
-            @Override
-            public void enterNode(NodeContext ctx) {
-                stack.push(new VDF2(u(ctx.name.getText())));
-            }
-
-            @Override
-            public void exitNode(NodeContext ctx) {
-                VDF2 current = stack.pop();
-                stack.peek().addNode(current);
-            }
-
-            @Override
-            public void exitPair(PairContext ctx) {
-                stack.peek().addProperty(new VDFProperty(u(ctx.key.getText()), u(ctx.value.getText())));
-            }
-
-            private String u(String s) {
-                if(s.startsWith("\"")) {
-                    Matcher m = UNQUOTE.matcher(s);
-                    if(m.find()) return m.group(1);
-                }
-                return s;
-            }
-        }, parser.parse());
-        return v;
-    }
-
-    VDF2 deepClone() {
-        VDF2 clone = new VDF2(custom);
-        for(VDF2 v : getNodes()) {
-            clone.addNode(v.deepClone());
-        }
-        for(VDFProperty p : getProperties()) {
-            clone.addProperty(new VDFProperty(p.getKey(), p.getValue()));
-        }
-        return clone;
-    }
-
-    public Diff<VDF2> rdiff2(VDF2 other) {
-        Diff<VDF2> d = new Diff<>();
+    public Diff<VDFNode> rdiff2(VDFNode other) {
+        Diff<VDFNode> d = new Diff<>();
         d.in = this;
         d.out = other;
-        VDF2 removed = new VDF2("Removed");
-        VDF2 added = new VDF2("Added");
-        VDF2 potential = new VDF2("Potential");
-        VDF2 potential2 = new VDF2("Potential2");
-        VDF2 same = new VDF2("Same");
-        for(VDF2 v : getNodes()) {
-            VDF2 match = other.getNamedNode(v.custom);
+        VDFNode removed = new VDFNode("Removed");
+        VDFNode added = new VDFNode("Added");
+        VDFNode potential = new VDFNode("Potential");
+        VDFNode potential2 = new VDFNode("Potential2");
+        VDFNode same = new VDFNode("Same");
+        for(VDFNode v : getNodes()) {
+            VDFNode match = other.get(v.custom);
             if(match == null) { // Not in new copy
                 removed.addNode(v);
             } else {
                 potential.addNode(match);
             }
         }
-        for(VDF2 v : other.getNodes()) {
-            VDF2 match = getNamedNode(v.custom);
+        for(VDFNode v : other.getNodes()) {
+            VDFNode match = get(v.custom);
             if(match == null) { // Not in this copy
                 added.addNode(v);
             } else {
                 potential2.addNode(match);
             }
         }
-        for(VDF2 v : potential.getNodes()) {
-            VDF2 v2 = potential2.getNamedNode(v.custom);
+        for(VDFNode v : potential.getNodes()) {
+            VDFNode v2 = potential2.get(v.custom);
             Diff<VDFProperty> diff = v2.diff(v); // FIXME: backwards for some reason
             if(( diff.added.size() + diff.removed.size() + diff.modified.size() ) > 0) { // Something was changed
-                VDF2 na = new VDF2(v.custom);
-                VDF2 nr = new VDF2(v.custom);
+                VDFNode na = new VDFNode(v.custom);
+                VDFNode nr = new VDFNode(v.custom);
                 for(VDFProperty a : diff.added) {
                     na.addProperty(a);
                 }
@@ -156,7 +97,7 @@ public class VDF2 extends Node<VDF2.VDFProperty, VDF2> {
      *
      * @return
      */
-    Diff<VDFProperty> diff(VDF2 other) {
+    Diff<VDFProperty> diff(VDFNode other) {
         return Diff.diff(getProperties(), other.getProperties(), COMPARATOR_KEY, COMPARATOR_VALUE);
     }
 
@@ -169,29 +110,29 @@ public class VDF2 extends Node<VDF2.VDFProperty, VDF2> {
      * @return
      */
     @Override
-    public Diff<VDF2> rdiff(VDF2 other) {
-        Diff<VDF2> d = new Diff<>();
+    public Diff<VDFNode> rdiff(VDFNode other) {
+        Diff<VDFNode> d = new Diff<>();
         d.in = this;
         d.out = other;
-        VDF2 removed = new VDF2("Removed");
-        VDF2 added = new VDF2("Added");
-        VDF2 same = new VDF2("Same");
-        VDF2 modified = new VDF2("Modified");
-        for(VDF2 v : getNodes()) {
-            VDF2 match = other.getNamedNode(v.custom);
+        VDFNode removed = new VDFNode("Removed");
+        VDFNode added = new VDFNode("Added");
+        VDFNode same = new VDFNode("Same");
+        VDFNode modified = new VDFNode("Modified");
+        for(VDFNode v : getNodes()) {
+            VDFNode match = other.get(v.custom);
             if(match == null) { // Not in new copy
                 removed.addNode(v);
             } else {
                 same.addNode(match); // TODO: check for differences
             }
         }
-        for(VDF2 v : other.getNodes()) {
-            VDF2 match = getNamedNode(v.custom);
+        for(VDFNode v : other.getNodes()) {
+            VDFNode match = get(v.custom);
             if(match == null) { // Not in this copy
                 added.addNode(v);
             }
             //            else {
-            //                Diff<VDFProperty> diff = v.diff(same.getNamedNode(v.custom));
+            //                Diff<VDFProperty> diff = v.diff(same.get(v.custom));
             //                if(diff.added.size() + diff.removed.size() + diff.modified.size() >= 0) { // Something was changed
             //                    // This could be a mixture of additions, removals or modifications, as well as unchanged values
             //                }
