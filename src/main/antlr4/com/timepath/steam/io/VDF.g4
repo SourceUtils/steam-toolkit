@@ -17,7 +17,7 @@ EQUALS
 COMMENT
     :   '//' ~[\r\n]* -> channel(HIDDEN) ;
 WS
-    :   [ \t\r\n]+ -> channel(HIDDEN) ;
+    :   [ \t\r\n\u0000]+ -> channel(HIDDEN) ;
 STRING
     :   ('"' STRING_ESCAPED* '"' | STRING_LITERAL) ;
 // only quotes are escaped in strings
@@ -25,4 +25,4 @@ STRING_ESCAPED
     :   ~["] | '\\"' ;
 // an unquoted word
 STRING_LITERAL
-    :   ~[ \t\r\n"{}=]+ ;
+    :   ~[ \t\r\n\u0000"{}=]+ ;

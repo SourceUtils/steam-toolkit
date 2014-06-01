@@ -144,7 +144,7 @@ public class VPK extends ExtendedVFile {
         e.entryOffset = buffer.getInt();
         e.entryLength = buffer.getInt();
         buffer.position(buffer.position() + e.preloadBytes); // TODO: load preload bytes
-        short term = buffer.getShort();
+        int term = buffer.getShort() & 0xFFFF;
         assert term == 0xFFFF : "VPK directory reading failed";
         return e;
     }

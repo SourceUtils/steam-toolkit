@@ -8,6 +8,8 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.logging.Level;
@@ -35,14 +37,17 @@ public class VDF {
     }
 
     public static VDFNode load(InputStream is) throws IOException {
-        VDFLexer lexer = new VDFLexer(new ANTLRInputStream(is));
+        return load(is, StandardCharsets.UTF_8);
+    }
+
+    public static VDFNode load(InputStream is, Charset c) throws IOException {
+        VDFLexer lexer = new VDFLexer(new ANTLRInputStream(new InputStreamReader(is, c)));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         VDFParser parser = new VDFParser(tokens);
         VDFNode v = new VDFNode();
         final Deque<VDFNode> stack = new LinkedList<>();
         stack.push(v);
         ParseTreeWalker.DEFAULT.walk(new VDFBaseListener() {
-
             @Override
             public void enterNode(NodeContext ctx) {
                 stack.push(new VDFNode(u(ctx.name.getText())));
@@ -67,4 +72,7 @@ public class VDF {
         return v;
     }
 
+    public static VDFNode load(File f, Charset c) throws IOException {
+        return load(new FileInputStream(f), c);
+    }
 }
