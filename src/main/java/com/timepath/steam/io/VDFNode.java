@@ -3,9 +3,21 @@ package com.timepath.steam.io;
 import com.timepath.Diff;
 import com.timepath.Node;
 import com.timepath.Pair;
+import com.timepath.steam.io.VDFNode.VDFProperty;
+import com.timepath.steam.io.VDFParser.NodeContext;
+import com.timepath.steam.io.VDFParser.PairContext;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.logging.Logger;
 
 /**
@@ -13,7 +25,7 @@ import java.util.logging.Logger;
  *
  * @author TimePath
  */
-public class VDFNode extends Node<VDFNode.VDFProperty, VDFNode> {
+public class VDFNode extends Node<VDFProperty, VDFNode> {
 
     private static final Comparator<VDFProperty> COMPARATOR_KEY   = new Comparator<VDFProperty>() {
         @Override
@@ -29,8 +41,38 @@ public class VDFNode extends Node<VDFNode.VDFProperty, VDFNode> {
     };
     private static final Logger                  LOG              = Logger.getLogger(VDFNode.class.getName());
 
-    VDFNode() {
+    protected VDFNode() {
         this("VDF");
+    }
+
+    public VDFNode(InputStream is, Charset c) throws IOException {
+        VDFLexer lexer = new VDFLexer(new ANTLRInputStream(new InputStreamReader(is, c)));
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        VDFParser parser = new VDFParser(tokens);
+        final Deque<VDFNode> stack = new LinkedList<>();
+        stack.push(this);
+        ParseTreeWalker.DEFAULT.walk(new VDFBaseListener() {
+            @Override
+            public void enterNode(NodeContext ctx) {
+                stack.push(new VDFNode(u(ctx.name.getText())));
+            }
+
+            @Override
+            public void exitNode(NodeContext ctx) {
+                VDFNode current = stack.pop();
+                stack.peek().addNode(current);
+            }
+
+            @Override
+            public void exitPair(PairContext ctx) {
+                stack.peek().addProperty(new VDFProperty(u(ctx.key.getText()), u(ctx.value.getText())));
+            }
+
+            private String u(String s) {
+                if(s.startsWith("\"")) return s.substring(1, s.length() - 1).replace("\\\"", "\"");
+                return s;
+            }
+        }, parser.parse());
     }
 
     public VDFNode(Object name) {
@@ -101,6 +143,32 @@ public class VDFNode extends Node<VDFNode.VDFProperty, VDFNode> {
         return Diff.diff(getProperties(), other.getProperties(), COMPARATOR_KEY, COMPARATOR_VALUE);
     }
 
+    public String save() {
+        StringBuilder sb = new StringBuilder();
+        // preceding header
+        for(VDFProperty p : properties) {
+            if(String.valueOf(p.getValue()).isEmpty()) {
+                if("\\n".equals(p.getKey())) {
+                    sb.append('\n');
+                }
+                if("//".equals(p.getKey())) {
+                    sb.append("//").append(p.getInfo()).append('\n');
+                }
+            }
+        }
+        sb.append(custom).append('\n');
+        sb.append("{\n");
+        for(VDFProperty p : properties) {
+            if(!String.valueOf(p.getValue()).isEmpty()) {
+                sb.append("\\n".equals(p.getKey()) ? "\t    \n" : ( "\t    " + p.getKey() + "\t    " + p.getValue() +
+                                                                    ( ( p.getInfo() != null ) ? ( ' ' + p.getInfo() ) : "" ) +
+                                                                    '\n' ));
+            }
+        }
+        sb.append("}\n");
+        return sb.toString();
+    }
+
     /**
      * Diffs the child nodes of both VDF nodes. TODO: breadth first would be more efficient with large differences
      *
@@ -157,6 +225,10 @@ public class VDFNode extends Node<VDFNode.VDFProperty, VDFNode> {
         @Override
         public String toString() {
             return '"' + getKey() + '"' + TAB + '"' + getValue() + '"';
+        }
+
+        public String getInfo() {
+            return "";
         }
     }
 }
