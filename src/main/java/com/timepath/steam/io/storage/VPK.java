@@ -4,6 +4,7 @@ import com.timepath.DataUtils;
 import com.timepath.StringUtils;
 import com.timepath.io.ByteBufferInputStream;
 import com.timepath.io.struct.StructField;
+import com.timepath.steam.io.storage.Files.FileHandler;
 import com.timepath.steam.io.util.ExtendedVFile;
 import com.timepath.vfs.SimpleVFile;
 
@@ -39,6 +40,16 @@ public class VPK extends ExtendedVFile {
     private final ByteBuffer[] mappings;
     private final File[]       store;
     private       String       name;
+
+    static {
+        Files.registerHandler(new FileHandler() {
+            @Override
+            public SimpleVFile handle(final File file) throws IOException {
+                if(!file.getName().endsWith("_dir.vpk")) return null;
+                return VPK.loadArchive(file);
+            }
+        });
+    }
 
     private VPK(final File file) throws IOException {
         LOG.log(Level.INFO, "Loading {0}", file);
