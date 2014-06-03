@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -44,9 +45,9 @@ public class VPK extends ExtendedVFile {
     static {
         Files.registerHandler(new FileHandler() {
             @Override
-            public SimpleVFile handle(final File file) throws IOException {
+            public Collection<? extends SimpleVFile> handle(final File file) throws IOException {
                 if(!file.getName().endsWith("_dir.vpk")) return null;
-                return VPK.loadArchive(file);
+                return VPK.loadArchive(file).list();
             }
         });
     }

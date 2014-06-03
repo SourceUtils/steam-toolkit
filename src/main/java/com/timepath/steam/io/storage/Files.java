@@ -40,7 +40,7 @@ public class Files extends ExtendedVFile {
     /**
      * Archive to directory map
      */
-    private final Map<SimpleVFile, SimpleVFile> archives = new HashMap<>();
+    private final Map<Collection<? extends SimpleVFile>, SimpleVFile> archives = new HashMap<>();
     private final File file;
 
     public Files(File f) {
@@ -61,21 +61,13 @@ public class Files extends ExtendedVFile {
     }
 
     private static void merge(SimpleVFile r, SimpleVFile parent) {
-        if(parent.get(r.getName()) == null) {
+        SimpleVFile existing = parent.get(r.getName());
+        // parent does not have this file
+        if(existing == null) {
             parent.add(r);
-            return;
-        }
-        for(SimpleVFile d : r.list()) {
-            SimpleVFile existing = null;
-            for(SimpleVFile t : parent.list()) {
-                if(t.getName().equals(d.getName())) {
-                    existing = t;
-                    break;
-                }
-            }
-            if(existing == null) {
-                parent.add(d);
-            } else {
+        } else {
+            // add all child files, silently ignore duplicates
+            for(SimpleVFile d : r.list()) {
                 merge(d, existing);
             }
         }
@@ -146,7 +138,7 @@ public class Files extends ExtendedVFile {
                     @Override
                     public Void call() throws Exception {
                         for(FileHandler h : handlers) {
-                            SimpleVFile root = h.handle(file);
+                            Collection<? extends SimpleVFile> root = h.handle(file);
                             if(root == null) continue;
                             archives.put(root, parent);
                         }
@@ -164,8 +156,10 @@ public class Files extends ExtendedVFile {
         }
         LOG.log(Level.INFO, "Recursive file load took {0}ms", System.currentTimeMillis() - start);
         // TODO: additive directories to avoid this kludge
-        for(Map.Entry<SimpleVFile, SimpleVFile> e : archives.entrySet()) {
-            merge(e.getKey(), e.getValue());
+        for(Map.Entry<Collection<? extends SimpleVFile>, SimpleVFile> e : archives.entrySet()) {
+            for(SimpleVFile root : e.getKey()) {
+                merge(root, e.getValue());
+            }
         }
     }
 
@@ -181,7 +175,7 @@ public class Files extends ExtendedVFile {
 
     public static interface FileHandler {
 
-        SimpleVFile handle(File file) throws IOException;
+        Collection<? extends SimpleVFile> handle(File file) throws IOException;
     }
 
     private interface FileVisitor {
