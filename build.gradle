@@ -1,0 +1,55 @@
+description = ''
+
+configurations {
+  antlr4 {
+    description = "ANTLR4"
+  }
+}
+
+ext.antlr = [
+  output: "${buildDir}/generated-src/antlr4",
+  version: '4.2.2'
+]
+
+dependencies {
+  antlr4 "org.antlr:antlr4:${antlr.version}"
+
+  compile "org.antlr:antlr4-runtime:${antlr.version}"
+  compile 'org.json:json:20140107'
+  compile project(':java-xplaf')
+  compile project(':java-vfs')
+  compile project(':web-api-base')
+}
+
+task compileAntlr() {
+  description = 'Generates Java sources from ANTLR4 grammars.'
+  mkdir(antlr.output)
+
+  def files = [:].withDefault {[]}
+  def base = new File(projectDir, '/src/main/antlr4');
+  base.eachFileRecurse(groovy.io.FileType.FILES) {
+    if(!it.name.endsWith('.g4')) return
+    def pkg = base.toURI().relativize(it.parentFile.toURI()).toString().replaceAll('/$', '').replace(File.separator, '.')
+    files[pkg].add(it.toString().replace(base.toString() + '/', ''))
+  }
+  files.each { pkg, grammars ->
+    doLast {
+      javaexec {
+        classpath configurations.all
+        workingDir = base.toString()
+        println 'found ' + grammars
+        main = 'org.antlr.v4.Tool'
+        args = ["-o", "${antlr.output}", /*"-atn", "-visitor", "-listener",*/ "-package", pkg, grammars].flatten()
+      }
+    }
+  }
+}
+
+compileJava {
+  dependsOn compileAntlr
+  source antlr.output
+}
+
+clean {
+  delete antlr.output
+}
