@@ -4,12 +4,12 @@ grammar VDF;
 parse
     :   (node | pair)* EOF ;
 node
-    :   name=STRING (QUALIFIER)? '{' (node | pair)* '}' ;
+    :   name=STRING (conditional=CONDITIONAL)? '{' (node | pair)* '}' ;
 pair
-    :   key=STRING (EQUALS)? value=STRING (QUALIFIER)? ;
+    :   key=STRING (EQUALS)? value=STRING (conditional=CONDITIONAL)? ;
 
 // like an ifdef
-QUALIFIER
+CONDITIONAL
     :    '[' .*? ']' ;
 // sometimes used in steam .res files between keyvalues
 EQUALS

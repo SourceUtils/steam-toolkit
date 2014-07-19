@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Deque;
@@ -41,6 +42,17 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
     };
     private static final Logger                  LOG              = Logger.getLogger(VDFNode.class.getName());
 
+    public String getConditional() { return conditional; }
+
+    public void setConditional(String conditional) { this.conditional = conditional; }
+
+    private String conditional;
+
+    @Override
+    public String toString() {
+        return super.toString() + ( conditional == null ? "" : "    " + conditional );
+    }
+
     protected VDFNode() {
         this("VDF");
     }
@@ -54,7 +66,9 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
         ParseTreeWalker.DEFAULT.walk(new VDFBaseListener() {
             @Override
             public void enterNode(NodeContext ctx) {
+                String conditional = ctx.conditional != null ? ctx.conditional.getText() : null;
                 stack.push(new VDFNode(u(ctx.name.getText())));
+                stack.peek().conditional = conditional;
             }
 
             @Override
@@ -65,7 +79,8 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
 
             @Override
             public void exitPair(PairContext ctx) {
-                stack.peek().addProperty(new VDFProperty(u(ctx.key.getText()), u(ctx.value.getText())));
+                String conditional = ctx.conditional != null ? ctx.conditional.getText() : null;
+                stack.peek().addProperty(new VDFProperty(u(ctx.key.getText()), u(ctx.value.getText()), conditional));
             }
 
             private String u(String s) {
@@ -160,9 +175,13 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
         sb.append("{\n");
         for(VDFProperty p : properties) {
             if(!String.valueOf(p.getValue()).isEmpty()) {
-                sb.append("\\n".equals(p.getKey()) ? "\t    \n" : ( "\t    " + p.getKey() + "\t    " + p.getValue() +
-                                                                    ( ( p.getInfo() != null ) ? ( ' ' + p.getInfo() ) : "" ) +
-                                                                    '\n' ));
+                if("\\n".equals(p.getKey())) {
+                    sb.append("\t    \n");
+                } else {
+                    sb.append("\t    ").append(p.getKey()).append("\t    ").append(p.getValue());
+                    if(p.getInfo() != null) sb.append(' ').append(p.getInfo());
+                    sb.append('\n');
+                }
             }
         }
         sb.append("}\n");
@@ -199,12 +218,12 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
             if(match == null) { // Not in this copy
                 added.addNode(v);
             }
-            //            else {
-            //                Diff<VDFProperty> diff = v.diff(same.get(v.custom));
-            //                if(diff.added.size() + diff.removed.size() + diff.modified.size() >= 0) { // Something was changed
-            //                    // This could be a mixture of additions, removals or modifications, as well as unchanged values
-            //                }
-            //            }
+            //else {
+            //    Diff<VDFProperty> diff = v.diff(same.get(v.custom));
+            //    if(diff.added.size() + diff.removed.size() + diff.modified.size() >= 0) { // Something was changed
+            //        // This could be a mixture of additions, removals or modifications, as well as unchanged values
+            //    }
+            //}
         }
         d.removed = Arrays.asList(removed);
         d.same = Arrays.asList(same);
@@ -217,14 +236,28 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
 
         private static final Logger LOG = Logger.getLogger(VDFProperty.class.getName());
         private static final String TAB = "    ";
+        private String conditional;
+
+        public String getConditional() { return conditional; }
+
+        public void setConditional(String conditional) { this.conditional = conditional; }
 
         public VDFProperty(String key, Object val) {
+            this(key, val, null);
+        }
+
+        public VDFProperty(String key, Object val, String conditional) {
             super(key, val);
+            this.conditional = conditional;
         }
 
         @Override
         public String toString() {
-            return '"' + getKey() + '"' + TAB + '"' + getValue() + '"';
+            return MessageFormat.format("''{1}''{0}''{2}''{3}",
+                                        TAB,
+                                        getKey(),
+                                        getValue(),
+                                        conditional == null ? "" : TAB + conditional);
         }
 
         public String getInfo() {
