@@ -13,11 +13,11 @@ class DataBlockHeader {
     /**
      * Size of each data block in bytes.
      */
-    final         int blockSize;
+    final int blockSize;
     /**
      * Offset to first data block.
      */
-    final         int firstBlockOffset;
+    final int firstBlockOffset;
     /**
      * Number of data blocks.
      */
@@ -51,9 +51,9 @@ class DataBlockHeader {
         checked += DataUtils.updateChecksumAdd(blockSize);
         checked += DataUtils.updateChecksumAdd(firstBlockOffset);
         checked += DataUtils.updateChecksumAdd(blocksUsed);
-        String checkState = ( checksum == checked ) ? "OK" : ( checksum + "vs" + checked );
+        String checkState = (checksum == checked) ? "OK" : (checksum + "vs" + checked);
         return "v:" + gcfRevision + ", blocks:" + blockCount + ", size:" + blockSize + ", offset:0x" +
-               Integer.toHexString(firstBlockOffset) + ", used:" + blocksUsed + ", check:" + checkState;
+                Integer.toHexString(firstBlockOffset) + ", used:" + blocksUsed + ", check:" + checkState;
     }
 
     int check() {

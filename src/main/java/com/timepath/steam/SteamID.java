@@ -21,10 +21,10 @@ public class SteamID {
     /**
      * Steam_# 0 from HL to TF2, 1 from L4D to CS:GO
      */
-    private static final Pattern    ID32         = Pattern.compile("STEAM_([0-9]):([0-9]):([0-9]{4,})");
-    private static final Pattern    ID64         = Pattern.compile("([0-9]{17,})");
-    private static final Pattern    UID          = Pattern.compile("U:([0-9]):([0-9]{4,})");
-    private static final Logger     LOG          = Logger.getLogger(SteamID.class.getName());
+    private static final Pattern ID32 = Pattern.compile("STEAM_([0-9]):([0-9]):([0-9]{4,})");
+    private static final Pattern ID64 = Pattern.compile("([0-9]{17,})");
+    private static final Pattern UID = Pattern.compile("U:([0-9]):([0-9]{4,})");
+    private static final Logger LOG = Logger.getLogger(SteamID.class.getName());
     /**
      * The 4 is because hexadecimal; sqrt 16? 2^4 = 16? Probably that
      */
@@ -45,7 +45,7 @@ public class SteamID {
 
     private static CharSequence ID32toUID(CharSequence steam) {
         Matcher matcher = ID32.matcher(steam);
-        if(!matcher.matches()) {
+        if (!matcher.matches()) {
             return null;
         }
         BigInteger id = new BigInteger(matcher.group(3)).multiply(BigInteger.valueOf(2)).add(new BigInteger(matcher.group(2)));
@@ -54,7 +54,7 @@ public class SteamID {
 
     private static String UIDtoID64(CharSequence steam) {
         Matcher matcher = UID.matcher(steam);
-        if(!matcher.matches()) {
+        if (!matcher.matches()) {
             return null;
         }
         BigInteger id = new BigInteger(matcher.group(2)).add(ID_64_OFFSET);
@@ -67,7 +67,7 @@ public class SteamID {
 
     public static String ID64toUID(CharSequence steam) {
         Matcher matcher = ID64.matcher(steam);
-        if(!matcher.matches()) {
+        if (!matcher.matches()) {
             return null;
         }
         BigInteger id = new BigInteger(matcher.group(1)).subtract(ID_64_OFFSET);
@@ -76,7 +76,7 @@ public class SteamID {
 
     public static String UIDtoID32(CharSequence steam) {
         Matcher matcher = UID.matcher(steam);
-        if(!matcher.matches()) {
+        if (!matcher.matches()) {
             return null;
         }
         BigInteger[] id = new BigInteger(matcher.group(2)).divideAndRemainder(BigInteger.valueOf(2));

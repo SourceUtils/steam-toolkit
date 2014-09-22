@@ -14,40 +14,40 @@ class BlockAllocationTableHeader {
      * 8 * 4
      */
     static final long SIZE = 32;
-    final         long pos;
+    final long pos;
     /**
      * Number of data blocks.
      */
-    private final int  blockCount;
+    private final int blockCount;
     /**
      * Number of data blocks that point to data.
      */
-    private final int  blocksUsed;
+    private final int blocksUsed;
     /**
      * Header checksum.
      * The checksum is simply the sum total of all the preceeding DWORDs in the header
      */
-    private final int  checksum;
+    private final int checksum;
     /**
      *
      */
-    private final int  dummy0;
+    private final int dummy0;
     /**
      *
      */
-    private final int  dummy1;
+    private final int dummy1;
     /**
      *
      */
-    private final int  dummy2;
+    private final int dummy2;
     /**
      *
      */
-    private final int  dummy3;
+    private final int dummy3;
     /**
      *
      */
-    private final int  lastBlockUsed;
+    private final int lastBlockUsed;
 
     BlockAllocationTableHeader(GCF g) throws IOException {
         RandomAccessFileWrapper raf = g.raf;
@@ -67,7 +67,7 @@ class BlockAllocationTableHeader {
     @Override
     public String toString() {
         int checked = check();
-        String checkState = ( checksum == checked ) ? "OK" : ( checksum + " vs " + checked );
+        String checkState = (checksum == checked) ? "OK" : (checksum + " vs " + checked);
         return "blockCount:" + blockCount + ", blocksUsed:" + blocksUsed + ", check:" + checkState;
     }
 

@@ -38,12 +38,12 @@ public class BlobNode extends DefaultMutableTreeNode {
     @Override
     public String toString() {
         Object o = getUserObject();
-        if(o == null) {
+        if (o == null) {
             return "unnamed";
         } else {
-            return ( o instanceof String )
-                   ? (String) o
-                   : ( ( ( name != null ) ? name : o.getClass().getSimpleName() ) + ": " + o );
+            return (o instanceof String)
+                    ? (String) o
+                    : (((name != null) ? name : o.getClass().getSimpleName()) + ": " + o);
         }
     }
 

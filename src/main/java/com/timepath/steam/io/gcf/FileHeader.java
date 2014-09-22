@@ -79,10 +79,10 @@ class FileHeader {
     @Override
     public String toString() {
         int checked = check();
-        String checkState = ( checksum == checked ) ? "OK" : ( checksum + "vs" + checked );
+        String checkState = (checksum == checked) ? "OK" : (checksum + "vs" + checked);
         return "id:" + applicationID + ", ver:" + formatVersion + ", rev:" + applicationVersion +
-               ", mounted?: " + isMounted + ", size:" + fileSize + ", blockSize:" + clusterSize + ", blocks:" +
-               clusterCount + ", checksum:" + checkState;
+                ", mounted?: " + isMounted + ", size:" + fileSize + ", blockSize:" + clusterSize + ", blocks:" +
+                clusterCount + ", checksum:" + checkState;
     }
 
     int check() {

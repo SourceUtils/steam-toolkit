@@ -13,15 +13,15 @@ class DirectoryMapHeader {
      * 2 * 4
      */
     static final long SIZE = 8;
-    final         long pos;
+    final long pos;
     /**
      * Always 0x00000000
      */
-    private final int  dummy0;
+    private final int dummy0;
     /**
      * Always 0x00000001
      */
-    private final int  headerVersion;
+    private final int headerVersion;
 
     DirectoryMapHeader(GCF g) throws IOException {
         RandomAccessFileWrapper raf = g.raf;

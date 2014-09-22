@@ -16,12 +16,12 @@ import java.util.logging.Logger;
  */
 public class Server {
 
-    private static final Level  LEVEL_SEND = Level.FINE;
-    private static final Level  LEVEL_GET  = Level.FINE;
-    private static final Logger LOG        = Logger.getLogger(Server.class.getName());
-    protected int             port;
+    private static final Level LEVEL_SEND = Level.FINE;
+    private static final Level LEVEL_GET = Level.FINE;
+    private static final Logger LOG = Logger.getLogger(Server.class.getName());
+    protected int port;
     protected DatagramChannel chan;
-    protected InetAddress     address;
+    protected InetAddress address;
 
     public Server(String hostname, int port) {
         try {
@@ -30,7 +30,7 @@ public class Server {
             InetSocketAddress sock = new InetSocketAddress(address, port);
             chan = DatagramChannel.open();
             chan.connect(sock);
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
     }
@@ -40,7 +40,7 @@ public class Server {
     }
 
     protected void send(ByteBuffer buf) throws IOException {
-        LOG.log(LEVEL_SEND, "Sending {0} bytes\nPayload: {1}\nAddress: {2}", new Object[] {
+        LOG.log(LEVEL_SEND, "Sending {0} bytes\nPayload: {1}\nAddress: {2}", new Object[]{
                 buf.limit(), DataUtils.hexDump(buf), address
         });
         chan.write(buf);
@@ -54,12 +54,12 @@ public class Server {
         ByteBuffer buf = ByteBuffer.allocate(1392);
         buf.order(ByteOrder.LITTLE_ENDIAN);
         int bytesRead = chan.read(buf);
-        if(bytesRead > 0) {
+        if (bytesRead > 0) {
             buf.rewind();
             buf.limit(bytesRead);
             buf = buf.slice();
         }
-        LOG.log(LEVEL_GET, "Receiving {0} bytes\nPayload: {1}\nAddress: {2}", new Object[] {
+        LOG.log(LEVEL_GET, "Receiving {0} bytes\nPayload: {1}\nAddress: {2}", new Object[]{
                 buf.limit(), DataUtils.hexDump(buf), address
         });
         return buf;

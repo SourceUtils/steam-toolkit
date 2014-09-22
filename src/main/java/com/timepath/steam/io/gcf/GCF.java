@@ -25,38 +25,38 @@ import java.util.logging.Logger;
 public class GCF extends ExtendedVFile {
 
     private static final Logger LOG = Logger.getLogger(GCF.class.getName());
-    final         ManifestHeader             manifestHeader;
-    final         RandomAccessFileWrapper    raf;
+    final ManifestHeader manifestHeader;
+    final RandomAccessFileWrapper raf;
     private final BlockAllocationTableHeader blockAllocationTableHeader;
-    private final ChecksumHeader             checksumHeader;
-    private final ChecksumMapHeader          checksumMapHeader;
-    private final DataBlockHeader            dataBlockHeader;
-    private final DirectoryMapHeader         directoryMapHeader;
-    private final FileAllocationTableHeader  fragMap;
-    private final FileHeader                 header;
-    private final String                     name;
+    private final ChecksumHeader checksumHeader;
+    private final ChecksumMapHeader checksumMapHeader;
+    private final DataBlockHeader dataBlockHeader;
+    private final DirectoryMapHeader directoryMapHeader;
+    private final FileAllocationTableHeader fragMap;
+    private final FileHeader header;
+    private final String name;
     BlockAllocationTableEntry[] blocks;
-    ChecksumEntry[]             checksumEntries;
-    ChecksumMapEntry[]          checksumMapEntries;
-    DirectoryMapEntry[]         directoryMapEntries;
-    FileAllocationTableEntry[]  fragMapEntries;
+    ChecksumEntry[] checksumEntries;
+    ChecksumMapEntry[] checksumMapEntries;
+    DirectoryMapEntry[] directoryMapEntries;
+    FileAllocationTableEntry[] fragMapEntries;
     /**
      * TODO
      */
-    private CopyEntry[]         copyEntries;
+    private CopyEntry[] copyEntries;
     private GCFDirectoryEntry[] directoryEntries;
     /**
      * Name table
      */
-    private Info1Entry[]        info1Entries;
+    private Info1Entry[] info1Entries;
     /**
      * Hash table
      */
-    private Info2Entry[]        info2Entries;
+    private Info2Entry[] info2Entries;
     /**
      * TODO
      */
-    private LocalEntry[]        localEntries;
+    private LocalEntry[] localEntries;
 
     public GCF(File file) throws IOException {
         name = file.getName();
@@ -66,43 +66,43 @@ public class GCF extends ExtendedVFile {
         fragMap = new FileAllocationTableHeader(this);
         manifestHeader = new ManifestHeader(raf);
         boolean skipManifest = false;
-        if(skipManifest) {
+        if (skipManifest) {
             raf.skipBytes(manifestHeader.binarySize - ManifestHeader.SIZE);
         } else {
             directoryEntries = new GCFDirectoryEntry[manifestHeader.nodeCount];
-            for(int i = 0; i < manifestHeader.nodeCount; i++) {
+            for (int i = 0; i < manifestHeader.nodeCount; i++) {
                 directoryEntries[i] = new GCFDirectoryEntry(i);
             }
             byte[] ls = raf.readBytes(manifestHeader.nameSize);
-            for(GCFDirectoryEntry de : directoryEntries) {
+            for (GCFDirectoryEntry de : directoryEntries) {
                 int off = de.nameOffset;
                 ByteArrayOutputStream s = new ByteArrayOutputStream();
-                while(ls[off] != 0) {
+                while (ls[off] != 0) {
                     s.write(ls[off]);
                     off++;
                 }
                 de.name = new String(s.toByteArray(), "UTF-8");
-                if(de.parentIndex != 0xFFFFFFFF) {
+                if (de.parentIndex != 0xFFFFFFFF) {
                     de.setParent(directoryEntries[de.parentIndex]);
                 }
             }
             directoryEntries[0].name = name;
             info1Entries = new Info1Entry[manifestHeader.hashTableKeyCount];
-            for(int i = 0; i < manifestHeader.hashTableKeyCount; i++) {
+            for (int i = 0; i < manifestHeader.hashTableKeyCount; i++) {
                 info1Entries[i] = new Info1Entry(raf);
             }
             info2Entries = new Info2Entry[manifestHeader.nodeCount];
-            for(int i = 0; i < manifestHeader.nodeCount; i++) {
+            for (int i = 0; i < manifestHeader.nodeCount; i++) {
                 info2Entries[i] = new Info2Entry(raf);
             }
             copyEntries = new CopyEntry[manifestHeader.minimumFootprintCount];
-            for(int i = 0; i < manifestHeader.minimumFootprintCount; i++) {
+            for (int i = 0; i < manifestHeader.minimumFootprintCount; i++) {
                 CopyEntry f = new CopyEntry();
                 f.DirectoryIndex = raf.readULEInt();
                 copyEntries[i] = f;
             }
             localEntries = new LocalEntry[manifestHeader.userConfigCount];
-            for(int i = 0; i < manifestHeader.userConfigCount; i++) {
+            for (int i = 0; i < manifestHeader.userConfigCount; i++) {
                 LocalEntry f = new LocalEntry();
                 f.DirectoryIndex = raf.readULEInt();
                 localEntries[i] = f;
@@ -126,9 +126,9 @@ public class GCF extends ExtendedVFile {
 
     private ChecksumEntry checksumEntries(int i) throws IOException {
         ChecksumEntry ce = checksumEntries[i];
-        if(ce == null) {
-            raf.seek(directoryMapHeader.pos + ChecksumMapHeader.SIZE + ( checksumMapEntries.length * ChecksumMapEntry.SIZE ) +
-                     ( i * ChecksumEntry.SIZE ));
+        if (ce == null) {
+            raf.seek(directoryMapHeader.pos + ChecksumMapHeader.SIZE + (checksumMapEntries.length * ChecksumMapEntry.SIZE) +
+                    (i * ChecksumEntry.SIZE));
             return checksumEntries[i] = new ChecksumEntry(raf);
         }
         return ce;
@@ -136,8 +136,8 @@ public class GCF extends ExtendedVFile {
 
     private ChecksumMapEntry checksumMapEntries(int i) throws IOException {
         ChecksumMapEntry cme = checksumMapEntries[i];
-        if(cme == null) {
-            raf.seek(directoryMapHeader.pos + ChecksumMapHeader.SIZE + ( i * ChecksumMapEntry.SIZE ));
+        if (cme == null) {
+            raf.seek(directoryMapHeader.pos + ChecksumMapHeader.SIZE + (i * ChecksumMapEntry.SIZE));
             return checksumMapEntries[i] = new ChecksumMapEntry(raf);
         }
         return cme;
@@ -145,11 +145,11 @@ public class GCF extends ExtendedVFile {
 
     private DirectoryMapEntry directoryMapEntries(int i) {
         DirectoryMapEntry dme = directoryMapEntries[i];
-        if(dme == null) {
+        if (dme == null) {
             try {
-                raf.seek(directoryMapHeader.pos + DirectoryMapHeader.SIZE + ( i * DirectoryMapEntry.SIZE ));
+                raf.seek(directoryMapHeader.pos + DirectoryMapHeader.SIZE + (i * DirectoryMapEntry.SIZE));
                 return directoryMapEntries[i] = new DirectoryMapEntry(raf);
-            } catch(IOException ex) {
+            } catch (IOException ex) {
                 Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
@@ -163,8 +163,8 @@ public class GCF extends ExtendedVFile {
 
     private BlockAllocationTableEntry getBlock(int i) throws IOException {
         BlockAllocationTableEntry bae = blocks[i];
-        if(bae == null) {
-            raf.seek(blockAllocationTableHeader.pos + BlockAllocationTableHeader.SIZE + ( i * BlockAllocationTableEntry.SIZE ));
+        if (bae == null) {
+            raf.seek(blockAllocationTableHeader.pos + BlockAllocationTableHeader.SIZE + (i * BlockAllocationTableEntry.SIZE));
             return blocks[i] = new BlockAllocationTableEntry(raf);
         }
         return bae;
@@ -172,22 +172,37 @@ public class GCF extends ExtendedVFile {
 
     private FileAllocationTableEntry getEntry(int i) throws IOException {
         FileAllocationTableEntry fae = fragMapEntries[i];
-        if(fae == null) {
-            raf.seek(fragMap.pos + FileAllocationTableHeader.SIZE + ( i * FileAllocationTableEntry.SIZE ));
+        if (fae == null) {
+            raf.seek(fragMap.pos + FileAllocationTableHeader.SIZE + (i * FileAllocationTableEntry.SIZE));
             return fragMapEntries[i] = new FileAllocationTableEntry(raf);
         }
         return fae;
     }
 
     private byte[] readData(BlockAllocationTableEntry block, int dataIdx) throws IOException {
-        long pos = dataBlockHeader.firstBlockOffset + ( dataIdx * dataBlockHeader.blockSize );
+        long pos = dataBlockHeader.firstBlockOffset + (dataIdx * dataBlockHeader.blockSize);
         raf.seek(pos);
         byte[] buf = new byte[dataBlockHeader.blockSize];
-        if(block.fileDataOffset != 0) {
+        if (block.fileDataOffset != 0) {
             LOG.log(Level.INFO, "off = {0}", block.fileDataOffset);
         }
         raf.read(buf);
         return buf;
+    }
+
+    @Override
+    public ExtendedVFile getRoot() {
+        return directoryEntries[0];
+    }
+
+    @Override
+    public boolean isComplete() {
+        return true;
+    }
+
+    @Override
+    public InputStream openStream() {
+        return null;
     }
 
     private class GCFDirectoryEntry extends ExtendedVFile {
@@ -196,28 +211,28 @@ public class GCF extends ExtendedVFile {
         /**
          * Checksum index / file ID. 0xFFFFFFFF == None.
          */
-        final int                               checksumIndex;
+        final int checksumIndex;
         /**
          * Index of the first directory item. 0x00000000 == None.
          */
-        final int                               firstChildIndex;
-        final int                               index;
+        final int firstChildIndex;
+        final int index;
         /**
          * Size of the item. If file, file size. If folder, number of items.
          */
-        final int                               itemSize;
+        final int itemSize;
         /**
          * Offset to the directory item name from the end of the directory items
          */
-        final int                               nameOffset;
+        final int nameOffset;
         /**
          * Index of the next directory item. 0x00000000 == None.
          */
-        final int                               nextIndex;
+        final int nextIndex;
         /**
          * Index of the parent directory item. 0xFFFFFFFF == None.
          */
-        final int                               parentIndex;
+        final int parentIndex;
         String name;
 
         GCFDirectoryEntry(int index) throws IOException {
@@ -252,7 +267,7 @@ public class GCF extends ExtendedVFile {
 
         @Override
         public boolean isComplete() {
-            return ( directoryMapEntries(index).firstBlockIndex < blocks.length ) || ( itemSize == 0 );
+            return (directoryMapEntries(index).firstBlockIndex < blocks.length) || (itemSize == 0);
         }
 
         @Override
@@ -281,7 +296,7 @@ public class GCF extends ExtendedVFile {
 
                 @Override
                 public int read() {
-                    if(( data == null ) || ( pointer > data.length )) {
+                    if ((data == null) || (pointer > data.length)) {
                         return -1;
                     }
                     return data[pointer++];
@@ -291,28 +306,28 @@ public class GCF extends ExtendedVFile {
                     ByteBuffer b = ByteBuffer.wrap(new byte[GCFDirectoryEntry.this.itemSize]);
                     b.order(ByteOrder.LITTLE_ENDIAN);
                     int idx = directoryMapEntries(index).firstBlockIndex;
-                    if(idx >= blocks.length) {
+                    if (idx >= blocks.length) {
                         LOG.log(Level.WARNING, "Block out of range for item {0}. Is the size 0?", GCFDirectoryEntry.this);
                         return null;
                     }
                     try {
                         block = getBlock(idx);
                         dataIdx = block.firstClusterIndex;
-                        LOG.log(Level.FINE, "bSize: {0}", new Object[] { block.fileDataSize });
+                        LOG.log(Level.FINE, "bSize: {0}", new Object[]{block.fileDataSize});
                         data = fill(b);
-                    } catch(IOException ex) {
+                    } catch (IOException ex) {
                         Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     return b;
                 }
 
                 private byte[] fill(ByteBuffer buf) {
-                    if(( dataIdx == 0xFFFF ) || ( dataIdx == -1 )) {
-                        return new byte[] { -1 };
+                    if ((dataIdx == 0xFFFF) || (dataIdx == -1)) {
+                        return new byte[]{-1};
                     }
                     try {
                         byte[] b = readData(block, dataIdx);
-                        if(( buf.position() + b.length ) > buf.capacity()) {
+                        if ((buf.position() + b.length) > buf.capacity()) {
                             buf.put(b, 0, block.fileDataSize % dataBlockHeader.blockSize);
                         } else {
                             buf.put(b);
@@ -320,27 +335,12 @@ public class GCF extends ExtendedVFile {
                         dataIdx = getEntry(dataIdx).nextClusterIndex;
                         LOG.log(Level.INFO, "next dataIdx: {0}", dataIdx);
                         return buf.array();
-                    } catch(IOException ex) {
+                    } catch (IOException ex) {
                         Logger.getLogger(GCF.class.getName()).log(Level.SEVERE, null, ex);
-                        return new byte[] { -1 };
+                        return new byte[]{-1};
                     }
                 }
             };
         }
-    }
-
-    @Override
-    public ExtendedVFile getRoot() {
-        return directoryEntries[0];
-    }
-
-    @Override
-    public boolean isComplete() {
-        return true;
-    }
-
-    @Override
-    public InputStream openStream() {
-        return null;
     }
 }

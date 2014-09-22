@@ -26,54 +26,54 @@ class ManifestHeader {
      * & lpGCFDirectoryInfo2Entries & lpGCFDirectoryCopyEntries & lpGCFDirectoryLocalEntries in bytes.
      * Inclusive of header
      */
-    final         int                     binarySize;
+    final int binarySize;
     /**
      * Number of Info1 entries.
      */
-    final         int                     hashTableKeyCount;
+    final int hashTableKeyCount;
     /**
      * Number of files to copy.
      */
-    final         int                     minimumFootprintCount;
+    final int minimumFootprintCount;
     /**
      * Size of the directory names in bytes.
      */
-    final         int                     nameSize;
+    final int nameSize;
     /**
      * Number of items in the directory.
      */
-    final         int                     nodeCount;
+    final int nodeCount;
     /**
      * Number of files to keep local.
      */
-    final         int                     userConfigCount;
+    final int userConfigCount;
     private final RandomAccessFileWrapper raf;
     /**
      * Cache ID.
      */
-    private final int                     applicationID;
+    private final int applicationID;
     /**
      * GCF file version.
      */
-    private final int                     applicationVersion;
+    private final int applicationVersion;
     /**
      * TODO: ManifestHeaderBitmask bitmask;
      */
-    private final int                     bitmask;
-    private final int                     checksum;
+    private final int bitmask;
+    private final int checksum;
     /**
      * Always 0x00008000.
      */
-    private final int                     compressionBlockSize;
+    private final int compressionBlockSize;
     /**
      * Number of files in the directory.
      */
-    private final int                     fileCount;
+    private final int fileCount;
     /**
      * Always 0x00000004.
      */
-    private final int                     headerVersion;
-    private final long                    pos;
+    private final int headerVersion;
+    private final long pos;
 
     ManifestHeader(RandomAccessFileWrapper raf) throws IOException {
         this.raf = raf;
@@ -98,11 +98,11 @@ class ManifestHeader {
     @Override
     public String toString() {
         int checked = check();
-        String checkState = ( checksum == checked ) ? "OK" : ( DataUtils.toBinaryString(checksum) + " vs " +
-                                                               DataUtils.toBinaryString(checked) );
+        String checkState = (checksum == checked) ? "OK" : (DataUtils.toBinaryString(checksum) + " vs " +
+                DataUtils.toBinaryString(checked));
         return MessageFormat.format(
                 "{0} : id:{1}, ver:{2}, bitmask:0x{3}, items:{4}, files:{5}, dsize:{6}, nsize:{7}, info1:{8}, " +
-                "copy:{9}, local:{10}, check:{11}",
+                        "copy:{9}, local:{10}, check:{11}",
                 Long.toHexString(pos),
                 applicationID,
                 applicationVersion,
@@ -115,7 +115,7 @@ class ManifestHeader {
                 minimumFootprintCount,
                 userConfigCount,
                 checkState
-                                   );
+        );
     }
 
     int check() {
@@ -148,7 +148,7 @@ class ManifestHeader {
             Checksum adler32 = new Adler32();
             adler32.update(bytes, 0, bytes.length);
             return (int) adler32.getValue();
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             Logger.getLogger(com.timepath.steam.io.gcf.GCF.class.getName()).log(Level.SEVERE, null, ex);
         }
         return 0;

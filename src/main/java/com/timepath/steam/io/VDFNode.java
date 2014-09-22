@@ -28,7 +28,7 @@ import java.util.logging.Logger;
  */
 public class VDFNode extends Node<VDFProperty, VDFNode> {
 
-    private static final Comparator<VDFProperty> COMPARATOR_KEY   = new Comparator<VDFProperty>() {
+    private static final Comparator<VDFProperty> COMPARATOR_KEY = new Comparator<VDFProperty>() {
         @Override
         public int compare(VDFProperty o1, VDFProperty o2) {
             return o1.getKey().compareTo(o2.getKey());
@@ -40,18 +40,8 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
             return o1.getValue().hashCode() - o2.getValue().hashCode();
         }
     };
-    private static final Logger                  LOG              = Logger.getLogger(VDFNode.class.getName());
-
-    public String getConditional() { return conditional; }
-
-    public void setConditional(String conditional) { this.conditional = conditional; }
-
+    private static final Logger LOG = Logger.getLogger(VDFNode.class.getName());
     private String conditional;
-
-    @Override
-    public String toString() {
-        return super.toString() + ( conditional == null ? "" : "    " + conditional );
-    }
 
     protected VDFNode() {
         this("VDF");
@@ -84,7 +74,7 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
             }
 
             private String u(String s) {
-                if(s.startsWith("\"")) return s.substring(1, s.length() - 1).replace("\\\"", "\"");
+                if (s.startsWith("\"")) return s.substring(1, s.length() - 1).replace("\\\"", "\"");
                 return s;
             }
         }, parser.parse());
@@ -92,6 +82,19 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
 
     public VDFNode(Object name) {
         super(name);
+    }
+
+    public String getConditional() {
+        return conditional;
+    }
+
+    public void setConditional(String conditional) {
+        this.conditional = conditional;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + (conditional == null ? "" : "    " + conditional);
     }
 
     public Diff<VDFNode> rdiff2(VDFNode other) {
@@ -103,37 +106,37 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
         VDFNode potential = new VDFNode("Potential");
         VDFNode potential2 = new VDFNode("Potential2");
         VDFNode same = new VDFNode("Same");
-        for(VDFNode v : getNodes()) {
+        for (VDFNode v : getNodes()) {
             VDFNode match = other.get(v.custom);
-            if(match == null) { // Not in new copy
+            if (match == null) { // Not in new copy
                 removed.addNode(v);
             } else {
                 potential.addNode(match);
             }
         }
-        for(VDFNode v : other.getNodes()) {
+        for (VDFNode v : other.getNodes()) {
             VDFNode match = get(v.custom);
-            if(match == null) { // Not in this copy
+            if (match == null) { // Not in this copy
                 added.addNode(v);
             } else {
                 potential2.addNode(match);
             }
         }
-        for(VDFNode v : potential.getNodes()) {
+        for (VDFNode v : potential.getNodes()) {
             VDFNode v2 = potential2.get(v.custom);
             Diff<VDFProperty> diff = v2.diff(v); // FIXME: backwards for some reason
-            if(( diff.added.size() + diff.removed.size() + diff.modified.size() ) > 0) { // Something was changed
+            if ((diff.added.size() + diff.removed.size() + diff.modified.size()) > 0) { // Something was changed
                 VDFNode na = new VDFNode(v.custom);
                 VDFNode nr = new VDFNode(v.custom);
-                for(VDFProperty a : diff.added) {
+                for (VDFProperty a : diff.added) {
                     na.addProperty(a);
                 }
                 added.addNode(na);
-                for(VDFProperty r : diff.removed) {
+                for (VDFProperty r : diff.removed) {
                     nr.addProperty(r);
                 }
                 removed.addNode(nr);
-                for(Pair<VDFProperty, VDFProperty> p : diff.modified) { // TODO: push to modified
+                for (Pair<VDFProperty, VDFProperty> p : diff.modified) { // TODO: push to modified
                     nr.addProperty(p.getKey());
                     na.addProperty(p.getValue());
                 }
@@ -149,9 +152,7 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
     /**
      * Diffs the properties of both VDF nodes
      *
-     * @param other
-     *         The other node
-     *
+     * @param other The other node
      * @return
      */
     Diff<VDFProperty> diff(VDFNode other) {
@@ -161,25 +162,25 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
     public String save() {
         StringBuilder sb = new StringBuilder();
         // preceding header
-        for(VDFProperty p : properties) {
-            if(String.valueOf(p.getValue()).isEmpty()) {
-                if("\\n".equals(p.getKey())) {
+        for (VDFProperty p : properties) {
+            if (String.valueOf(p.getValue()).isEmpty()) {
+                if ("\\n".equals(p.getKey())) {
                     sb.append('\n');
                 }
-                if("//".equals(p.getKey())) {
+                if ("//".equals(p.getKey())) {
                     sb.append("//").append(p.getInfo()).append('\n');
                 }
             }
         }
         sb.append(custom).append('\n');
         sb.append("{\n");
-        for(VDFProperty p : properties) {
-            if(!String.valueOf(p.getValue()).isEmpty()) {
-                if("\\n".equals(p.getKey())) {
+        for (VDFProperty p : properties) {
+            if (!String.valueOf(p.getValue()).isEmpty()) {
+                if ("\\n".equals(p.getKey())) {
                     sb.append("\t    \n");
                 } else {
                     sb.append("\t    ").append(p.getKey()).append("\t    ").append(p.getValue());
-                    if(p.getInfo() != null) sb.append(' ').append(p.getInfo());
+                    if (p.getInfo() != null) sb.append(' ').append(p.getInfo());
                     sb.append('\n');
                 }
             }
@@ -191,9 +192,7 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
     /**
      * Diffs the child nodes of both VDF nodes. TODO: breadth first would be more efficient with large differences
      *
-     * @param other
-     *         The other node
-     *
+     * @param other The other node
      * @return
      */
     @Override
@@ -205,17 +204,17 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
         VDFNode added = new VDFNode("Added");
         VDFNode same = new VDFNode("Same");
         VDFNode modified = new VDFNode("Modified");
-        for(VDFNode v : getNodes()) {
+        for (VDFNode v : getNodes()) {
             VDFNode match = other.get(v.custom);
-            if(match == null) { // Not in new copy
+            if (match == null) { // Not in new copy
                 removed.addNode(v);
             } else {
                 same.addNode(match); // TODO: check for differences
             }
         }
-        for(VDFNode v : other.getNodes()) {
+        for (VDFNode v : other.getNodes()) {
             VDFNode match = get(v.custom);
-            if(match == null) { // Not in this copy
+            if (match == null) { // Not in this copy
                 added.addNode(v);
             }
             //else {
@@ -238,10 +237,6 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
         private static final String TAB = "    ";
         private String conditional;
 
-        public String getConditional() { return conditional; }
-
-        public void setConditional(String conditional) { this.conditional = conditional; }
-
         public VDFProperty(String key, Object val) {
             this(key, val, null);
         }
@@ -251,13 +246,21 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
             this.conditional = conditional;
         }
 
+        public String getConditional() {
+            return conditional;
+        }
+
+        public void setConditional(String conditional) {
+            this.conditional = conditional;
+        }
+
         @Override
         public String toString() {
             return MessageFormat.format("''{1}''{0}''{2}''{3}",
-                                        TAB,
-                                        getKey(),
-                                        getValue(),
-                                        conditional == null ? "" : TAB + conditional);
+                    TAB,
+                    getKey(),
+                    getValue(),
+                    conditional == null ? "" : TAB + conditional);
         }
 
         public String getInfo() {

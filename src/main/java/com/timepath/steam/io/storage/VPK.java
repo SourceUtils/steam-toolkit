@@ -31,22 +31,22 @@ import java.util.zip.Checksum;
  */
 public class VPK extends ExtendedVFile {
 
-    private static final int                       HEADER        = 0x55AA1234;
-    private static final Logger                    LOG           = Logger.getLogger(VPK.class.getName());
+    private static final int HEADER = 0x55AA1234;
+    private static final Logger LOG = Logger.getLogger(VPK.class.getName());
     /**
      * Previously loaded VPKs stored as references.
      */
     private static final Map<File, Reference<VPK>> REFERENCE_MAP = new HashMap<>(0);
-    private final ByteBuffer   globaldata;
+    private final ByteBuffer globaldata;
     private final ByteBuffer[] mappings;
-    private final File[]       store;
-    private       String       name;
+    private final File[] store;
+    private String name;
 
     static {
         Files.registerHandler(new FileHandler() {
             @Override
             public Collection<? extends SimpleVFile> handle(final File file) throws IOException {
-                if(!file.getName().endsWith("_dir.vpk")) return null;
+                if (!file.getName().endsWith("_dir.vpk")) return null;
                 return VPK.loadArchive(file).list();
             }
         });
@@ -57,26 +57,26 @@ public class VPK extends ExtendedVFile {
         // Map extra archives
         name = file.getName();
         name = name.substring(0, name.length() - 4); // Strip '.vkp'
-        if(name.endsWith("_dir")) {
+        if (name.endsWith("_dir")) {
             name = name.substring(0, name.length() - 4); // Strip '_dir'
         }
         File[] parts = file.getParentFile().listFiles(new FileFilter() {
             @Override
             public boolean accept(File pathname) {
                 return !pathname.equals(file) && pathname.getName().startsWith(name) &&
-                       ( pathname.getName().length() == ( name.length() + 8 ) );
+                        (pathname.getName().length() == (name.length() + 8));
             }
         });
         store = new File[parts.length];
         mappings = new ByteBuffer[store.length];
-        for(File part : parts) {
+        for (File part : parts) {
             String[] split = part.getName().split("_");
             int idx = Integer.parseInt(split[split.length - 1].replaceAll(".vpk", ""));
             store[idx] = part;
         }
         ByteBuffer buffer = DataUtils.mapFile(file);
         int signature = buffer.getInt();
-        if(signature != HEADER) {
+        if (signature != HEADER) {
             throw new IOException("Not a VPK file");
         }
         int ver = buffer.getInt();
@@ -85,7 +85,7 @@ public class VPK extends ExtendedVFile {
         int v2 = 0;
         int v3 = 0; // 48 in most
         int v4 = 0;
-        if(ver >= 2) {
+        if (ver >= 2) {
             dataLength = buffer.getInt();
             v2 = buffer.getInt();
             v3 = buffer.getInt();
@@ -97,25 +97,42 @@ public class VPK extends ExtendedVFile {
         buffer.get(new byte[v3]); // Single + Directory
         buffer.get(new byte[v4]); // Directory
         Object[][] debug = {
-                { "dataLength = ", dataLength },
-                { "v2 = ", v2 },
-                { "v3 = ", v3 },
-                { "v4 = ", v4 },
-                { "Underflow = ", buffer.remaining() },
+                {"dataLength = ", dataLength},
+                {"v2 = ", v2},
+                {"v3 = ", v3},
+                {"v4 = ", v4},
+                {"Underflow = ", buffer.remaining()},
         };
         LOG.info(StringUtils.fromDoubleArray(debug, "Debug:"));
         parseTree(directoryInfo);
     }
 
+    public static VPK loadArchive(File file) {
+        Reference<VPK> ref = REFERENCE_MAP.get(file);
+        VPK cached = (ref != null) ? ref.get() : null;
+        if (cached != null) {
+            LOG.log(Level.INFO, "Loaded {0} from cache", file);
+            return cached;
+        }
+        try {
+            VPK v = new VPK(file);
+            REFERENCE_MAP.put(file, new SoftReference<>(v));
+            return v;
+        } catch (IOException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+
     private void parseTree(ByteBuffer buffer) {
         // Extensions
-        for(String ext; !( ext = DataUtils.readZeroString(buffer) ).isEmpty(); ) {
+        for (String ext; !(ext = DataUtils.readZeroString(buffer)).isEmpty(); ) {
             ext = " ".equals(ext) ? "" : '.' + ext;
             // Paths
-            for(String dir; !( dir = DataUtils.readZeroString(buffer) ).isEmpty(); ) {
+            for (String dir; !(dir = DataUtils.readZeroString(buffer)).isEmpty(); ) {
                 SimpleVFile p = nodeForPath(dir);
                 // File names
-                for(String basename; !( basename = DataUtils.readZeroString(buffer) ).isEmpty(); ) {
+                for (String basename; !(basename = DataUtils.readZeroString(buffer)).isEmpty(); ) {
                     VPKDirectoryEntry e = readFileInfo(buffer, basename + ext);
                     p.add(e);
                 }
@@ -125,19 +142,19 @@ public class VPK extends ExtendedVFile {
 
     private SimpleVFile nodeForPath(String path) {
         SimpleVFile node = getRoot();
-        if(" ".equals(path)) {
+        if (" ".equals(path)) {
             return node;
         }
         String[] components = path.replace('\\', '/').split("/");
-        for(String dir : components) {
+        for (String dir : components) {
             SimpleVFile match = null;
-            for(SimpleVFile e : node.list()) {
-                if(e.isDirectory() && e.getName().equalsIgnoreCase(dir)) {
+            for (SimpleVFile e : node.list()) {
+                if (e.isDirectory() && e.getName().equalsIgnoreCase(dir)) {
                     match = e;
                     break;
                 }
             }
-            if(match == null) {
+            if (match == null) {
                 VPKDirectoryEntry dirEntry = new VPKDirectoryEntry(dir);
                 dirEntry.isDirectory = true;
                 match = dirEntry;
@@ -161,23 +178,6 @@ public class VPK extends ExtendedVFile {
         return e;
     }
 
-    public static VPK loadArchive(File file) {
-        Reference<VPK> ref = REFERENCE_MAP.get(file);
-        VPK cached = ( ref != null ) ? ref.get() : null;
-        if(cached != null) {
-            LOG.log(Level.INFO, "Loaded {0} from cache", file);
-            return cached;
-        }
-        try {
-            VPK v = new VPK(file);
-            REFERENCE_MAP.put(file, new SoftReference<>(v));
-            return v;
-        } catch(IOException ex) {
-            LOG.log(Level.SEVERE, null, ex);
-            return null;
-        }
-    }
-
     @Override
     public String getName() {
         return name;
@@ -190,13 +190,38 @@ public class VPK extends ExtendedVFile {
 
     private ByteBuffer getData(int i) {
         try {
-            if(mappings[i] == null) {
+            if (mappings[i] == null) {
                 mappings[i] = DataUtils.mapFile(store[i]);
             }
             return mappings[i];
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
+        return null;
+    }
+
+    @Override
+    public Object getAttributes() {
+        return null;
+    }
+
+    @Override
+    public ExtendedVFile getRoot() {
+        return this;
+    }
+
+    /**
+     * VPK entries are complete by definition
+     *
+     * @return true
+     */
+    @Override
+    public boolean isComplete() {
+        return true;
+    }
+
+    @Override
+    public InputStream openStream() {
         return null;
     }
 
@@ -210,15 +235,15 @@ public class VPK extends ExtendedVFile {
          * A 32bit CRC of the file's data.
          */
         @StructField(index = 0)
-        int   crc;
+        int crc;
         @StructField(index = 2)
         short archiveIndex;
         @StructField(index = 4)
-        int   entryLength;
+        int entryLength;
         @StructField(index = 3)
-        int   entryOffset;
+        int entryOffset;
         boolean isDirectory;
-        String  name;
+        String name;
         @StructField(index = 1)
         short preloadBytes;
         private Reference<ByteBuffer> localdata;
@@ -229,13 +254,13 @@ public class VPK extends ExtendedVFile {
 
         @Override
         public long calculateChecksum() {
-            if(localData() == null) {
+            if (localData() == null) {
                 return 0;
             }
             Checksum checksum = new CRC32();
             localData().position(0);
             byte[] buf = new byte[4096];
-            while(localData().hasRemaining()) {
+            while (localData().hasRemaining()) {
                 int bsize = Math.min(buf.length, localData().remaining());
                 localData().get(buf, 0, bsize);
                 checksum.update(buf, 0, bsize);
@@ -264,7 +289,7 @@ public class VPK extends ExtendedVFile {
         }
 
         public ByteBuffer getSource() {
-            if(archiveIndex == 0x7FFF) { // This archive
+            if (archiveIndex == 0x7FFF) { // This archive
                 return globaldata;
             }
             return getData(archiveIndex);
@@ -288,8 +313,8 @@ public class VPK extends ExtendedVFile {
         }
 
         public ByteBuffer localData() {
-            ByteBuffer buf = ( localdata != null ) ? localdata.get() : null;
-            if(buf == null) {
+            ByteBuffer buf = (localdata != null) ? localdata.get() : null;
+            if (buf == null) {
                 ByteBuffer src = getSource();
                 src.position(entryOffset);
                 buf = DataUtils.getSlice(src, entryLength);
@@ -302,30 +327,5 @@ public class VPK extends ExtendedVFile {
         public InputStream openStream() {
             return new ByteBufferInputStream(localData());
         }
-    }
-
-    @Override
-    public Object getAttributes() {
-        return null;
-    }
-
-    @Override
-    public ExtendedVFile getRoot() {
-        return this;
-    }
-
-    /**
-     * VPK entries are complete by definition
-     *
-     * @return true
-     */
-    @Override
-    public boolean isComplete() {
-        return true;
-    }
-
-    @Override
-    public InputStream openStream() {
-        return null;
     }
 }

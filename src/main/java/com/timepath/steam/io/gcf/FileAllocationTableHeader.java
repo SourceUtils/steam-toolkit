@@ -14,25 +14,25 @@ class FileAllocationTableHeader {
      * 4 * 4
      */
     static final long SIZE = 16;
-    final         long pos;
+    final long pos;
     /**
      * Header checksum.
      */
-    private final int  checksum;
+    private final int checksum;
     /**
      * Number of data blocks.
      */
-    private final int  clusterCount;
+    private final int clusterCount;
     /**
      * Index of 1st unused GCFFRAGMAP entry.
      */
-    private final int  firstUnusedEntry;
+    private final int firstUnusedEntry;
     /**
      * Defines the end of block chain terminator.
      * If the value is 0, then the terminator is 0x0000FFFF; if the value is 1, then the
      * terminator is 0xFFFFFFFF
      */
-    private final int  isLongTerminator;
+    private final int isLongTerminator;
 
     FileAllocationTableHeader(GCF g) throws IOException {
         RandomAccessFileWrapper raf = g.raf;
@@ -48,9 +48,9 @@ class FileAllocationTableHeader {
     @Override
     public String toString() {
         int checked = check();
-        String checkState = ( checksum == checked ) ? "OK" : ( checksum + "vs" + checked );
+        String checkState = (checksum == checked) ? "OK" : (checksum + "vs" + checked);
         return "blockCount:" + clusterCount + ", firstUnusedEntry:" + firstUnusedEntry + ", isLongTerminator:" +
-               isLongTerminator + ", checksum:" + checkState;
+                isLongTerminator + ", checksum:" + checkState;
     }
 
     int check() {

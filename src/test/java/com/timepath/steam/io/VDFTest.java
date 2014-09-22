@@ -30,8 +30,8 @@ public class VDFTest {
             ACF a = ACF.fromManifest(440);
             PrintStream original = System.err;
             List<String> warnings = new LinkedList<>();
-            for(String s : new String[] { ".res", ".vdf" }) {
-                for(VFile f : a.find(s)) {
+            for (String s : new String[]{".res", ".vdf"}) {
+                for (VFile f : a.find(s)) {
                     final boolean[] flag = new boolean[1];
                     System.setErr(new PrintStream(original) {
                         @Override
@@ -53,16 +53,16 @@ public class VDFTest {
                         }
                     });
                     VDF.load(f.openStream());
-                    if(flag[0]) {
+                    if (flag[0]) {
                         warnings.add(f.toString());
                         System.err.println("Warning from: " + f.getPath() + f.getName());
                     }
-                    if(warnings.size() > max) {
+                    if (warnings.size() > max) {
                         fail("Too many warnings: " + warnings);
                     }
                 }
             }
-        } catch(IOException ignored) {
+        } catch (IOException ignored) {
         }
     }
 }

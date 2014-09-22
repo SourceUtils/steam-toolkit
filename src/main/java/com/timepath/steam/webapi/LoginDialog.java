@@ -10,13 +10,13 @@ import java.awt.event.ActionListener;
  */
 public abstract class LoginDialog extends JDialog {
 
-    private JTextField     captchaInput;
-    private JLabel         captchaLabel;
-    private JButton        loginButton;
-    private JLabel         messageLabel;
+    private JTextField captchaInput;
+    private JLabel captchaLabel;
+    private JButton loginButton;
+    private JLabel messageLabel;
     private JPasswordField passInput;
-    private JTextField     steamguardInput;
-    private JTextField     userInput;
+    private JTextField steamguardInput;
+    private JTextField userInput;
 
     /**
      * Creates new form LoginDialog
@@ -27,6 +27,27 @@ public abstract class LoginDialog extends JDialog {
     protected LoginDialog(Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+    }
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String... args) {
+        /*
+         * Create and display the dialog
+         */
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                LoginDialog dialog = new LoginDialog(new JFrame(), true) {
+                    @Override
+                    public void login() {
+                    }
+                };
+                dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                dialog.setVisible(true);
+            }
+        });
     }
 
     private void initComponents() {
@@ -88,28 +109,6 @@ public abstract class LoginDialog extends JDialog {
     }
 
     public abstract void login();
-
-    /**
-     * @param args
-     *         the command line arguments
-     */
-    public static void main(String... args) {
-        /*
-         * Create and display the dialog
-         */
-        EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                LoginDialog dialog = new LoginDialog(new JFrame(), true) {
-                    @Override
-                    public void login() {
-                    }
-                };
-                dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-                dialog.setVisible(true);
-            }
-        });
-    }
 
     /**
      * @return the captchaInput

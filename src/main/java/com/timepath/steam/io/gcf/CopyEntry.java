@@ -10,5 +10,6 @@ class CopyEntry {
      */
     int DirectoryIndex;
 
-    CopyEntry() {}
+    CopyEntry() {
+    }
 }

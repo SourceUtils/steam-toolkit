@@ -24,12 +24,12 @@ public class BVDFConstants {
 
         public static String getName(int i) {
             Universe[] search = Universe.values();
-            for(Universe search1 : search) {
-                if(search1.id == i) {
+            for (Universe search1 : search) {
+                if (search1.id == i) {
                     return search1.name();
                 }
             }
-            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] { Universe.class.getSimpleName(), i });
+            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[]{Universe.class.getSimpleName(), i});
             return "UNKNOWN (" + i + ')';
         }
     }
@@ -45,12 +45,12 @@ public class BVDFConstants {
 
         public static String getName(int i) {
             AppInfoState[] search = AppInfoState.values();
-            for(AppInfoState search1 : search) {
-                if(search1.id == i) {
+            for (AppInfoState search1 : search) {
+                if (search1.id == i) {
                     return search1.name();
                 }
             }
-            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] { AppInfoState.class.getSimpleName(), i });
+            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[]{AppInfoState.class.getSimpleName(), i});
             return "UNKNOWN (" + i + ')';
         }
     }
@@ -85,12 +85,12 @@ public class BVDFConstants {
 
         public static String get(int i) {
             Section[] search = Section.values();
-            for(Section search1 : search) {
-                if(search1.id == i) {
+            for (Section search1 : search) {
+                if (search1.id == i) {
                     return search1.name();
                 }
             }
-            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] { Section.class.getSimpleName(), i });
+            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[]{Section.class.getSimpleName(), i});
             return "UNKNOWN (" + i + ')';
         }
     }
@@ -123,12 +123,12 @@ public class BVDFConstants {
         }
 
         public static String get(int i) {
-            for(SteamAppState s : SteamAppState.values()) {
-                if(s.id == i) {
+            for (SteamAppState s : SteamAppState.values()) {
+                if (s.id == i) {
                     return s.name();
                 }
             }
-            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] { SteamAppState.class.getSimpleName(), i });
+            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[]{SteamAppState.class.getSimpleName(), i});
             return "UNKNOWN (" + i + ')';
         }
     }
@@ -147,12 +147,12 @@ public class BVDFConstants {
         }
 
         public static String get(int i) {
-            for(AppInfoSectionPropagationType s : AppInfoSectionPropagationType.values()) {
-                if(s.id == i) {
+            for (AppInfoSectionPropagationType s : AppInfoSectionPropagationType.values()) {
+                if (s.id == i) {
                     return s.name();
                 }
             }
-            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[] { AppInfoSectionPropagationType.class.getSimpleName(), i });
+            LOG.log(Level.WARNING, "Unknown {0}: {1}", new Object[]{AppInfoSectionPropagationType.class.getSimpleName(), i});
             return "UNKNOWN (" + i + ')';
         }
     }

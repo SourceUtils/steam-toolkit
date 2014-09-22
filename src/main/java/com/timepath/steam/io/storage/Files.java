@@ -14,25 +14,25 @@ import java.util.logging.Logger;
  */
 public class Files extends ExtendedVFile {
 
-    private static final Logger            LOG      = Logger.getLogger(Files.class.getName());
-    private static final ExecutorService   pool     = Executors.newFixedThreadPool(
+    private static final Logger LOG = Logger.getLogger(Files.class.getName());
+    private static final ExecutorService pool = Executors.newFixedThreadPool(
             Runtime.getRuntime().availableProcessors() * 10,
             new ThreadFactory() {
                 @Override
                 public Thread newThread(Runnable r) {
                     Thread t = Executors.defaultThreadFactory()
-                                        .newThread(r);
+                            .newThread(r);
                     t.setDaemon(true);
                     return t;
                 }
             }
-                                                                                  );
-    protected static     List<FileHandler> handlers = new LinkedList<>();
+    );
+    protected static List<FileHandler> handlers = new LinkedList<>();
 
     static {
         try {
             Class.forName(VPK.class.getName());
-        } catch(ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             LOG.log(Level.SEVERE, null, e);
         }
     }
@@ -55,7 +55,7 @@ public class Files extends ExtendedVFile {
      */
     private Files(File f, boolean recursive) {
         file = f;
-        if(recursive) {
+        if (recursive) {
             insert(f);
         }
     }
@@ -63,11 +63,11 @@ public class Files extends ExtendedVFile {
     private static void merge(SimpleVFile r, SimpleVFile parent) {
         SimpleVFile existing = parent.get(r.getName());
         // parent does not have this file
-        if(existing == null) {
+        if (existing == null) {
             parent.add(r);
         } else {
             // add all child files, silently ignore duplicates
-            for(SimpleVFile d : r.list()) {
+            for (SimpleVFile d : r.list()) {
                 merge(d, existing);
             }
         }
@@ -101,7 +101,7 @@ public class Files extends ExtendedVFile {
     public InputStream openStream() {
         try {
             return new BufferedInputStream(new FileInputStream(file));
-        } catch(FileNotFoundException ex) {
+        } catch (FileNotFoundException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         return null;
@@ -130,16 +130,16 @@ public class Files extends ExtendedVFile {
             public void visit(final File file, final Files parent) {
                 Files e = new Files(file, false);
                 parent.add(e);
-                if(file.isDirectory()) {
+                if (file.isDirectory()) {
                     e.visit(file, this);
                     return;
                 }
                 tasks.add(pool.submit(new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        for(FileHandler h : handlers) {
+                        for (FileHandler h : handlers) {
                             Collection<? extends SimpleVFile> root = h.handle(file);
-                            if(root == null) continue;
+                            if (root == null) continue;
                             archives.put(root, parent);
                         }
                         return null;
@@ -147,17 +147,17 @@ public class Files extends ExtendedVFile {
                 }));
             }
         });
-        for(Future fut : tasks) {
+        for (Future fut : tasks) {
             try {
                 fut.get();
-            } catch(InterruptedException | ExecutionException ex) {
+            } catch (InterruptedException | ExecutionException ex) {
                 LOG.log(Level.SEVERE, null, ex);
             }
         }
         LOG.log(Level.INFO, "Recursive file load took {0}ms", System.currentTimeMillis() - start);
         // TODO: additive directories to avoid this kludge
-        for(Map.Entry<Collection<? extends SimpleVFile>, SimpleVFile> e : archives.entrySet()) {
-            for(SimpleVFile root : e.getKey()) {
+        for (Map.Entry<Collection<? extends SimpleVFile>, SimpleVFile> e : archives.entrySet()) {
+            for (SimpleVFile root : e.getKey()) {
                 merge(root, e.getValue());
             }
         }
@@ -165,10 +165,10 @@ public class Files extends ExtendedVFile {
 
     private void visit(File dir, FileVisitor v) {
         File[] ls = dir.listFiles();
-        if(ls == null) {
+        if (ls == null) {
             return;
         }
-        for(File f : ls) {
+        for (File f : ls) {
             v.visit(f, this);
         }
     }

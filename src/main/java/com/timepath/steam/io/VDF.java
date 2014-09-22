@@ -16,8 +16,8 @@ public class VDF {
             RandomAccessFile rf = new RandomAccessFile(f, "r");
             rf.seek(rf.length() - 1);
             int r = rf.read();
-            return ( r == 0x00 ) || ( r == 0x08 ) || ( r == 0xFF );
-        } catch(IOException ex) {
+            return (r == 0x00) || (r == 0x08) || (r == 0xFF);
+        } catch (IOException ex) {
             Logger.getLogger(VDF.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;

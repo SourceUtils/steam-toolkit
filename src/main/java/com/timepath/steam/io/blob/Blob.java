@@ -37,12 +37,12 @@ public class Blob implements Savable {
 
     private static void parsePayload(ByteBuffer parentbuf, BlobNode parent, boolean rawData) {
         ByteBuffer buf = DataUtils.getSlice(parentbuf);
-        if(buf.remaining() < 2) {
+        if (buf.remaining() < 2) {
             return;
         }
         short id = buf.getShort();
         BlobNode d = new BlobNode("Payload: 0x" + Integer.toHexString(id));
-        switch(id) {
+        switch (id) {
             // Compressed
             /*
              * case 0x4301:
@@ -79,19 +79,19 @@ public class Blob implements Savable {
             case 0x5001:
                 int length = buf.getInt();
                 int padding = buf.getInt();
-                int limit = ( buf.position() - 10 ) + length + padding; // 10 because is relative to when this section started
+                int limit = (buf.position() - 10) + length + padding; // 10 because is relative to when this section started
                 //                limit = Math.min(limit, buf.position() + buf.remaining()); // workaround for decompressed
                 LOG.log(Level.FINE, "limit: {0}", limit);
                 buf.limit(limit);
                 ByteBuffer payload = DataUtils.getSlice(buf);
                 // Payload
-                while(payload.remaining() > padding) {
+                while (payload.remaining() > padding) {
                     BlobNode child = new BlobNode();
                     short descLength = payload.getShort();
                     int payloadLength = payload.getInt();
                     ByteBuffer childDesc = DataUtils.getSlice(payload, descLength);
                     String name = DataUtils.getText(childDesc);
-                    if("\1\0\0\0".equals(name) || "\2\0\0\0".equals(name)) {
+                    if ("\1\0\0\0".equals(name) || "\2\0\0\0".equals(name)) {
                         childDesc.position(0);
                         child.setMeta(childDesc.getInt());
                     }
@@ -99,25 +99,25 @@ public class Blob implements Savable {
                     name = name.replaceAll("\2\0\0\0", "<File>");
                     child.setUserObject(name);
                     ByteBuffer childPayload = DataUtils.getSlice(payload, payloadLength);
-                    if(payloadLength == 10) {
+                    if (payloadLength == 10) {
                         continue;
                     }
                     BlobNode nextup = child;
-                    if(!child.isMeta()) {
+                    if (!child.isMeta()) {
                         d.add(child);
                     } else {
                         nextup = parent;
                     }
-                    if(( child.getMeta() == 1 ) && ( payloadLength == 4 )) {
+                    if ((child.getMeta() == 1) && (payloadLength == 4)) {
                         parent.setDataType(childPayload.getInt());//parent.add(new BlobNode("Payload type: " + parent.dataType));
                     } else {
                         int dataType = parent.getDataType();
-                        if(dataType != -1) {
-                            switch(dataType) {
+                        if (dataType != -1) {
+                            switch (dataType) {
                                 case 0: // Text
                                     String str = DataUtils.getString(childPayload);
                                     String date = DateUtils.parse(str);
-                                    if(date != null) {
+                                    if (date != null) {
                                         str = "Date: " + date;
                                     }
                                     LOG.log(Level.FINE, "String: {0}", str);
@@ -135,13 +135,13 @@ public class Blob implements Savable {
                                     childPayload.get(data);
                                     childPayload.position(0);
                                     BlobNode raw = new BlobNode("Raw data: " + Utils.hex(data) +
-                                                                ( ( remaining > max ) ? " ..." : "" )
+                                            ((remaining > max) ? " ..." : "")
                                     );
                                     parent.add(raw);
                                     parsePayload(childPayload, raw, true);
                                     break;
                                 default:
-                                    if(!rawData) {
+                                    if (!rawData) {
                                         parent.add(new BlobNode("Unhandled data type: " + dataType));
                                     }
                                     //                                LOG.log(Level.WARNING, "Unhandled data type {0}", dataType);
@@ -153,13 +153,13 @@ public class Blob implements Savable {
                     }
                 }
                 payload.get(new byte[padding]);
-                if(buf.remaining() > 0) {
+                if (buf.remaining() > 0) {
                     LOG.log(Level.INFO, "Underflow: {0}", buf.remaining());
                     return;
                 }
                 break;
             default:
-                if(!rawData) {
+                if (!rawData) {
                     LOG.log(Level.WARNING, "Unhandled {0}", id);
                 }
                 break;
@@ -173,9 +173,7 @@ public class Blob implements Savable {
      * byte[compressed] perform zlib decompression (skip the first 2 bytes) to
      * get byte[decompressed]
      *
-     * @param originalBuffer
-     *         compressed blob
-     *
+     * @param originalBuffer compressed blob
      * @return the originalBufffer decompressed
      */
     private static ByteBuffer decompress(ByteBuffer originalBuffer) {
@@ -193,11 +191,11 @@ public class Blob implements Savable {
         int compLevel = mybuf.getShort();
         LOG.log(Level.FINE,
                 "Header claims payload compressed length is {0}, deflated length is {1}, " + "compression level {2}",
-                new Object[] { compressedLen, decompressedLen, compLevel });
-        if(mybuf.remaining() < compressedLen) {
+                new Object[]{compressedLen, decompressedLen, compLevel});
+        if (mybuf.remaining() < compressedLen) {
             LOG.log(Level.WARNING,
                     "The buffer remainder is too small ({0}) to contain the amount of data the header specifies ({1}).",
-                    new Object[] { mybuf.remaining(), compressedLen });
+                    new Object[]{mybuf.remaining(), compressedLen});
         }
         mybuf.limit(mybuf.position() + compressedLen);
         byte[] compressed = new byte[mybuf.remaining()];
@@ -209,7 +207,7 @@ public class Blob implements Savable {
         try {
             inflater.inflate(decompressed);
             LOG.fine("Decompression successful");
-        } catch(DataFormatException ex) {
+        } catch (DataFormatException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
         ByteBuffer newBuf = ByteBuffer.wrap(decompressed);
@@ -226,7 +224,7 @@ public class Blob implements Savable {
         try {
             byte[] buf = new byte[in.available()];
             readExternal(ByteBuffer.wrap(buf));
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
     }

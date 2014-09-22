@@ -28,7 +28,7 @@ public class BVDFStream {
 
     private static final Logger LOG = Logger.getLogger(BVDFStream.class.getName());
     private final OrderedInputStream is;
-    private final BVDFListener       listener;
+    private final BVDFListener listener;
 
     public BVDFStream(InputStream in, BVDFListener listener) throws IOException {
         is = new OrderedInputStream(in);
@@ -40,18 +40,18 @@ public class BVDFStream {
      * @throws IOException
      */
     public void read() throws IOException {
-        while(true) {
+        while (true) {
             ValueType type = ValueType.read(is);
-            if(type == null) { // Parsing error
-                LOG.log(Level.SEVERE, "Type: {0}, position: {1}", new Object[] { type, is.position() }); // TODO: pushback header
+            if (type == null) { // Parsing error
+                LOG.log(Level.SEVERE, "Type: {0}, position: {1}", new Object[]{type, is.position()}); // TODO: pushback header
                 return;
             }
-            switch(type) {
+            switch (type) {
                 case TYPE_APPINFO:
                     listener.emit("universe", BVDFConstants.Universe.getName(is.readInt()));
-                    while(true) {
+                    while (true) {
                         int appID = is.readInt();
-                        if(appID == 0) {
+                        if (appID == 0) {
                             break;
                         }
                         listener.push(appID);
@@ -72,9 +72,9 @@ public class BVDFStream {
                             listener.emit("changeNumber", changeNumber);
                             listener.push("Sections");
                             {
-                                while(true) {
+                                while (true) {
                                     int section = is.read();
-                                    if(section == 0) {
+                                    if (section == 0) {
                                         break;
                                     }
                                     listener.push(BVDFConstants.Section.get(section));
@@ -92,9 +92,9 @@ public class BVDFStream {
                     return;
                 case TYPE_PACKAGEINFO:
                     listener.emit("universe", BVDFConstants.Universe.getName(is.readInt()));
-                    while(true) {
+                    while (true) {
                         int packageID = is.readInt();
-                        if(packageID == -1) {
+                        if (packageID == -1) {
                             break;
                         }
                         listener.push(packageID);
@@ -112,7 +112,7 @@ public class BVDFStream {
                     return;
             }
             String key = is.readString();
-            switch(type) {
+            switch (type) {
                 case TYPE_NONE:
                     listener.push(key);
                     read();
@@ -161,9 +161,9 @@ public class BVDFStream {
 
         public static ValueType read(OrderedInputStream is) throws IOException {
             int i = is.read();
-            for(ValueType type : ValueType.values()) {
-                if(type.sig[0] == i) {
-                    if(type.sig.length > 1) {
+            for (ValueType type : ValueType.values()) {
+                if (type.sig[0] == i) {
+                    if (type.sig.length > 1) {
                         is.readFully(new byte[type.sig.length - 1]);
                     }
                     return type;

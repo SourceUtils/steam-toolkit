@@ -35,11 +35,11 @@ import java.util.logging.Logger;
  */
 public class Main {
 
-    private static final Logger LOG            = Logger.getLogger(Main.class.getName());
+    private static final Logger LOG = Logger.getLogger(Main.class.getName());
     private static final Logger LOG_CONNECTION = Logger.getLogger(Connection.class.getName());
     private final com.timepath.steam.webapi.LoginDialog dlg;
     private String emailsteamid = "";
-    private long   gid          = -1L;
+    private long gid = -1L;
 
     private Main() {
         dlg = new com.timepath.steam.webapi.LoginDialog(null, true) {
@@ -52,18 +52,18 @@ public class Main {
                 try {
                     String u = getUserInput().getText();
                     byte[] p = new String(getPassInput().getPassword()).getBytes("UTF-8");
-                    if(( prevattempt == null ) || !prevattempt.toLowerCase().equals(u.toLowerCase())) {
+                    if ((prevattempt == null) || !prevattempt.toLowerCase().equals(u.toLowerCase())) {
                         prevattempt = u;
                         enc = encrypt(u, p);
                     }
                     boolean loggedin = tryLogin(u, gid, enc);
-                    if(loggedin) {
+                    if (loggedin) {
                         dispose();
                         byte nul = 0;
                         Arrays.fill(p, 0, Math.min(0, p.length - 1), nul);
                         return;
                     }
-                } catch(Exception ex) {
+                } catch (Exception ex) {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 LOG.info("Login failed");
@@ -77,21 +77,19 @@ public class Main {
 
     /**
      * @return [0] = (byte[]) token, [1] = (String) timestamp
-     *
      * @throws Exception
      * @throws JSONException
      */
     private static Object[] encrypt(String username, byte... password) throws
-                                                                       MalformedURLException,
-                                                                       IllegalBlockSizeException,
-                                                                       InvalidKeyException,
-                                                                       NoSuchAlgorithmException,
-                                                                       InvalidKeySpecException,
-                                                                       NoSuchPaddingException,
-                                                                       BadPaddingException
-    {
+            MalformedURLException,
+            IllegalBlockSizeException,
+            InvalidKeyException,
+            NoSuchAlgorithmException,
+            InvalidKeySpecException,
+            NoSuchPaddingException,
+            BadPaddingException {
         Connection login = new com.timepath.steam.webapi.SteamConnection();
-        RequestBuilder rb = RequestBuilder.fromArray(new String[][] { { "username", username } });
+        RequestBuilder rb = RequestBuilder.fromArray(new String[][]{{"username", username}});
         JSONObject ret = new JSONObject(login.postget("login/getrsakey", rb.toString()));
         BigInteger mod = new BigInteger(ret.getString("publickey_mod"), 16);
         BigInteger exp = new BigInteger(ret.getString("publickey_exp"), 16);
@@ -100,16 +98,25 @@ public class Main {
         Key key = keyFactory.generatePublic(pubKeySpec);
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.ENCRYPT_MODE, key);
-        return new Object[] { cipher.doFinal(password), ret.getString("timestamp") };
+        return new Object[]{cipher.doFinal(password), ret.getString("timestamp")};
+    }
+
+    @SuppressWarnings("MethodNamesDifferingOnlyByCase")
+    public static void main(String... args) {
+        EventQueue.invokeLater(new Runnable() {
+            @SuppressWarnings("ResultOfObjectAllocationIgnored")
+            @Override
+            public void run() {
+                new Main();
+            }
+        });
     }
 
     /**
      * @param u
      * @param g
      * @param enc
-     *
      * @return
-     *
      * @throws MalformedURLException
      * @throws IOException
      * @throws SecurityException
@@ -122,86 +129,86 @@ public class Main {
         byte[] cipherData = (byte[]) enc[0];
         Connection login = new com.timepath.steam.webapi.SteamConnection();
         String mobile = "mobile";
-        String req1 = RequestBuilder.fromArray(new Object[][] {
-                                                       // Credentials
-                                                       {
-                                                               "username", u
-                                                       }, {
-                                                               "password", DatatypeConverter.printBase64Binary(cipherData)
-                                                       }, {
-                                                               "rsatimestamp", enc[1]
-                                                       },
-                                                       // Steamguard
-                                                       {
-                                                               "emailauth", eauth
-                                                       }, {
-                                                               "emailsteamid", emailsteamid
-                                                       },
-                                                       // Captcha
-                                                       {
-                                                               "captchagid", g
-                                                       }, {
-                                                               "captcha_text", captcha
-                                                       },
-                                                       // User
-                                                       // preference
-                                                       {
-                                                               "loginfriendlyname", "TimePath java test"
-                                                       }, {
-                                                               "remember_login", true
-                                                       },
-                                                       // oauth
-                                                       {
-                                                               "oauth_client_id", "DE45CD61"
-                                                       },
-                                                       // 3638BFB1,
-                                                       // DE45CD61
-                                                       {
-                                                               "oauth_scope", "read_profile " +
-                                                                              "write_profile " +
-                                                                              "read_client " +
-                                                                              "write_client"
-                                                       },
-                                               }
-                                              ).toString();
+        String req1 = RequestBuilder.fromArray(new Object[][]{
+                        // Credentials
+                        {
+                                "username", u
+                        }, {
+                        "password", DatatypeConverter.printBase64Binary(cipherData)
+                }, {
+                        "rsatimestamp", enc[1]
+                },
+                        // Steamguard
+                        {
+                                "emailauth", eauth
+                        }, {
+                        "emailsteamid", emailsteamid
+                },
+                        // Captcha
+                        {
+                                "captchagid", g
+                        }, {
+                        "captcha_text", captcha
+                },
+                        // User
+                        // preference
+                        {
+                                "loginfriendlyname", "TimePath java test"
+                        }, {
+                        "remember_login", true
+                },
+                        // oauth
+                        {
+                                "oauth_client_id", "DE45CD61"
+                        },
+                        // 3638BFB1,
+                        // DE45CD61
+                        {
+                                "oauth_scope", "read_profile " +
+                                "write_profile " +
+                                "read_client " +
+                                "write_client"
+                        },
+                }
+        ).toString();
         JSONObject ret = new JSONObject(login.postget(mobile + "login/dologin", req1));
-        if(ret.getBoolean("success")) {
-            if(ret.has("oauth")) {
-                long umqid = (long) ( Math.random() * Long.MAX_VALUE );
+        if (ret.getBoolean("success")) {
+            if (ret.has("oauth")) {
+                long umqid = (long) (Math.random() * Long.MAX_VALUE);
                 JSONObject dict = new JSONObject(ret.getString("oauth"));
                 LOG.info(String.valueOf(dict));
-                String req2 = RequestBuilder.fromArray(new Object[][] {
-                                                               {
-                                                                       "access_token", dict.getString("oauth_token")
-                                                               }, {
-                                                                       "umqid", umqid
-                                                               }
-                                                       }
-                                                      ).toString();
+                String req2 = RequestBuilder.fromArray(new Object[][]{
+                                {
+                                        "access_token", dict.getString("oauth_token")
+                                }, {
+                                "umqid", umqid
+                        }
+                        }
+                ).toString();
                 String ret2 = login.postget("ISteamWebUserPresenceOAuth/Logon/v0001", req2);
-                while(true) {
+                while (true) {
                     LOG_CONNECTION.setLevel(Level.WARNING);
-                    LOG.info(login.postget("ISteamWebUserPresenceOAuth/Poll/v0001", RequestBuilder.fromArray(new Object[][] {
-                                                                                                                     {
-                                                                                                                             "access_token",
-                                                                                                                             dict.getString(
-                                                                                                                                     "oauth_token")
-                                                                                                                     }, {
-                                                                                                                             "umqid",
-                                                                                                                             umqid
-                                                                                                                     }
-                                                                                                             }
-                                                                                                            ).toString()
-                                          ));
+                    LOG.info(login.postget("ISteamWebUserPresenceOAuth/Poll/v0001", RequestBuilder.fromArray(new Object[][]{
+                                            {
+                                                    "access_token",
+                                                    dict.getString(
+                                                            "oauth_token")
+                                            }, {
+                                            "umqid",
+                                            umqid
+                                    }
+                                    }
+                            ).toString()
+                    ));
                     Thread.sleep(1000);
                 }
             }
-            if(ret.has("transfer_url")) {
+            if (ret.has("transfer_url")) {
                 RequestBuilder rb = new RequestBuilder();
                 String trans = ret.getString("transfer_url");
                 JSONObject arr = ret.getJSONObject("transfer_parameters");
                 Object[] keys = arr.keySet().toArray();
-                for(Object key : keys) {
+                for (Object key : keys) {
                     String keyStr = key.toString();
                     rb.append(keyStr, arr.get(keyStr).toString());
                 }
@@ -210,24 +217,13 @@ public class Main {
             return true;
         }
         dlg.getMessageLabel().setText(ret.getString("message"));
-        if(ret.optBoolean("emailauth_needed")) {
+        if (ret.optBoolean("emailauth_needed")) {
             emailsteamid = ret.getString("emailsteamid");
-        } else if(ret.optBoolean("captcha_needed")) {
+        } else if (ret.optBoolean("captcha_needed")) {
             gid = ret.getLong("captcha_gid");
             String address = "https://steamcommunity.com/public/captcha.php?gid=" + gid;
             dlg.getCaptchaLabel().setIcon(new ImageIcon(ImageIO.read(URI.create(address).toURL())));
         }
         return false;
-    }
-
-    @SuppressWarnings("MethodNamesDifferingOnlyByCase")
-    public static void main(String... args) {
-        EventQueue.invokeLater(new Runnable() {
-            @SuppressWarnings("ResultOfObjectAllocationIgnored")
-            @Override
-            public void run() {
-                new Main();
-            }
-        });
     }
 }

@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  */
 public class ACF extends Files {
 
-    private static final Logger                      LOG           = Logger.getLogger(ACF.class.getName());
+    private static final Logger LOG = Logger.getLogger(ACF.class.getName());
     private static final Map<String, Reference<ACF>> REFERENCE_MAP = new HashMap<>();
 
     private ACF(File root) {
@@ -33,15 +33,15 @@ public class ACF extends Files {
         File dir;
         try {
             dir = new File((String) v.get("AppState", "UserConfig").getValue("appinstalldir"));
-        } catch(Exception ignored) {
+        } catch (Exception ignored) {
             dir = new File(mf.getParentFile(), "common/" + v.get("AppState").getValue("installdir"));
         }
         // TODO: gameinfo.txt
         String key = mf.getName();
         Reference<ACF> ref = REFERENCE_MAP.get(key);
-        if(ref != null) {
+        if (ref != null) {
             ACF a = ref.get();
-            if(a != null) {
+            if (a != null) {
                 return a;
             }
         }

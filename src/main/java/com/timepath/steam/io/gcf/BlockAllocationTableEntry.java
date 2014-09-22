@@ -16,15 +16,15 @@ class BlockAllocationTableEntry {
     /**
      * The offset for the data contained in this block entry in the file.
      */
-    final         int fileDataOffset;
+    final int fileDataOffset;
     /**
      * The length of the data in this block entry.
      */
-    final         int fileDataSize;
+    final int fileDataSize;
     /**
      * The index to the first data block of this block entry's data.
      */
-    final         int firstClusterIndex;
+    final int firstClusterIndex;
     /**
      * Flags for the block entry.
      * 0x200F0000 == Not used
@@ -58,6 +58,6 @@ class BlockAllocationTableEntry {
     @Override
     public String toString() {
         return "type:" + entryType + ", off:" + fileDataOffset + ", size:" + fileDataSize + ", firstidx:" + firstClusterIndex +
-               ", nextidx:" + nextBlockEntryIndex + ", previdx:" + previousBlockEntryIndex + ", di:" + manifestIndex;
+                ", nextidx:" + nextBlockEntryIndex + ", previdx:" + previousBlockEntryIndex + ", di:" + manifestIndex;
     }
 }

@@ -31,55 +31,6 @@ public class BVDF implements Savable {
         return root;
     }
 
-    public static class DataNode extends DefaultMutableTreeNode {
-
-        public String name;
-        public Object value;
-
-        DataNode(Object obj) {
-            name = obj.toString();
-        }
-
-        DataNode(String name, Object obj) {
-            this.name = name;
-            value = obj;
-        }
-
-        public DataNode get(String key) {
-            for(Object o : children) {
-                if(!( o instanceof DataNode )) {
-                    continue;
-                }
-                DataNode node = (DataNode) o;
-                if(node.name.equals(key)) {
-                    return node;
-                }
-            }
-            return null;
-        }
-
-        @Override
-        public String toString() {
-            String nameStr = "";
-            if(name != null) {
-                nameStr = name;
-            }
-            String splitStr = "";
-            if(( name != null ) && ( value != null )) {
-                splitStr = ": ";
-            }
-            String valStr = "";
-            if(value != null) {
-                valStr = value.toString();
-                if(value instanceof byte[]) {
-                    valStr = Arrays.toString((byte[]) value);
-                }
-                valStr += " [" + value.getClass().getSimpleName() + ']';
-            }
-            return MessageFormat.format("{0}{1}{2}", nameStr, splitStr, valStr);
-        }
-    }
-
     @Override
     public void readExternal(ByteBuffer buf) {
         readExternal(new ByteBufferInputStream(buf));
@@ -108,7 +59,7 @@ public class BVDF implements Savable {
                     last = node;
                 }
             }).read();
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
     }
@@ -119,5 +70,54 @@ public class BVDF implements Savable {
     @Override
     public void writeExternal(OutputStream out) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public static class DataNode extends DefaultMutableTreeNode {
+
+        public String name;
+        public Object value;
+
+        DataNode(Object obj) {
+            name = obj.toString();
+        }
+
+        DataNode(String name, Object obj) {
+            this.name = name;
+            value = obj;
+        }
+
+        public DataNode get(String key) {
+            for (Object o : children) {
+                if (!(o instanceof DataNode)) {
+                    continue;
+                }
+                DataNode node = (DataNode) o;
+                if (node.name.equals(key)) {
+                    return node;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public String toString() {
+            String nameStr = "";
+            if (name != null) {
+                nameStr = name;
+            }
+            String splitStr = "";
+            if ((name != null) && (value != null)) {
+                splitStr = ": ";
+            }
+            String valStr = "";
+            if (value != null) {
+                valStr = value.toString();
+                if (value instanceof byte[]) {
+                    valStr = Arrays.toString((byte[]) value);
+                }
+                valStr += " [" + value.getClass().getSimpleName() + ']';
+            }
+            return MessageFormat.format("{0}{1}{2}", nameStr, splitStr, valStr);
+        }
     }
 }

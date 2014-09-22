@@ -10,5 +10,6 @@ class LocalEntry {
      */
     int DirectoryIndex;
 
-    LocalEntry() {}
+    LocalEntry() {
+    }
 }
