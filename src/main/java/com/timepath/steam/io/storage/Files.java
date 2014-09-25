@@ -1,7 +1,9 @@
 package com.timepath.steam.io.storage;
 
 import com.timepath.steam.io.util.ExtendedVFile;
+import com.timepath.util.concurrent.DaemonThreadFactory;
 import com.timepath.vfs.SimpleVFile;
+import sun.java2d.pipe.SpanShapeRenderer;
 
 import java.io.*;
 import java.util.*;
@@ -17,15 +19,7 @@ public class Files extends ExtendedVFile {
     private static final Logger LOG = Logger.getLogger(Files.class.getName());
     private static final ExecutorService pool = Executors.newFixedThreadPool(
             Runtime.getRuntime().availableProcessors() * 10,
-            new ThreadFactory() {
-                @Override
-                public Thread newThread(Runnable r) {
-                    Thread t = Executors.defaultThreadFactory()
-                            .newThread(r);
-                    t.setDaemon(true);
-                    return t;
-                }
-            }
+            new DaemonThreadFactory()
     );
     protected static List<FileHandler> handlers = new LinkedList<>();
 
@@ -60,15 +54,23 @@ public class Files extends ExtendedVFile {
         }
     }
 
-    private static void merge(SimpleVFile r, SimpleVFile parent) {
-        SimpleVFile existing = parent.get(r.getName());
-        // parent does not have this file
+    /**
+     * Adds one file to another, merging any directories.
+     * TODO: additive/union directories to avoid this kludge
+     *
+     * @param src
+     * @param parent
+     */
+    private static void merge(SimpleVFile src, SimpleVFile parent) {
+        SimpleVFile existing = parent.get(src.getName());
         if (existing == null) {
-            parent.add(r);
+            // Parent does not have this file, simple case
+            parent.add(src);
         } else {
-            // add all child files, silently ignore duplicates
-            for (SimpleVFile d : r.list()) {
-                merge(d, existing);
+            // Add all child files, silently ignore duplicates
+            Collection<? extends SimpleVFile> children = src.list();
+            for (SimpleVFile f : children.toArray(new SimpleVFile[children.size()])) { // Defensive copy
+                merge(f, existing);
             }
         }
     }
@@ -122,18 +124,24 @@ public class Files extends ExtendedVFile {
         return file.length();
     }
 
+    /**
+     * Insert children of a directory
+     *
+     * @param f the directory
+     */
     private void insert(File f) {
         long start = System.currentTimeMillis();
         final Collection<Future> tasks = new LinkedList<>();
         visit(f, new FileVisitor() {
             @Override
             public void visit(final File file, final Files parent) {
-                Files e = new Files(file, false);
-                parent.add(e);
+                Files entry = new Files(file, false);
+                parent.add(entry);
                 if (file.isDirectory()) {
-                    e.visit(file, this);
+                    entry.visit(file, this); // Depth first search
                     return;
                 }
+                // File identification
                 tasks.add(pool.submit(new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
@@ -155,10 +163,11 @@ public class Files extends ExtendedVFile {
             }
         }
         LOG.log(Level.INFO, "Recursive file load took {0}ms", System.currentTimeMillis() - start);
-        // TODO: additive directories to avoid this kludge
         for (Map.Entry<Collection<? extends SimpleVFile>, SimpleVFile> e : archives.entrySet()) {
-            for (SimpleVFile root : e.getKey()) {
-                merge(root, e.getValue());
+            Collection<? extends SimpleVFile> files = e.getKey();
+            SimpleVFile directory = e.getValue();
+            for (SimpleVFile file : files.toArray(new SimpleVFile[files.size()])) { // Defensive copy
+                merge(file, directory);
             }
         }
     }
