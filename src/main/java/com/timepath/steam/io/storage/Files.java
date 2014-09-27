@@ -3,7 +3,6 @@ package com.timepath.steam.io.storage;
 import com.timepath.steam.io.util.ExtendedVFile;
 import com.timepath.util.concurrent.DaemonThreadFactory;
 import com.timepath.vfs.SimpleVFile;
-import sun.java2d.pipe.SpanShapeRenderer;
 
 import java.io.*;
 import java.util.*;
