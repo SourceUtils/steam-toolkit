@@ -92,7 +92,7 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
         return conditional;
     }
 
-    public void setConditional(String conditional) {
+    public void setConditional(@Nullable String conditional) {
         this.conditional = conditional;
     }
 

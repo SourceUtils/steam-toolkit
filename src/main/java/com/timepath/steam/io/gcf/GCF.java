@@ -271,6 +271,7 @@ public class GCF extends ExtendedVFile {
             return attributes;
         }
 
+        @NotNull
         @Override
         public String getName() {
             return name;

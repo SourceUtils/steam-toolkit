@@ -186,6 +186,7 @@ public class VPK extends ExtendedVFile {
         return e;
     }
 
+    @NotNull
     @Override
     public String getName() {
         return name;
@@ -292,6 +293,7 @@ public class VPK extends ExtendedVFile {
             return crc;
         }
 
+        @NotNull
         @Override
         public String getName() {
             return name;
