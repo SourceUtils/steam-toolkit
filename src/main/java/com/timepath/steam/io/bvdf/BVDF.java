@@ -2,6 +2,8 @@ package com.timepath.steam.io.bvdf;
 
 import com.timepath.io.ByteBufferInputStream;
 import com.timepath.io.utils.Savable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.io.IOException;
@@ -21,25 +23,28 @@ import java.util.logging.Logger;
 public class BVDF implements Savable {
 
     private static final Logger LOG = Logger.getLogger(BVDF.class.getName());
+    @NotNull
     private final DataNode root;
 
     public BVDF() {
         root = new DataNode("BVDF");
     }
 
+    @NotNull
     public DataNode getRoot() {
         return root;
     }
 
     @Override
-    public void readExternal(ByteBuffer buf) {
+    public void readExternal(@NotNull ByteBuffer buf) {
         readExternal(new ByteBufferInputStream(buf));
     }
 
     @Override
-    public void readExternal(InputStream in) {
+    public void readExternal(@NotNull InputStream in) {
         try {
             new BVDFStream(in, new BVDFListener() {
+                @NotNull
                 private DataNode last = root;
 
                 @Override
@@ -53,8 +58,8 @@ public class BVDF implements Savable {
                 }
 
                 @Override
-                public void push(Object section) {
-                    DataNode node = new DataNode(section);
+                public void push(@NotNull Object section) {
+                    @NotNull DataNode node = new DataNode(section);
                     last.add(node);
                     last = node;
                 }
@@ -77,7 +82,7 @@ public class BVDF implements Savable {
         public String name;
         public Object value;
 
-        DataNode(Object obj) {
+        DataNode(@NotNull Object obj) {
             name = obj.toString();
         }
 
@@ -86,12 +91,13 @@ public class BVDF implements Savable {
             value = obj;
         }
 
+        @Nullable
         public DataNode get(String key) {
             for (Object o : children) {
                 if (!(o instanceof DataNode)) {
                     continue;
                 }
-                DataNode node = (DataNode) o;
+                @NotNull DataNode node = (DataNode) o;
                 if (node.name.equals(key)) {
                     return node;
                 }
@@ -99,13 +105,14 @@ public class BVDF implements Savable {
             return null;
         }
 
+        @NotNull
         @Override
         public String toString() {
             String nameStr = "";
             if (name != null) {
                 nameStr = name;
             }
-            String splitStr = "";
+            @NotNull String splitStr = "";
             if ((name != null) && (value != null)) {
                 splitStr = ": ";
             }

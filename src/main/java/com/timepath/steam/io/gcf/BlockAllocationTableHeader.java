@@ -2,6 +2,7 @@ package com.timepath.steam.io.gcf;
 
 import com.timepath.DataUtils;
 import com.timepath.io.RandomAccessFileWrapper;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -49,8 +50,8 @@ class BlockAllocationTableHeader {
      */
     private final int lastBlockUsed;
 
-    BlockAllocationTableHeader(GCF g) throws IOException {
-        RandomAccessFileWrapper raf = g.raf;
+    BlockAllocationTableHeader(@NotNull GCF g) throws IOException {
+        @NotNull RandomAccessFileWrapper raf = g.raf;
         pos = raf.getFilePointer();
         blockCount = raf.readULEInt();
         blocksUsed = raf.readULEInt();
@@ -64,10 +65,11 @@ class BlockAllocationTableHeader {
         raf.skipBytes(g.blocks.length * BlockAllocationTableEntry.SIZE);
     }
 
+    @NotNull
     @Override
     public String toString() {
         int checked = check();
-        String checkState = (checksum == checked) ? "OK" : (checksum + " vs " + checked);
+        @NotNull String checkState = (checksum == checked) ? "OK" : (checksum + " vs " + checked);
         return "blockCount:" + blockCount + ", blocksUsed:" + blocksUsed + ", check:" + checkState;
     }
 

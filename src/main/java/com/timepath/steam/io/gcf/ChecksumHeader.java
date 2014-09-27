@@ -1,6 +1,7 @@
 package com.timepath.steam.io.gcf;
 
 import com.timepath.io.RandomAccessFileWrapper;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -19,11 +20,12 @@ class ChecksumHeader {
      */
     private final int headerVersion;
 
-    ChecksumHeader(RandomAccessFileWrapper raf) throws IOException {
+    ChecksumHeader(@NotNull RandomAccessFileWrapper raf) throws IOException {
         headerVersion = raf.readULEInt();
         checksumSize = raf.readULEInt();
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "headerVersion:" + headerVersion + ", ChecksumSize:" + checksumSize;

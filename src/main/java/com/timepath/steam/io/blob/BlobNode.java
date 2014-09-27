@@ -1,5 +1,7 @@
 package com.timepath.steam.io.blob;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.logging.Logger;
 
@@ -35,6 +37,7 @@ public class BlobNode extends DefaultMutableTreeNode {
         this.dataType = dataType;
     }
 
+    @NotNull
     @Override
     public String toString() {
         Object o = getUserObject();

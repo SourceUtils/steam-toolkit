@@ -2,6 +2,7 @@ package com.timepath.steam.io.gcf;
 
 import com.timepath.DataUtils;
 import com.timepath.io.RandomAccessFileWrapper;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -47,6 +48,7 @@ class ManifestHeader {
      * Number of files to keep local.
      */
     final int userConfigCount;
+    @NotNull
     private final RandomAccessFileWrapper raf;
     /**
      * Cache ID.
@@ -75,7 +77,7 @@ class ManifestHeader {
     private final int headerVersion;
     private final long pos;
 
-    ManifestHeader(RandomAccessFileWrapper raf) throws IOException {
+    ManifestHeader(@NotNull RandomAccessFileWrapper raf) throws IOException {
         this.raf = raf;
         pos = raf.getFilePointer();
         headerVersion = raf.readULEInt();
@@ -95,10 +97,11 @@ class ManifestHeader {
         checksum = raf.readULEInt();
     }
 
+    @NotNull
     @Override
     public String toString() {
         int checked = check();
-        String checkState = (checksum == checked) ? "OK" : (DataUtils.toBinaryString(checksum) + " vs " +
+        @NotNull String checkState = (checksum == checked) ? "OK" : (DataUtils.toBinaryString(checksum) + " vs " +
                 DataUtils.toBinaryString(checked));
         return MessageFormat.format(
                 "{0} : id:{1}, ver:{2}, bitmask:0x{3}, items:{4}, files:{5}, dsize:{6}, nsize:{7}, info1:{8}, " +
@@ -137,15 +140,15 @@ class ManifestHeader {
             bbh.putInt(0);
             bbh.putInt(0);
             bbh.flip();
-            byte[] bytes1 = bbh.array();
+            @NotNull byte[] bytes1 = bbh.array();
             raf.seek(pos + SIZE);
             ByteBuffer bb = ByteBuffer.allocate(binarySize);
             bb.order(ByteOrder.LITTLE_ENDIAN);
             bb.put(bytes1);
             bb.put(raf.readBytes(binarySize - SIZE));
             bb.flip();
-            byte[] bytes = bb.array();
-            Checksum adler32 = new Adler32();
+            @NotNull byte[] bytes = bb.array();
+            @NotNull Checksum adler32 = new Adler32();
             adler32.update(bytes, 0, bytes.length);
             return (int) adler32.getValue();
         } catch (IOException ex) {

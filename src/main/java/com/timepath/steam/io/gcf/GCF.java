@@ -3,6 +3,8 @@ package com.timepath.steam.io.gcf;
 import com.timepath.EnumFlags;
 import com.timepath.io.RandomAccessFileWrapper;
 import com.timepath.steam.io.util.ExtendedVFile;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -25,15 +27,25 @@ import java.util.logging.Logger;
 public class GCF extends ExtendedVFile {
 
     private static final Logger LOG = Logger.getLogger(GCF.class.getName());
+    @NotNull
     final ManifestHeader manifestHeader;
+    @NotNull
     final RandomAccessFileWrapper raf;
+    @NotNull
     private final BlockAllocationTableHeader blockAllocationTableHeader;
+    @NotNull
     private final ChecksumHeader checksumHeader;
+    @NotNull
     private final ChecksumMapHeader checksumMapHeader;
+    @NotNull
     private final DataBlockHeader dataBlockHeader;
+    @NotNull
     private final DirectoryMapHeader directoryMapHeader;
+    @NotNull
     private final FileAllocationTableHeader fragMap;
+    @NotNull
     private final FileHeader header;
+    @NotNull
     private final String name;
     BlockAllocationTableEntry[] blocks;
     ChecksumEntry[] checksumEntries;
@@ -58,7 +70,7 @@ public class GCF extends ExtendedVFile {
      */
     private LocalEntry[] localEntries;
 
-    public GCF(File file) throws IOException {
+    public GCF(@NotNull File file) throws IOException {
         name = file.getName();
         raf = new RandomAccessFileWrapper(file, "r");
         header = new FileHeader(raf);
@@ -73,10 +85,10 @@ public class GCF extends ExtendedVFile {
             for (int i = 0; i < manifestHeader.nodeCount; i++) {
                 directoryEntries[i] = new GCFDirectoryEntry(i);
             }
-            byte[] ls = raf.readBytes(manifestHeader.nameSize);
-            for (GCFDirectoryEntry de : directoryEntries) {
+            @NotNull byte[] ls = raf.readBytes(manifestHeader.nameSize);
+            for (@NotNull GCFDirectoryEntry de : directoryEntries) {
                 int off = de.nameOffset;
-                ByteArrayOutputStream s = new ByteArrayOutputStream();
+                @NotNull ByteArrayOutputStream s = new ByteArrayOutputStream();
                 while (ls[off] != 0) {
                     s.write(ls[off]);
                     off++;
@@ -97,13 +109,13 @@ public class GCF extends ExtendedVFile {
             }
             copyEntries = new CopyEntry[manifestHeader.minimumFootprintCount];
             for (int i = 0; i < manifestHeader.minimumFootprintCount; i++) {
-                CopyEntry f = new CopyEntry();
+                @NotNull CopyEntry f = new CopyEntry();
                 f.DirectoryIndex = raf.readULEInt();
                 copyEntries[i] = f;
             }
             localEntries = new LocalEntry[manifestHeader.userConfigCount];
             for (int i = 0; i < manifestHeader.userConfigCount; i++) {
-                LocalEntry f = new LocalEntry();
+                @NotNull LocalEntry f = new LocalEntry();
                 f.DirectoryIndex = raf.readULEInt();
                 localEntries[i] = f;
             }
@@ -114,6 +126,7 @@ public class GCF extends ExtendedVFile {
         dataBlockHeader = new DataBlockHeader(raf);
     }
 
+    @NotNull
     @Override
     public String getName() {
         return name;
@@ -156,6 +169,7 @@ public class GCF extends ExtendedVFile {
         return dme;
     }
 
+    @Nullable
     @Override
     public Object getAttributes() {
         return null;
@@ -179,10 +193,11 @@ public class GCF extends ExtendedVFile {
         return fae;
     }
 
-    private byte[] readData(BlockAllocationTableEntry block, int dataIdx) throws IOException {
+    @NotNull
+    private byte[] readData(@NotNull BlockAllocationTableEntry block, int dataIdx) throws IOException {
         long pos = dataBlockHeader.firstBlockOffset + (dataIdx * dataBlockHeader.blockSize);
         raf.seek(pos);
-        byte[] buf = new byte[dataBlockHeader.blockSize];
+        @NotNull byte[] buf = new byte[dataBlockHeader.blockSize];
         if (block.fileDataOffset != 0) {
             LOG.log(Level.INFO, "off = {0}", block.fileDataOffset);
         }
@@ -200,6 +215,7 @@ public class GCF extends ExtendedVFile {
         return true;
     }
 
+    @Nullable
     @Override
     public InputStream openStream() {
         return null;
@@ -260,6 +276,7 @@ public class GCF extends ExtendedVFile {
             return name;
         }
 
+        @NotNull
         @Override
         public ExtendedVFile getRoot() {
             return GCF.this;
@@ -280,10 +297,12 @@ public class GCF extends ExtendedVFile {
             return itemSize;
         }
 
+        @Nullable
         @Override
         public InputStream openStream() {
             return new InputStream() {
                 private BlockAllocationTableEntry block;
+                @Nullable
                 private final ByteBuffer buf = createBuffer();
                 private byte[] data;
                 private int dataIdx;
@@ -302,6 +321,7 @@ public class GCF extends ExtendedVFile {
                     return data[pointer++];
                 }
 
+                @Nullable
                 private ByteBuffer createBuffer() {
                     ByteBuffer b = ByteBuffer.wrap(new byte[GCFDirectoryEntry.this.itemSize]);
                     b.order(ByteOrder.LITTLE_ENDIAN);
@@ -321,12 +341,13 @@ public class GCF extends ExtendedVFile {
                     return b;
                 }
 
-                private byte[] fill(ByteBuffer buf) {
+                @NotNull
+                private byte[] fill(@NotNull ByteBuffer buf) {
                     if ((dataIdx == 0xFFFF) || (dataIdx == -1)) {
                         return new byte[]{-1};
                     }
                     try {
-                        byte[] b = readData(block, dataIdx);
+                        @NotNull byte[] b = readData(block, dataIdx);
                         if ((buf.position() + b.length) > buf.capacity()) {
                             buf.put(b, 0, block.fileDataSize % dataBlockHeader.blockSize);
                         } else {

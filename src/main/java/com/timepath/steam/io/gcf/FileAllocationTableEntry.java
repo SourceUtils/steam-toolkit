@@ -1,6 +1,7 @@
 package com.timepath.steam.io.gcf;
 
 import com.timepath.io.RandomAccessFileWrapper;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -19,10 +20,11 @@ class FileAllocationTableEntry {
      */
     final int nextClusterIndex;
 
-    FileAllocationTableEntry(RandomAccessFileWrapper raf) throws IOException {
+    FileAllocationTableEntry(@NotNull RandomAccessFileWrapper raf) throws IOException {
         nextClusterIndex = raf.readULEInt();
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "nextDataBlockIndex:" + nextClusterIndex;

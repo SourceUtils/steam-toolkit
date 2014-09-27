@@ -2,6 +2,8 @@ package com.timepath.steam.webapi;
 
 import com.timepath.web.api.base.Connection;
 import com.timepath.web.api.base.RequestBuilder;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -37,6 +39,7 @@ public class Main {
 
     private static final Logger LOG = Logger.getLogger(Main.class.getName());
     private static final Logger LOG_CONNECTION = Logger.getLogger(Connection.class.getName());
+    @NotNull
     private final com.timepath.steam.webapi.LoginDialog dlg;
     private String emailsteamid = "";
     private long gid = -1L;
@@ -51,7 +54,7 @@ public class Main {
                 LOG.info("Logging in");
                 try {
                     String u = getUserInput().getText();
-                    byte[] p = new String(getPassInput().getPassword()).getBytes("UTF-8");
+                    @NotNull byte[] p = new String(getPassInput().getPassword()).getBytes("UTF-8");
                     if ((prevattempt == null) || !prevattempt.toLowerCase().equals(u.toLowerCase())) {
                         prevattempt = u;
                         enc = encrypt(u, p);
@@ -80,6 +83,7 @@ public class Main {
      * @throws Exception
      * @throws JSONException
      */
+    @NotNull
     private static Object[] encrypt(String username, byte... password) throws
             MalformedURLException,
             IllegalBlockSizeException,
@@ -88,13 +92,13 @@ public class Main {
             InvalidKeySpecException,
             NoSuchPaddingException,
             BadPaddingException {
-        Connection login = new com.timepath.steam.webapi.SteamConnection();
-        RequestBuilder rb = RequestBuilder.fromArray(new String[][]{{"username", username}});
-        JSONObject ret = new JSONObject(login.postget("login/getrsakey", rb.toString()));
-        BigInteger mod = new BigInteger(ret.getString("publickey_mod"), 16);
-        BigInteger exp = new BigInteger(ret.getString("publickey_exp"), 16);
+        @NotNull Connection login = new com.timepath.steam.webapi.SteamConnection();
+        @NotNull RequestBuilder rb = RequestBuilder.fromArray(new String[][]{{"username", username}});
+        @NotNull JSONObject ret = new JSONObject(login.postget("login/getrsakey", rb.toString()));
+        @NotNull BigInteger mod = new BigInteger(ret.getString("publickey_mod"), 16);
+        @NotNull BigInteger exp = new BigInteger(ret.getString("publickey_exp"), 16);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        KeySpec pubKeySpec = new RSAPublicKeySpec(mod, exp);
+        @NotNull KeySpec pubKeySpec = new RSAPublicKeySpec(mod, exp);
         Key key = keyFactory.generatePublic(pubKeySpec);
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.ENCRYPT_MODE, key);
@@ -126,10 +130,10 @@ public class Main {
     private boolean tryLogin(String u, long g, Object... enc) throws MalformedURLException, IOException, InterruptedException {
         String captcha = dlg.getCaptchaInput().getText();
         String eauth = dlg.getSteamguardInput().getText();
-        byte[] cipherData = (byte[]) enc[0];
-        Connection login = new com.timepath.steam.webapi.SteamConnection();
-        String mobile = "mobile";
-        String req1 = RequestBuilder.fromArray(new Object[][]{
+        @NotNull byte[] cipherData = (byte[]) enc[0];
+        @NotNull Connection login = new com.timepath.steam.webapi.SteamConnection();
+        @NotNull String mobile = "mobile";
+        @NotNull String req1 = RequestBuilder.fromArray(new Object[][]{
                         // Credentials
                         {
                                 "username", u
@@ -171,13 +175,13 @@ public class Main {
                         },
                 }
         ).toString();
-        JSONObject ret = new JSONObject(login.postget(mobile + "login/dologin", req1));
+        @NotNull JSONObject ret = new JSONObject(login.postget(mobile + "login/dologin", req1));
         if (ret.getBoolean("success")) {
             if (ret.has("oauth")) {
                 long umqid = (long) (Math.random() * Long.MAX_VALUE);
-                JSONObject dict = new JSONObject(ret.getString("oauth"));
+                @NotNull JSONObject dict = new JSONObject(ret.getString("oauth"));
                 LOG.info(String.valueOf(dict));
-                String req2 = RequestBuilder.fromArray(new Object[][]{
+                @NotNull String req2 = RequestBuilder.fromArray(new Object[][]{
                                 {
                                         "access_token", dict.getString("oauth_token")
                                 }, {
@@ -185,7 +189,7 @@ public class Main {
                         }
                         }
                 ).toString();
-                String ret2 = login.postget("ISteamWebUserPresenceOAuth/Logon/v0001", req2);
+                @Nullable String ret2 = login.postget("ISteamWebUserPresenceOAuth/Logon/v0001", req2);
                 while (true) {
                     LOG_CONNECTION.setLevel(Level.WARNING);
                     LOG.info(login.postget("ISteamWebUserPresenceOAuth/Poll/v0001", RequestBuilder.fromArray(new Object[][]{
@@ -204,11 +208,11 @@ public class Main {
                 }
             }
             if (ret.has("transfer_url")) {
-                RequestBuilder rb = new RequestBuilder();
+                @NotNull RequestBuilder rb = new RequestBuilder();
                 String trans = ret.getString("transfer_url");
                 JSONObject arr = ret.getJSONObject("transfer_parameters");
-                Object[] keys = arr.keySet().toArray();
-                for (Object key : keys) {
+                @NotNull Object[] keys = arr.keySet().toArray();
+                for (@NotNull Object key : keys) {
                     String keyStr = key.toString();
                     rb.append(keyStr, arr.get(keyStr).toString());
                 }
@@ -221,7 +225,7 @@ public class Main {
             emailsteamid = ret.getString("emailsteamid");
         } else if (ret.optBoolean("captcha_needed")) {
             gid = ret.getLong("captcha_gid");
-            String address = "https://steamcommunity.com/public/captcha.php?gid=" + gid;
+            @NotNull String address = "https://steamcommunity.com/public/captcha.php?gid=" + gid;
             dlg.getCaptchaLabel().setIcon(new ImageIcon(ImageIO.read(URI.create(address).toURL())));
         }
         return false;

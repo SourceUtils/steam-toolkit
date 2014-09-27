@@ -1,6 +1,7 @@
 package com.timepath.steam.io.gcf;
 
 import com.timepath.io.RandomAccessFileWrapper;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -15,10 +16,11 @@ class Info1Entry {
     static final long SIZE = 4;
     private final int Dummy0;
 
-    Info1Entry(RandomAccessFileWrapper raf) throws IOException {
+    Info1Entry(@NotNull RandomAccessFileWrapper raf) throws IOException {
         Dummy0 = raf.readULEInt();
     }
 
+    @NotNull
     @Override
     public String toString() {
         return String.valueOf(Dummy0);

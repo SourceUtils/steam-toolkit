@@ -2,6 +2,8 @@ package com.timepath.steam.io.bvdf;
 
 import com.timepath.DateUtils;
 import com.timepath.io.OrderedInputStream;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.io.IOException;
@@ -27,10 +29,11 @@ import java.util.logging.Logger;
 public class BVDFStream {
 
     private static final Logger LOG = Logger.getLogger(BVDFStream.class.getName());
+    @NotNull
     private final OrderedInputStream is;
     private final BVDFListener listener;
 
-    public BVDFStream(InputStream in, BVDFListener listener) throws IOException {
+    public BVDFStream(@NotNull InputStream in, BVDFListener listener) throws IOException {
         is = new OrderedInputStream(in);
         is.order(ByteOrder.LITTLE_ENDIAN);
         this.listener = listener;
@@ -41,7 +44,7 @@ public class BVDFStream {
      */
     public void read() throws IOException {
         while (true) {
-            ValueType type = ValueType.read(is);
+            @Nullable ValueType type = ValueType.read(is);
             if (type == null) { // Parsing error
                 LOG.log(Level.SEVERE, "Type: {0}, position: {1}", new Object[]{type, is.position()}); // TODO: pushback header
                 return;
@@ -65,7 +68,7 @@ public class BVDFStream {
                             listener.emit("lastUpdated", formattedDate);
                             long token = is.readLong();
                             listener.emit("token", token);
-                            byte[] sha = new byte[20];
+                            @NotNull byte[] sha = new byte[20];
                             is.readFully(sha);
                             listener.emit("sha", sha);
                             int changeNumber = is.readInt();
@@ -98,7 +101,7 @@ public class BVDFStream {
                             break;
                         }
                         listener.push(packageID);
-                        byte[] sha = new byte[20];
+                        @NotNull byte[] sha = new byte[20];
                         is.readFully(sha);
                         listener.emit("sha", sha);
                         int changeNumber = is.readInt();
@@ -111,7 +114,7 @@ public class BVDFStream {
                     // Leave node
                     return;
             }
-            String key = is.readString();
+            @NotNull String key = is.readString();
             switch (type) {
                 case TYPE_NONE:
                     listener.push(key);
@@ -137,7 +140,7 @@ public class BVDFStream {
                     break;
                 case TYPE_COLOR:
                     is.order(ByteOrder.BIG_ENDIAN);
-                    Color color = new Color(is.readInt(), true);
+                    @NotNull Color color = new Color(is.readInt(), true);
                     is.order(ByteOrder.LITTLE_ENDIAN);
                     listener.emit(key, color);
                     break;
@@ -159,9 +162,10 @@ public class BVDFStream {
             this.sig = sig;
         }
 
-        public static ValueType read(OrderedInputStream is) throws IOException {
+        @Nullable
+        public static ValueType read(@NotNull OrderedInputStream is) throws IOException {
             int i = is.read();
-            for (ValueType type : ValueType.values()) {
+            for (@NotNull ValueType type : ValueType.values()) {
                 if (type.sig[0] == i) {
                     if (type.sig.length > 1) {
                         is.readFully(new byte[type.sig.length - 1]);

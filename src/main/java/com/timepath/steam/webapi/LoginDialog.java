@@ -1,5 +1,7 @@
 package com.timepath.steam.webapi;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -39,7 +41,7 @@ public abstract class LoginDialog extends JDialog {
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                LoginDialog dialog = new LoginDialog(new JFrame(), true) {
+                @NotNull LoginDialog dialog = new LoginDialog(new JFrame(), true) {
                     @Override
                     public void login() {
                     }
@@ -51,15 +53,15 @@ public abstract class LoginDialog extends JDialog {
     }
 
     private void initComponents() {
-        JPanel jPanel6 = new JPanel();
-        JPanel jPanel7 = new JPanel();
-        JPanel jPanel4 = new JPanel();
+        @NotNull JPanel jPanel6 = new JPanel();
+        @NotNull JPanel jPanel7 = new JPanel();
+        @NotNull JPanel jPanel4 = new JPanel();
         userInput = new JTextField();
         passInput = new JPasswordField();
-        JPanel jPanel1 = new JPanel();
-        JLabel jLabel1 = new JLabel();
+        @NotNull JPanel jPanel1 = new JPanel();
+        @NotNull JLabel jLabel1 = new JLabel();
         steamguardInput = new JTextField();
-        JPanel captchaPanel = new JPanel();
+        @NotNull JPanel captchaPanel = new JPanel();
         captchaLabel = new JLabel();
         captchaInput = new JTextField();
         messageLabel = new JLabel();

@@ -1,6 +1,7 @@
 package com.timepath.steam.io.gcf;
 
 import com.timepath.io.RandomAccessFileWrapper;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -23,8 +24,8 @@ class DirectoryMapHeader {
      */
     private final int headerVersion;
 
-    DirectoryMapHeader(GCF g) throws IOException {
-        RandomAccessFileWrapper raf = g.raf;
+    DirectoryMapHeader(@NotNull GCF g) throws IOException {
+        @NotNull RandomAccessFileWrapper raf = g.raf;
         pos = raf.getFilePointer();
         headerVersion = raf.readULEInt();
         dummy0 = raf.readULEInt();
@@ -32,6 +33,7 @@ class DirectoryMapHeader {
         raf.skipBytes(g.directoryMapEntries.length * DirectoryMapEntry.SIZE);
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "headerVersion:" + headerVersion + ", Dummy0:" + dummy0;

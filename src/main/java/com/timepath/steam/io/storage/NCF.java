@@ -1,5 +1,7 @@
 package com.timepath.steam.io.storage;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 
 /**
@@ -8,7 +10,7 @@ import java.io.File;
  */
 public class NCF extends Files {
 
-    public NCF(File f) {
+    public NCF(@NotNull File f) {
         super(f);
         throw new UnsupportedOperationException("Not supported yet.");
     }

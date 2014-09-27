@@ -2,6 +2,8 @@ package com.timepath.steam.net;
 
 import com.timepath.DataUtils;
 import com.timepath.Utils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -22,20 +24,20 @@ public class MasterServer extends Server {
         super(hostname, port);
     }
 
-    public void query(Region r, com.timepath.steam.net.ServerListener l) throws IOException {
+    public void query(@NotNull Region r, com.timepath.steam.net.ServerListener l) throws IOException {
         query(r, "", l);
     }
 
-    public void query(Region r, String filter, com.timepath.steam.net.ServerListener l) throws IOException {
+    public void query(@NotNull Region r, String filter, @Nullable com.timepath.steam.net.ServerListener l) throws IOException {
         if (l == null) {
             l = com.timepath.steam.net.ServerListener.NULL;
         }
-        String initialAddress = "0.0.0.0:0";
+        @NotNull String initialAddress = "0.0.0.0:0";
         String lastAddress = initialAddress;
         boolean looping = true;
         while (looping) {
             LOG.log(Level.FINE, "Last address: {0}", lastAddress);
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            @NotNull ByteArrayOutputStream baos = new ByteArrayOutputStream();
             baos.write(0x31);
             baos.write(r.code);
             baos.write((lastAddress + '\0').getBytes("UTF-8"));
@@ -51,7 +53,7 @@ public class MasterServer extends Server {
             byte head = buf.get();
             if (head != 0x66) {
                 LOG.log(Level.WARNING, "Unknown header {0}", head);
-                String rec = DataUtils.hexDump(buf);
+                @NotNull String rec = DataUtils.hexDump(buf);
                 LOG.log(Level.WARNING, "Received {0}", rec);
                 l.inform(rec);
                 break;
@@ -61,7 +63,7 @@ public class MasterServer extends Server {
                 LOG.log(Level.WARNING, "Malformed byte {0}", newline);
                 break;
             }
-            int[] octet = new int[4];
+            @NotNull int[] octet = new int[4];
             do {
                 octet[0] = buf.get() & 0xFF;
                 octet[1] = buf.get() & 0xFF;
@@ -75,7 +77,7 @@ public class MasterServer extends Server {
                 }
             } while (buf.remaining() >= 6);
             if (buf.remaining() > 0) {
-                byte[] under = new byte[buf.remaining()];
+                @NotNull byte[] under = new byte[buf.remaining()];
                 if (under.length > 0) {
                     LOG.log(Level.WARNING, "{0} byte underflow: {0}", new Object[]{
                             buf.remaining(), Utils.hex(under)

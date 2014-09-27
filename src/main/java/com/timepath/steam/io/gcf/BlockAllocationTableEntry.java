@@ -1,6 +1,7 @@
 package com.timepath.steam.io.gcf;
 
 import com.timepath.io.RandomAccessFileWrapper;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -45,7 +46,7 @@ class BlockAllocationTableEntry {
      */
     private final int previousBlockEntryIndex;
 
-    BlockAllocationTableEntry(RandomAccessFileWrapper raf) throws IOException {
+    BlockAllocationTableEntry(@NotNull RandomAccessFileWrapper raf) throws IOException {
         entryType = raf.readULEInt();
         fileDataOffset = raf.readULEInt();
         fileDataSize = raf.readULEInt();
@@ -55,6 +56,7 @@ class BlockAllocationTableEntry {
         manifestIndex = raf.readULEInt();
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "type:" + entryType + ", off:" + fileDataOffset + ", size:" + fileDataSize + ", firstidx:" + firstClusterIndex +

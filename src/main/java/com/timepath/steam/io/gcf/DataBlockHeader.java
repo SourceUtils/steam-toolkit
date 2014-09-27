@@ -2,6 +2,7 @@ package com.timepath.steam.io.gcf;
 
 import com.timepath.DataUtils;
 import com.timepath.io.RandomAccessFileWrapper;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -35,7 +36,7 @@ class DataBlockHeader {
      */
     private final int gcfRevision;
 
-    DataBlockHeader(RandomAccessFileWrapper raf) throws IOException {
+    DataBlockHeader(@NotNull RandomAccessFileWrapper raf) throws IOException {
         gcfRevision = raf.readULEInt();
         blockCount = raf.readULEInt();
         blockSize = raf.readULEInt();
@@ -44,6 +45,7 @@ class DataBlockHeader {
         checksum = raf.readULEInt();
     }
 
+    @NotNull
     @Override
     public String toString() {
         int checked = 0;
@@ -51,7 +53,7 @@ class DataBlockHeader {
         checked += DataUtils.updateChecksumAdd(blockSize);
         checked += DataUtils.updateChecksumAdd(firstBlockOffset);
         checked += DataUtils.updateChecksumAdd(blocksUsed);
-        String checkState = (checksum == checked) ? "OK" : (checksum + "vs" + checked);
+        @NotNull String checkState = (checksum == checked) ? "OK" : (checksum + "vs" + checked);
         return "v:" + gcfRevision + ", blocks:" + blockCount + ", size:" + blockSize + ", offset:0x" +
                 Integer.toHexString(firstBlockOffset) + ", used:" + blocksUsed + ", check:" + checkState;
     }

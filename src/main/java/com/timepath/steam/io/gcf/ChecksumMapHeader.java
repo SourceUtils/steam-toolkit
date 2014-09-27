@@ -1,6 +1,7 @@
 package com.timepath.steam.io.gcf;
 
 import com.timepath.io.RandomAccessFileWrapper;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -31,8 +32,8 @@ class ChecksumMapHeader {
      */
     private final int itemCount;
 
-    ChecksumMapHeader(GCF g) throws IOException {
-        RandomAccessFileWrapper raf = g.raf;
+    ChecksumMapHeader(@NotNull GCF g) throws IOException {
+        @NotNull RandomAccessFileWrapper raf = g.raf;
         formatCode = raf.readULEInt();
         dummy0 = raf.readULEInt();
         itemCount = raf.readULEInt();

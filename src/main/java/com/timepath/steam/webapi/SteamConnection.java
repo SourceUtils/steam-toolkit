@@ -1,6 +1,7 @@
 package com.timepath.steam.webapi;
 
 import com.timepath.web.api.base.Connection;
+import org.jetbrains.annotations.NotNull;
 
 import java.net.HttpURLConnection;
 import java.util.logging.Logger;
@@ -21,11 +22,13 @@ public class SteamConnection extends Connection {
     public SteamConnection() {
     }
 
+    @NotNull
     @Override
     public String getBaseUrl() {
         return "https://steamcommunity.com/";
     }
 
+    @NotNull
     @Override
     public String getUserAgent() {
         return "Java steam wrapper";

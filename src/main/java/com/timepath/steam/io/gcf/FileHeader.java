@@ -2,6 +2,7 @@ package com.timepath.steam.io.gcf;
 
 import com.timepath.DataUtils;
 import com.timepath.io.RandomAccessFileWrapper;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -62,7 +63,7 @@ class FileHeader {
      */
     private final int isMounted;
 
-    FileHeader(RandomAccessFileWrapper raf) throws IOException {
+    FileHeader(@NotNull RandomAccessFileWrapper raf) throws IOException {
         headerVersion = raf.readULEInt();
         cacheType = raf.readULEInt();
         formatVersion = raf.readULEInt();
@@ -76,10 +77,11 @@ class FileHeader {
         checksum = raf.readULEInt();
     }
 
+    @NotNull
     @Override
     public String toString() {
         int checked = check();
-        String checkState = (checksum == checked) ? "OK" : (checksum + "vs" + checked);
+        @NotNull String checkState = (checksum == checked) ? "OK" : (checksum + "vs" + checked);
         return "id:" + applicationID + ", ver:" + formatVersion + ", rev:" + applicationVersion +
                 ", mounted?: " + isMounted + ", size:" + fileSize + ", blockSize:" + clusterSize + ", blocks:" +
                 clusterCount + ", checksum:" + checkState;

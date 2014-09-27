@@ -3,6 +3,8 @@ package com.timepath.steam.io.storage;
 import com.timepath.steam.io.util.ExtendedVFile;
 import com.timepath.util.concurrent.DaemonThreadFactory;
 import com.timepath.vfs.SimpleVFile;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.util.*;
@@ -20,6 +22,7 @@ public class Files extends ExtendedVFile {
             Runtime.getRuntime().availableProcessors() * 10,
             new DaemonThreadFactory()
     );
+    @NotNull
     protected static List<FileHandler> handlers = new LinkedList<>();
 
     static {
@@ -34,9 +37,10 @@ public class Files extends ExtendedVFile {
      * Archive to directory map
      */
     private final Map<Collection<? extends SimpleVFile>, SimpleVFile> archives = new HashMap<>();
+    @NotNull
     private final File file;
 
-    public Files(File f) {
+    public Files(@NotNull File f) {
         this(f, f.isDirectory());
     }
 
@@ -46,7 +50,7 @@ public class Files extends ExtendedVFile {
      * @param f
      * @param recursive
      */
-    private Files(File f, boolean recursive) {
+    private Files(@NotNull File f, boolean recursive) {
         file = f;
         if (recursive) {
             insert(f);
@@ -60,15 +64,15 @@ public class Files extends ExtendedVFile {
      * @param src
      * @param parent
      */
-    private static void merge(SimpleVFile src, SimpleVFile parent) {
-        SimpleVFile existing = parent.get(src.getName());
+    private static void merge(@NotNull SimpleVFile src, @NotNull SimpleVFile parent) {
+        @Nullable SimpleVFile existing = parent.get(src.getName());
         if (existing == null) {
             // Parent does not have this file, simple case
             parent.add(src);
         } else {
             // Add all child files, silently ignore duplicates
-            Collection<? extends SimpleVFile> children = src.list();
-            for (SimpleVFile f : children.toArray(new SimpleVFile[children.size()])) { // Defensive copy
+            @Nullable Collection<? extends SimpleVFile> children = src.list();
+            for (@NotNull SimpleVFile f : children.toArray(new SimpleVFile[children.size()])) { // Defensive copy
                 merge(f, existing);
             }
         }
@@ -78,11 +82,13 @@ public class Files extends ExtendedVFile {
         handlers.add(h);
     }
 
+    @Nullable
     @Override
     public Object getAttributes() {
         return null;
     }
 
+    @NotNull
     @Override
     public ExtendedVFile getRoot() {
         return this;
@@ -93,11 +99,13 @@ public class Files extends ExtendedVFile {
         return true;
     }
 
+    @NotNull
     @Override
     public String getName() {
         return file.getName();
     }
 
+    @Nullable
     @Override
     public InputStream openStream() {
         try {
@@ -128,13 +136,13 @@ public class Files extends ExtendedVFile {
      *
      * @param f the directory
      */
-    private void insert(File f) {
+    private void insert(@NotNull File f) {
         long start = System.currentTimeMillis();
-        final Collection<Future> tasks = new LinkedList<>();
+        @NotNull final Collection<Future> tasks = new LinkedList<>();
         visit(f, new FileVisitor() {
             @Override
-            public void visit(final File file, final Files parent) {
-                Files entry = new Files(file, false);
+            public void visit(@NotNull final File file, @NotNull final Files parent) {
+                @NotNull Files entry = new Files(file, false);
                 parent.add(entry);
                 if (file.isDirectory()) {
                     entry.visit(file, this); // Depth first search
@@ -142,10 +150,11 @@ public class Files extends ExtendedVFile {
                 }
                 // File identification
                 tasks.add(pool.submit(new Callable<Void>() {
+                    @Nullable
                     @Override
                     public Void call() throws Exception {
-                        for (FileHandler h : handlers) {
-                            Collection<? extends SimpleVFile> root = h.handle(file);
+                        for (@NotNull FileHandler h : handlers) {
+                            @Nullable Collection<? extends SimpleVFile> root = h.handle(file);
                             if (root == null) continue;
                             archives.put(root, parent);
                         }
@@ -154,25 +163,25 @@ public class Files extends ExtendedVFile {
                 }));
             }
         });
-        for (Future fut : tasks) {
+        for (@NotNull Future fut : tasks) {
             try {
                 fut.get();
-            } catch (InterruptedException | ExecutionException ex) {
+            } catch (@NotNull InterruptedException | ExecutionException ex) {
                 LOG.log(Level.SEVERE, null, ex);
             }
         }
         LOG.log(Level.INFO, "Recursive file load took {0}ms", System.currentTimeMillis() - start);
-        for (Map.Entry<Collection<? extends SimpleVFile>, SimpleVFile> e : archives.entrySet()) {
+        for (@NotNull Map.Entry<Collection<? extends SimpleVFile>, SimpleVFile> e : archives.entrySet()) {
             Collection<? extends SimpleVFile> files = e.getKey();
             SimpleVFile directory = e.getValue();
-            for (SimpleVFile file : files.toArray(new SimpleVFile[files.size()])) { // Defensive copy
+            for (@NotNull SimpleVFile file : files.toArray(new SimpleVFile[files.size()])) { // Defensive copy
                 merge(file, directory);
             }
         }
     }
 
-    private void visit(File dir, FileVisitor v) {
-        File[] ls = dir.listFiles();
+    private void visit(@NotNull File dir, @NotNull FileVisitor v) {
+        @Nullable File[] ls = dir.listFiles();
         if (ls == null) {
             return;
         }
@@ -183,6 +192,7 @@ public class Files extends ExtendedVFile {
 
     public static interface FileHandler {
 
+        @Nullable
         Collection<? extends SimpleVFile> handle(File file) throws IOException;
     }
 

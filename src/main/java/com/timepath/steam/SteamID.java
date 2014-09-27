@@ -1,5 +1,8 @@
 package com.timepath.steam;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.math.BigInteger;
 import java.text.MessageFormat;
 import java.util.logging.Logger;
@@ -39,12 +42,14 @@ public class SteamID {
         this.id32 = id32;
     }
 
-    public static String ID32toID64(CharSequence steam) {
+    @Nullable
+    public static String ID32toID64(@NotNull CharSequence steam) {
         return UIDtoID64(ID32toUID(steam));
     }
 
-    private static CharSequence ID32toUID(CharSequence steam) {
-        Matcher matcher = ID32.matcher(steam);
+    @Nullable
+    private static CharSequence ID32toUID(@NotNull CharSequence steam) {
+        @NotNull Matcher matcher = ID32.matcher(steam);
         if (!matcher.matches()) {
             return null;
         }
@@ -52,8 +57,9 @@ public class SteamID {
         return "U:1:" + id;
     }
 
-    private static String UIDtoID64(CharSequence steam) {
-        Matcher matcher = UID.matcher(steam);
+    @Nullable
+    private static String UIDtoID64(@NotNull CharSequence steam) {
+        @NotNull Matcher matcher = UID.matcher(steam);
         if (!matcher.matches()) {
             return null;
         }
@@ -61,12 +67,14 @@ public class SteamID {
         return id.toString();
     }
 
-    public static String ID64toID32(CharSequence steam) {
+    @Nullable
+    public static String ID64toID32(@NotNull CharSequence steam) {
         return UIDtoID32(ID64toUID(steam));
     }
 
-    public static String ID64toUID(CharSequence steam) {
-        Matcher matcher = ID64.matcher(steam);
+    @Nullable
+    public static String ID64toUID(@NotNull CharSequence steam) {
+        @NotNull Matcher matcher = ID64.matcher(steam);
         if (!matcher.matches()) {
             return null;
         }
@@ -74,8 +82,9 @@ public class SteamID {
         return "U:1:" + id;
     }
 
-    public static String UIDtoID32(CharSequence steam) {
-        Matcher matcher = UID.matcher(steam);
+    @Nullable
+    public static String UIDtoID32(@NotNull CharSequence steam) {
+        @NotNull Matcher matcher = UID.matcher(steam);
         if (!matcher.matches()) {
             return null;
         }
@@ -103,6 +112,7 @@ public class SteamID {
         this.user = user;
     }
 
+    @NotNull
     @Override
     public String toString() {
         return MessageFormat.format("[{0}, {1}, {2}, {3}]", user, id64, uid, id32);

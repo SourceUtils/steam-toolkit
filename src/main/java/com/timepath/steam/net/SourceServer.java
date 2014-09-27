@@ -1,6 +1,8 @@
 package com.timepath.steam.net;
 
 import com.timepath.DataUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,11 +25,11 @@ public class SourceServer extends Server {
         super(hostname, port);
     }
 
-    public void getInfo(com.timepath.steam.net.ServerListener listener) throws IOException {
+    public void getInfo(@Nullable com.timepath.steam.net.ServerListener listener) throws IOException {
         if (listener == null) {
             listener = com.timepath.steam.net.ServerListener.NULL;
         }
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        @NotNull ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write(HEADER);
         // A2S_INFO
         baos.write(0x54);
@@ -45,13 +47,13 @@ public class SourceServer extends Server {
         }
         byte protocol = buf.get();
         listener.inform("Protocol: " + protocol);
-        String name = DataUtils.getString(buf);
+        @NotNull String name = DataUtils.getString(buf);
         listener.inform("Name: '" + name + '\'');
-        String map = DataUtils.getString(buf);
+        @NotNull String map = DataUtils.getString(buf);
         listener.inform("Map: '" + map + '\'');
-        String gamedir = DataUtils.getString(buf);
+        @NotNull String gamedir = DataUtils.getString(buf);
         listener.inform("Gamedir: '" + gamedir + '\'');
-        String game = DataUtils.getString(buf);
+        @NotNull String game = DataUtils.getString(buf);
         listener.inform("Game: '" + game + '\'');
         short appID = buf.getShort();
         listener.inform("AppID: '" + appID + '\'');
@@ -61,15 +63,15 @@ public class SourceServer extends Server {
         listener.inform("Capacity: '" + playerCountMax + '\'');
         byte botCount = buf.get();
         listener.inform("Bots: '" + botCount + '\'');
-        ServerType type = ServerType.valueFor(buf.get());
+        @Nullable ServerType type = ServerType.valueFor(buf.get());
         listener.inform("Type: '" + type + '\'');
-        Environment env = Environment.valueFor(buf.get());
+        @Nullable Environment env = Environment.valueFor(buf.get());
         listener.inform("Environment: '" + env + '\'');
         boolean visibility = buf.get() == 0;
         listener.inform("Visible: '" + visibility + '\'');
         boolean secure = buf.get() == 1;
         listener.inform("VAC: '" + secure + '\'');
-        String version = DataUtils.getString(buf);
+        @NotNull String version = DataUtils.getString(buf);
         listener.inform("Version: '" + version + '\'');
         byte edf = buf.get();
         boolean edfPort = (edf & 0b10000000) != 0;
@@ -94,11 +96,11 @@ public class SourceServer extends Server {
         if (edfSTV) {
             short stvPort = buf.getShort();
             listener.inform("STV Port: '" + stvPort + '\'');
-            String stvName = DataUtils.getString(buf);
+            @NotNull String stvName = DataUtils.getString(buf);
             listener.inform("STV Name: '" + stvName + '\'');
         }
         if (edfTags) {
-            String tags = DataUtils.getString(buf);
+            @NotNull String tags = DataUtils.getString(buf);
             listener.inform("Tags: '" + tags + '\'');
         }
         if (edfGameID) {
@@ -110,12 +112,12 @@ public class SourceServer extends Server {
         }
     }
 
-    public void getRules(com.timepath.steam.net.ServerListener l) throws IOException {
+    public void getRules(@Nullable com.timepath.steam.net.ServerListener l) throws IOException {
         if (l == null) {
             l = com.timepath.steam.net.ServerListener.NULL;
         }
         // Get a challenge key
-        ByteArrayOutputStream challengeOut = new ByteArrayOutputStream();
+        @NotNull ByteArrayOutputStream challengeOut = new ByteArrayOutputStream();
         challengeOut.write(HEADER);
         challengeOut.write(0x56);
         challengeOut.write(HEADER);
@@ -131,9 +133,9 @@ public class SourceServer extends Server {
         if (challengeheader != 0x41) {
             LOG.log(Level.SEVERE, "Invalid header {0}", challengeheader);
         }
-        byte[] challengeKey = new byte[4];
+        @NotNull byte[] challengeKey = new byte[4];
         challengeGet.get(challengeKey);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        @NotNull ByteArrayOutputStream baos = new ByteArrayOutputStream();
         baos.write(HEADER);
         baos.write(0x56);
         baos.write(challengeKey);
@@ -166,7 +168,7 @@ public class SourceServer extends Server {
                 ruleCount = buf.getShort();
             }
             LOG.log(Level.FINE, "{0} / {1}", new Object[]{id, fragments});
-            byte[] data = new byte[buf.remaining()];
+            @NotNull byte[] data = new byte[buf.remaining()];
             buf.get(data);
             ruleBuf.put(data);
             if (id == fragments) {
@@ -180,8 +182,8 @@ public class SourceServer extends Server {
             if (ruleBuf.remaining() == 0) {
                 break;
             }
-            String key = DataUtils.getString(ruleBuf);
-            String value = DataUtils.getString(ruleBuf);
+            @NotNull String key = DataUtils.getString(ruleBuf);
+            @NotNull String value = DataUtils.getString(ruleBuf);
             l.inform("[" + ruleIndex + '/' + ruleCount + "] " + '\'' + key + "' = '" + value + '\'');
         }
         LOG.log(Level.FINE, "Underflow: {0}", ruleBuf.remaining());
@@ -197,8 +199,9 @@ public class SourceServer extends Server {
             this.code = code;
         }
 
+        @Nullable
         public static ServerType valueFor(byte b) {
-            for (ServerType t : ServerType.values()) {
+            for (@NotNull ServerType t : ServerType.values()) {
                 if (t.code == b) {
                     return t;
                 }
@@ -216,8 +219,9 @@ public class SourceServer extends Server {
             this.code = code;
         }
 
+        @Nullable
         public static Environment valueFor(byte b) {
-            for (Environment t : Environment.values()) {
+            for (@NotNull Environment t : Environment.values()) {
                 if (t.code == b) {
                     return t;
                 }

@@ -3,6 +3,8 @@ package com.timepath.steam;
 import com.timepath.plaf.OS;
 import com.timepath.plaf.win.WinRegistry;
 import com.timepath.steam.io.VDF;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,19 +26,20 @@ public class SteamUtils {
     /**
      * @return The most recently logged in steam user, or null
      */
+    @Nullable
     public static SteamID getUser() {
-        File autoLogin = new File(getSteam(), "config/SteamAppData.vdf");
-        File config = new File(getSteam(), "config/config.vdf");
+        @NotNull File autoLogin = new File(getSteam(), "config/SteamAppData.vdf");
+        @NotNull File config = new File(getSteam(), "config/config.vdf");
         if (!autoLogin.exists() || !config.exists()) {
             return null;
         }
         try {
-            String username = (String) VDF.load(autoLogin).get("SteamAppData").getValue("AutoLoginUser");
-            String id64 = (String) VDF.load(config)
+            @NotNull String username = (String) VDF.load(autoLogin).get("SteamAppData").getValue("AutoLoginUser");
+            @NotNull String id64 = (String) VDF.load(config)
                     .get("InstallConfigStore", "Software", "Valve", "Steam", "Accounts", username)
                     .getValue("SteamID");
-            String uid = SteamID.ID64toUID(id64);
-            String sid = SteamID.UIDtoID32(uid);
+            @Nullable String uid = SteamID.ID64toUID(id64);
+            @Nullable String sid = SteamID.UIDtoID32(uid);
             return new SteamID(username, id64, uid, sid);
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
@@ -47,6 +50,7 @@ public class SteamUtils {
     /**
      * @return Path to /Steam/ installation
      */
+    @Nullable
     public static File getSteam() {
         switch (OS.get()) {
             case Linux:
@@ -60,10 +64,11 @@ public class SteamUtils {
         }
     }
 
+    @NotNull
     private static File getSteamLinux() {
-        File linReg = new File(System.getenv("HOME") + "/.steam/registry.vdf");
+        @NotNull File linReg = new File(System.getenv("HOME") + "/.steam/registry.vdf");
         try {
-            String installPath = (String) VDF.load(linReg)
+            @NotNull String installPath = (String) VDF.load(linReg)
                     .get("Registry", "HKLM", "Software", "Valve", "Steam")
                     .getValue("InstallPath");
             LOG.log(Level.INFO, "Steam directory read from registry file: {0}", installPath);
@@ -74,10 +79,11 @@ public class SteamUtils {
         return new File(System.getenv("HOME") + "/.steam/steam"); // TODO: Shouldn't this be correct regardess?
     }
 
+    @NotNull
     private static File getSteamOSX() {
-        File macReg = new File("~/Library/Application Support/Steam/registry.vdf");
+        @NotNull File macReg = new File("~/Library/Application Support/Steam/registry.vdf");
         try {
-            String installPath = (String) VDF.load(macReg)
+            @NotNull String installPath = (String) VDF.load(macReg)
                     .get("Registry", "HKLM", "Software", "Valve", "Steam")
                     .getValue("InstallPath");
             LOG.log(Level.INFO, "Steam directory read from registry file: {0}", installPath);
@@ -88,8 +94,9 @@ public class SteamUtils {
         return new File("~/Library/Application Support/Steam");
     }
 
+    @Nullable
     private static File getSteamWindows() {
-        String reg = null;
+        @Nullable String reg = null;
         try {
             reg = WinRegistry.readString(WinRegistry.HKEY_CURRENT_USER, "Software\\Valve\\Steam", "SteamPath");
         } catch (Exception ex) {
@@ -103,7 +110,7 @@ public class SteamUtils {
         if (programFiles == null) { // Not a 64 bit machine
             programFiles = System.getenv("PROGRAMFILES");
         }
-        File f = new File(programFiles, "Steam");
+        @NotNull File f = new File(programFiles, "Steam");
         if (f.exists()) {
             return f;
         }
@@ -112,10 +119,10 @@ public class SteamUtils {
         String sourcesdk = System.getenv("sourcesdk");
         if (sourcesdk != null) {
             sourcesdk = sourcesdk.toLowerCase();
-            String scan = "steam";
+            @NotNull String scan = "steam";
             int idx = sourcesdk.indexOf(scan);
             if (idx != -1) {
-                File ret = new File(sourcesdk.substring(0, idx + scan.length()));
+                @NotNull File ret = new File(sourcesdk.substring(0, idx + scan.length()));
                 LOG.log(Level.INFO, "Found steam via sourcesdk env var: {0}", ret);
                 return ret;
             }
@@ -126,8 +133,9 @@ public class SteamUtils {
     /**
      * @return Path to /Steam/SteamApps/
      */
+    @Nullable
     public static File getSteamApps() {
-        File steam = getSteam();
+        @Nullable File steam = getSteam();
         if (steam == null) {
             return null;
         }
@@ -148,11 +156,12 @@ public class SteamUtils {
      * @return Path to {@code user}'s {@code userdata}, or null
      * @throws IllegalArgumentException If {@code user} is null
      */
-    public static File getUserData(SteamID user) {
+    @Nullable
+    public static File getUserData(@Nullable SteamID user) {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");
         }
-        File steam = getSteam();
+        @Nullable File steam = getSteam();
         if (steam == null) {
             return null;
         }
@@ -162,6 +171,7 @@ public class SteamUtils {
     /**
      * @return Path to {@link #getUser()}'s {@code userdata}
      */
+    @Nullable
     public static File getUserData() {
         return getUserData(getUser());
     }

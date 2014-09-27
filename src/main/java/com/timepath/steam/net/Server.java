@@ -1,6 +1,7 @@
 package com.timepath.steam.net;
 
 import com.timepath.DataUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -27,7 +28,7 @@ public class Server {
         try {
             address = InetAddress.getByName(hostname);
             this.port = port;
-            InetSocketAddress sock = new InetSocketAddress(address, port);
+            @NotNull InetSocketAddress sock = new InetSocketAddress(address, port);
             chan = DatagramChannel.open();
             chan.connect(sock);
         } catch (IOException ex) {
@@ -39,7 +40,7 @@ public class Server {
         return port;
     }
 
-    protected void send(ByteBuffer buf) throws IOException {
+    protected void send(@NotNull ByteBuffer buf) throws IOException {
         LOG.log(LEVEL_SEND, "Sending {0} bytes\nPayload: {1}\nAddress: {2}", new Object[]{
                 buf.limit(), DataUtils.hexDump(buf), address
         });

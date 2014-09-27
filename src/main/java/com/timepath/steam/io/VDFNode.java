@@ -9,6 +9,8 @@ import com.timepath.steam.io.VDFParser.PairContext;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,33 +32,34 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
 
     private static final Comparator<VDFProperty> COMPARATOR_KEY = new Comparator<VDFProperty>() {
         @Override
-        public int compare(VDFProperty o1, VDFProperty o2) {
+        public int compare(@NotNull VDFProperty o1, @NotNull VDFProperty o2) {
             return o1.getKey().compareTo(o2.getKey());
         }
     };
     private static final Comparator<VDFProperty> COMPARATOR_VALUE = new Comparator<VDFProperty>() {
         @Override
-        public int compare(VDFProperty o1, VDFProperty o2) {
+        public int compare(@NotNull VDFProperty o1, @NotNull VDFProperty o2) {
             return o1.getValue().hashCode() - o2.getValue().hashCode();
         }
     };
     private static final Logger LOG = Logger.getLogger(VDFNode.class.getName());
+    @Nullable
     private String conditional;
 
     protected VDFNode() {
         this("VDF");
     }
 
-    public VDFNode(InputStream is, Charset c) throws IOException {
-        VDFLexer lexer = new VDFLexer(new ANTLRInputStream(new InputStreamReader(is, c)));
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        VDFParser parser = new VDFParser(tokens);
-        final Deque<VDFNode> stack = new LinkedList<>();
+    public VDFNode(@NotNull InputStream is, @NotNull Charset c) throws IOException {
+        @NotNull VDFLexer lexer = new VDFLexer(new ANTLRInputStream(new InputStreamReader(is, c)));
+        @NotNull CommonTokenStream tokens = new CommonTokenStream(lexer);
+        @NotNull VDFParser parser = new VDFParser(tokens);
+        @NotNull final Deque<VDFNode> stack = new LinkedList<>();
         stack.push(this);
         ParseTreeWalker.DEFAULT.walk(new VDFBaseListener() {
             @Override
-            public void enterNode(NodeContext ctx) {
-                String conditional = ctx.conditional != null ? ctx.conditional.getText() : null;
+            public void enterNode(@NotNull NodeContext ctx) {
+                @Nullable String conditional = ctx.conditional != null ? ctx.conditional.getText() : null;
                 stack.push(new VDFNode(u(ctx.name.getText())));
                 stack.peek().conditional = conditional;
             }
@@ -68,12 +71,12 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
             }
 
             @Override
-            public void exitPair(PairContext ctx) {
-                String conditional = ctx.conditional != null ? ctx.conditional.getText() : null;
+            public void exitPair(@NotNull PairContext ctx) {
+                @Nullable String conditional = ctx.conditional != null ? ctx.conditional.getText() : null;
                 stack.peek().addProperty(new VDFProperty(u(ctx.key.getText()), u(ctx.value.getText()), conditional));
             }
 
-            private String u(String s) {
+            private String u(@NotNull String s) {
                 if (s.startsWith("\"")) return s.substring(1, s.length() - 1).replace("\\\"", "\"");
                 return s;
             }
@@ -84,6 +87,7 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
         super(name);
     }
 
+    @Nullable
     public String getConditional() {
         return conditional;
     }
@@ -92,42 +96,44 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
         this.conditional = conditional;
     }
 
+    @NotNull
     @Override
     public String toString() {
         return super.toString() + (conditional == null ? "" : "    " + conditional);
     }
 
-    public Diff<VDFNode> rdiff2(VDFNode other) {
-        Diff<VDFNode> d = new Diff<>();
+    @NotNull
+    public Diff<VDFNode> rdiff2(@NotNull VDFNode other) {
+        @NotNull Diff<VDFNode> d = new Diff<>();
         d.in = this;
         d.out = other;
-        VDFNode removed = new VDFNode("Removed");
-        VDFNode added = new VDFNode("Added");
-        VDFNode potential = new VDFNode("Potential");
-        VDFNode potential2 = new VDFNode("Potential2");
-        VDFNode same = new VDFNode("Same");
-        for (VDFNode v : getNodes()) {
-            VDFNode match = other.get(v.custom);
+        @NotNull VDFNode removed = new VDFNode("Removed");
+        @NotNull VDFNode added = new VDFNode("Added");
+        @NotNull VDFNode potential = new VDFNode("Potential");
+        @NotNull VDFNode potential2 = new VDFNode("Potential2");
+        @NotNull VDFNode same = new VDFNode("Same");
+        for (@NotNull VDFNode v : getNodes()) {
+            @Nullable VDFNode match = other.get(v.custom);
             if (match == null) { // Not in new copy
                 removed.addNode(v);
             } else {
                 potential.addNode(match);
             }
         }
-        for (VDFNode v : other.getNodes()) {
-            VDFNode match = get(v.custom);
+        for (@NotNull VDFNode v : other.getNodes()) {
+            @Nullable VDFNode match = get(v.custom);
             if (match == null) { // Not in this copy
                 added.addNode(v);
             } else {
                 potential2.addNode(match);
             }
         }
-        for (VDFNode v : potential.getNodes()) {
-            VDFNode v2 = potential2.get(v.custom);
-            Diff<VDFProperty> diff = v2.diff(v); // FIXME: backwards for some reason
+        for (@NotNull VDFNode v : potential.getNodes()) {
+            @Nullable VDFNode v2 = potential2.get(v.custom);
+            @NotNull Diff<VDFProperty> diff = v2.diff(v); // FIXME: backwards for some reason
             if ((diff.added.size() + diff.removed.size() + diff.modified.size()) > 0) { // Something was changed
-                VDFNode na = new VDFNode(v.custom);
-                VDFNode nr = new VDFNode(v.custom);
+                @NotNull VDFNode na = new VDFNode(v.custom);
+                @NotNull VDFNode nr = new VDFNode(v.custom);
                 for (VDFProperty a : diff.added) {
                     na.addProperty(a);
                 }
@@ -136,7 +142,7 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
                     nr.addProperty(r);
                 }
                 removed.addNode(nr);
-                for (Pair<VDFProperty, VDFProperty> p : diff.modified) { // TODO: push to modified
+                for (@NotNull Pair<VDFProperty, VDFProperty> p : diff.modified) { // TODO: push to modified
                     nr.addProperty(p.getKey());
                     na.addProperty(p.getValue());
                 }
@@ -155,14 +161,16 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
      * @param other The other node
      * @return
      */
-    Diff<VDFProperty> diff(VDFNode other) {
+    @NotNull
+    Diff<VDFProperty> diff(@NotNull VDFNode other) {
         return Diff.diff(getProperties(), other.getProperties(), COMPARATOR_KEY, COMPARATOR_VALUE);
     }
 
+    @NotNull
     public String save() {
-        StringBuilder sb = new StringBuilder();
+        @NotNull StringBuilder sb = new StringBuilder();
         // preceding header
-        for (VDFProperty p : properties) {
+        for (@NotNull VDFProperty p : properties) {
             if (String.valueOf(p.getValue()).isEmpty()) {
                 if ("\\n".equals(p.getKey())) {
                     sb.append('\n');
@@ -174,7 +182,7 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
         }
         sb.append(custom).append('\n');
         sb.append("{\n");
-        for (VDFProperty p : properties) {
+        for (@NotNull VDFProperty p : properties) {
             if (!String.valueOf(p.getValue()).isEmpty()) {
                 if ("\\n".equals(p.getKey())) {
                     sb.append("\t    \n");
@@ -195,25 +203,26 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
      * @param other The other node
      * @return
      */
+    @NotNull
     @Override
-    public Diff<VDFNode> rdiff(VDFNode other) {
-        Diff<VDFNode> d = new Diff<>();
+    public Diff<VDFNode> rdiff(@NotNull VDFNode other) {
+        @NotNull Diff<VDFNode> d = new Diff<>();
         d.in = this;
         d.out = other;
-        VDFNode removed = new VDFNode("Removed");
-        VDFNode added = new VDFNode("Added");
-        VDFNode same = new VDFNode("Same");
-        VDFNode modified = new VDFNode("Modified");
-        for (VDFNode v : getNodes()) {
-            VDFNode match = other.get(v.custom);
+        @NotNull VDFNode removed = new VDFNode("Removed");
+        @NotNull VDFNode added = new VDFNode("Added");
+        @NotNull VDFNode same = new VDFNode("Same");
+        @NotNull VDFNode modified = new VDFNode("Modified");
+        for (@NotNull VDFNode v : getNodes()) {
+            @Nullable VDFNode match = other.get(v.custom);
             if (match == null) { // Not in new copy
                 removed.addNode(v);
             } else {
                 same.addNode(match); // TODO: check for differences
             }
         }
-        for (VDFNode v : other.getNodes()) {
-            VDFNode match = get(v.custom);
+        for (@NotNull VDFNode v : other.getNodes()) {
+            @Nullable VDFNode match = get(v.custom);
             if (match == null) { // Not in this copy
                 added.addNode(v);
             }
@@ -254,6 +263,7 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
             this.conditional = conditional;
         }
 
+        @NotNull
         @Override
         public String toString() {
             return MessageFormat.format("''{1}''{0}''{2}''{3}",
@@ -263,6 +273,7 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
                     conditional == null ? "" : TAB + conditional);
         }
 
+        @NotNull
         public String getInfo() {
             return "";
         }

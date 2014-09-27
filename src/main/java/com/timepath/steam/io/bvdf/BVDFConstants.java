@@ -1,5 +1,7 @@
 package com.timepath.steam.io.bvdf;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,7 +26,7 @@ public class BVDFConstants {
 
         public static String getName(int i) {
             Universe[] search = Universe.values();
-            for (Universe search1 : search) {
+            for (@NotNull Universe search1 : search) {
                 if (search1.id == i) {
                     return search1.name();
                 }
@@ -45,7 +47,7 @@ public class BVDFConstants {
 
         public static String getName(int i) {
             AppInfoState[] search = AppInfoState.values();
-            for (AppInfoState search1 : search) {
+            for (@NotNull AppInfoState search1 : search) {
                 if (search1.id == i) {
                     return search1.name();
                 }
@@ -85,7 +87,7 @@ public class BVDFConstants {
 
         public static String get(int i) {
             Section[] search = Section.values();
-            for (Section search1 : search) {
+            for (@NotNull Section search1 : search) {
                 if (search1.id == i) {
                     return search1.name();
                 }
@@ -123,7 +125,7 @@ public class BVDFConstants {
         }
 
         public static String get(int i) {
-            for (SteamAppState s : SteamAppState.values()) {
+            for (@NotNull SteamAppState s : SteamAppState.values()) {
                 if (s.id == i) {
                     return s.name();
                 }
@@ -147,7 +149,7 @@ public class BVDFConstants {
         }
 
         public static String get(int i) {
-            for (AppInfoSectionPropagationType s : AppInfoSectionPropagationType.values()) {
+            for (@NotNull AppInfoSectionPropagationType s : AppInfoSectionPropagationType.values()) {
                 if (s.id == i) {
                     return s.name();
                 }

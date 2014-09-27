@@ -1,5 +1,7 @@
 package com.timepath.steam.io;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -13,7 +15,7 @@ public class VDF {
 
     public static boolean isBinary(File f) {
         try {
-            RandomAccessFile rf = new RandomAccessFile(f, "r");
+            @NotNull RandomAccessFile rf = new RandomAccessFile(f, "r");
             rf.seek(rf.length() - 1);
             int r = rf.read();
             return (r == 0x00) || (r == 0x08) || (r == 0xFF);
@@ -23,19 +25,23 @@ public class VDF {
         return false;
     }
 
-    public static VDFNode load(File f) throws IOException {
+    @NotNull
+    public static VDFNode load(@NotNull File f) throws IOException {
         return load(new FileInputStream(f));
     }
 
-    public static VDFNode load(InputStream is) throws IOException {
+    @NotNull
+    public static VDFNode load(@NotNull InputStream is) throws IOException {
         return load(is, StandardCharsets.UTF_8);
     }
 
-    public static VDFNode load(InputStream is, Charset c) throws IOException {
+    @NotNull
+    public static VDFNode load(@NotNull InputStream is, @NotNull Charset c) throws IOException {
         return new VDFNode(is, c);
     }
 
-    public static VDFNode load(File f, Charset c) throws IOException {
+    @NotNull
+    public static VDFNode load(@NotNull File f, @NotNull Charset c) throws IOException {
         return load(new FileInputStream(f), c);
     }
 }

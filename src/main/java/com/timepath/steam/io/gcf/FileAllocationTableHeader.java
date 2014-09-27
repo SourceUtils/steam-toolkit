@@ -2,6 +2,7 @@ package com.timepath.steam.io.gcf;
 
 import com.timepath.DataUtils;
 import com.timepath.io.RandomAccessFileWrapper;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -34,8 +35,8 @@ class FileAllocationTableHeader {
      */
     private final int isLongTerminator;
 
-    FileAllocationTableHeader(GCF g) throws IOException {
-        RandomAccessFileWrapper raf = g.raf;
+    FileAllocationTableHeader(@NotNull GCF g) throws IOException {
+        @NotNull RandomAccessFileWrapper raf = g.raf;
         pos = raf.getFilePointer();
         clusterCount = raf.readULEInt();
         firstUnusedEntry = raf.readULEInt();
@@ -45,10 +46,11 @@ class FileAllocationTableHeader {
         raf.skipBytes(g.fragMapEntries.length * FileAllocationTableEntry.SIZE);
     }
 
+    @NotNull
     @Override
     public String toString() {
         int checked = check();
-        String checkState = (checksum == checked) ? "OK" : (checksum + "vs" + checked);
+        @NotNull String checkState = (checksum == checked) ? "OK" : (checksum + "vs" + checked);
         return "blockCount:" + clusterCount + ", firstUnusedEntry:" + firstUnusedEntry + ", isLongTerminator:" +
                 isLongTerminator + ", checksum:" + checkState;
     }

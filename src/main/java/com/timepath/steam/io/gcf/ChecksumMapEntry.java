@@ -1,6 +1,7 @@
 package com.timepath.steam.io.gcf;
 
 import com.timepath.io.RandomAccessFileWrapper;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
@@ -22,11 +23,12 @@ class ChecksumMapEntry {
      */
     private final int firstChecksumIndex;
 
-    ChecksumMapEntry(RandomAccessFileWrapper raf) throws IOException {
+    ChecksumMapEntry(@NotNull RandomAccessFileWrapper raf) throws IOException {
         checksumCount = raf.readULEInt();
         firstChecksumIndex = raf.readULEInt();
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "checkCount:" + checksumCount + ", first:" + firstChecksumIndex;
