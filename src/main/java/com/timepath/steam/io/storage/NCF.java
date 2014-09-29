@@ -1,5 +1,6 @@
 package com.timepath.steam.io.storage;
 
+import com.timepath.vfs.provider.Files;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;

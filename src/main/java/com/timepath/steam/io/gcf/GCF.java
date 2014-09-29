@@ -2,7 +2,7 @@ package com.timepath.steam.io.gcf;
 
 import com.timepath.EnumFlags;
 import com.timepath.io.RandomAccessFileWrapper;
-import com.timepath.steam.io.util.ExtendedVFile;
+import com.timepath.vfs.provider.ExtendedVFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

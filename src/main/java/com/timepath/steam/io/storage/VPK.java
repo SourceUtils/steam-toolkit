@@ -4,8 +4,7 @@ import com.timepath.DataUtils;
 import com.timepath.StringUtils;
 import com.timepath.io.ByteBufferInputStream;
 import com.timepath.io.struct.StructField;
-import com.timepath.steam.io.storage.Files.FileHandler;
-import com.timepath.steam.io.util.ExtendedVFile;
+import com.timepath.vfs.provider.ExtendedVFile;
 import com.timepath.vfs.SimpleVFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,7 +16,6 @@ import java.io.InputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.nio.ByteBuffer;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -45,17 +43,6 @@ public class VPK extends ExtendedVFile {
     @NotNull
     private final File[] store;
     private String name;
-
-    static {
-        Files.registerHandler(new FileHandler() {
-            @Nullable
-            @Override
-            public Collection<? extends SimpleVFile> handle(@NotNull final File file) throws IOException {
-                if (!file.getName().endsWith("_dir.vpk")) return null;
-                return VPK.loadArchive(file).list();
-            }
-        });
-    }
 
     private VPK(@NotNull final File file) throws IOException {
         LOG.log(Level.INFO, "Loading {0}", file);

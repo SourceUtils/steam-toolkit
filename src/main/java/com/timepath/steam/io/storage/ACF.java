@@ -3,6 +3,7 @@ package com.timepath.steam.io.storage;
 import com.timepath.steam.SteamUtils;
 import com.timepath.steam.io.VDF;
 import com.timepath.steam.io.VDFNode;
+import com.timepath.vfs.provider.Files;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
