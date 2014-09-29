@@ -3,7 +3,7 @@ package com.timepath.steam.io.storage;
 import com.timepath.steam.SteamUtils;
 import com.timepath.steam.io.VDF;
 import com.timepath.steam.io.VDFNode;
-import com.timepath.vfs.provider.Files;
+import com.timepath.vfs.provider.local.LocalFileProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 /**
  * @author TimePath
  */
-public class ACF extends Files {
+public class ACF extends LocalFileProvider {
 
     private static final Logger LOG = Logger.getLogger(ACF.class.getName());
     private static final Map<String, Reference<ACF>> REFERENCE_MAP = new HashMap<>();
