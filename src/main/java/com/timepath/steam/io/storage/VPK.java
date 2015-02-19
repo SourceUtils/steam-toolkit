@@ -143,7 +143,7 @@ public class VPK extends ExtendedVFile {
         for (String dir : components) {
             @Nullable SimpleVFile match = null;
             for (@NotNull SimpleVFile e : node.list()) {
-                if (e.isDirectory() && e.getName().equalsIgnoreCase(dir)) {
+                if (e.getIsDirectory() && e.getName().equalsIgnoreCase(dir)) {
                     match = e;
                     break;
                 }
@@ -180,7 +180,7 @@ public class VPK extends ExtendedVFile {
     }
 
     @Override
-    public boolean isDirectory() {
+    public boolean getIsDirectory() {
         return true;
     }
 
@@ -308,12 +308,12 @@ public class VPK extends ExtendedVFile {
         }
 
         @Override
-        public boolean isDirectory() {
+        public boolean getIsDirectory() {
             return isDirectory;
         }
 
         @Override
-        public long length() {
+        public long getLength() {
             return entryLength;
         }
 

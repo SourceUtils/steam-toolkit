@@ -32,7 +32,7 @@ public class Blob implements Savable {
 
     private static final Logger LOG = Logger.getLogger(Blob.class.getName());
     @NotNull
-    private final BlobNode root;
+    public final BlobNode root;
 
     public Blob() {
         root = new BlobNode("Blob");

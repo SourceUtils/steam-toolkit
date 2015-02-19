@@ -133,7 +133,7 @@ public class GCF extends ExtendedVFile {
     }
 
     @Override
-    public boolean isDirectory() {
+    public boolean getIsDirectory() {
         return true;
     }
 
@@ -289,12 +289,12 @@ public class GCF extends ExtendedVFile {
         }
 
         @Override
-        public boolean isDirectory() {
+        public boolean getIsDirectory() {
             return attributes.contains(DirectoryEntryAttributes.Directory);
         }
 
         @Override
-        public long length() {
+        public long getLength() {
             return itemSize;
         }
 

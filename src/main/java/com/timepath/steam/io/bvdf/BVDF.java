@@ -24,7 +24,7 @@ public class BVDF implements Savable {
 
     private static final Logger LOG = Logger.getLogger(BVDF.class.getName());
     @NotNull
-    private final DataNode root;
+    public final DataNode root;
 
     public BVDF() {
         root = new DataNode("BVDF");
