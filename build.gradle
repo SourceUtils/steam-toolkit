@@ -1,4 +1,20 @@
-description = ''
+buildscript {
+    ext.kotlin_version = '0.10.770'
+    repositories {
+        mavenCentral()
+        maven { url 'http://oss.sonatype.org/content/repositories/snapshots' }
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'kotlin'
+
+repositories {
+    mavenCentral()
+    maven { url 'http://oss.sonatype.org/content/repositories/snapshots' }
+}
 
 configurations { antlr4 }
 
@@ -10,6 +26,7 @@ ext.antlr = [
 dependencies {
     antlr4 "org.antlr:antlr4:${antlr.version}"
 
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile "org.antlr:antlr4-runtime:${antlr.version}"
     compile 'org.json:json:20140107'
     compile project(':java-xplaf')

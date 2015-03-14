@@ -2,6 +2,7 @@ package com.timepath.steam.io;
 
 import com.timepath.steam.io.storage.ACF;
 import com.timepath.vfs.VFile;
+import java.nio.charset.Charset;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.After;
@@ -29,7 +30,7 @@ public class VDFTest {
     public void testLoad() throws Exception {
         int max = 10;
         try {
-            @Nullable ACF a = ACF.fromManifest(440);
+            @Nullable ACF a = ACF.OBJECT$.fromManifest(440);
             PrintStream original = System.err;
             @NotNull List<String> warnings = new LinkedList<>();
             for (String s : new String[]{".res", ".vdf"}) {
@@ -54,7 +55,7 @@ public class VDFTest {
                             flag[0] = true;
                         }
                     });
-                    VDF.load(f.openStream());
+                    VDF.INSTANCE$.load(f.openStream(), Charset.defaultCharset());
                     if (flag[0]) {
                         warnings.add(f.toString());
                         System.err.println("Warning from: " + f.getPath() + f.getName());
