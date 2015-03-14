@@ -125,7 +125,7 @@ public class Main private() {
                 val keys = arr.keySet()
                 for (key in keys) {
                     val keyStr = key.toString()
-                    rb.append(keyStr, arr.get(keyStr).toString())
+                    rb.append(keyStr, arr[keyStr].toString())
                 }
                 LOG.info(trans + '?' + rb)
             }

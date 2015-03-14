@@ -77,7 +77,7 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
         val potential2 = VDFNode("Potential2")
         val same = VDFNode("Same")
         for (v in getNodes()) {
-            val match = other.get(v.getCustom())
+            val match = other[v.getCustom()]
             if (match == null) {
                 // Not in new copy
                 removed.addNode(v)
@@ -95,7 +95,7 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
             }
         }
         for (v in potential.getNodes()) {
-            val v2 = potential2.get(v.getCustom())
+            val v2 = potential2[v.getCustom()]
             val diff = v2!!.diff(v) // FIXME: backwards for some reason
             if ((diff.added.size() + diff.removed.size() + diff.modified.size()) > 0) {
                 // Something was changed
@@ -178,7 +178,7 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
         val same = VDFNode("Same")
         val modified = VDFNode("Modified")
         for (v in getNodes()) {
-            val match = other.get(v.getCustom())
+            val match = other[v.getCustom()]
             if (match == null) {
                 // Not in new copy
                 removed.addNode(v)

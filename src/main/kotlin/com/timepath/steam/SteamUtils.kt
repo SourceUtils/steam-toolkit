@@ -29,8 +29,8 @@ public object SteamUtils {
             return null
         }
         try {
-            val username = VDF.load(autoLogin).get("SteamAppData")!!.getValue("AutoLoginUser") as String
-            val id64 = VDF.load(config).get("InstallConfigStore", "Software", "Valve", "Steam", "Accounts", username)!!.getValue("SteamID") as String
+            val username = VDF.load(autoLogin)["SteamAppData"]!!.getValue("AutoLoginUser") as String
+            val id64 = VDF.load(config)["InstallConfigStore", "Software", "Valve", "Steam", "Accounts", username]!!.getValue("SteamID") as String
             val uid = SteamID.ID64toUID(id64)
             val sid = SteamID.UIDtoID32(uid!!)
             return SteamID(username, id64, uid, sid!!)
@@ -55,8 +55,7 @@ public object SteamUtils {
         val linReg = File(System.getenv("HOME") + "/.steam/registry.vdf")
         try {
             val VDFNode = VDF.load(linReg)
-            val installPath = VDFNode
-                    .get("Registry", "HKLM", "Software", "Valve", "Steam")!!
+            val installPath = VDFNode["Registry", "HKLM", "Software", "Valve", "Steam"]!!
                     .getValue("InstallPath") as String
             LOG.log(Level.INFO, "Steam directory read from registry file: {0}", installPath)
             return File(installPath)
@@ -70,7 +69,7 @@ public object SteamUtils {
     private fun getSteamOSX(): File {
         val macReg = File("~/Library/Application Support/Steam/registry.vdf")
         try {
-            val installPath = VDF.load(macReg).get("Registry", "HKLM", "Software", "Valve", "Steam")!!.getValue("InstallPath") as String
+            val installPath = VDF.load(macReg)["Registry", "HKLM", "Software", "Valve", "Steam"]!!.getValue("InstallPath") as String
             LOG.log(Level.INFO, "Steam directory read from registry file: {0}", installPath)
             return File(installPath)
         } catch (ex: IOException) {

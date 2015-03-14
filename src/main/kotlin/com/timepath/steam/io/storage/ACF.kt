@@ -32,14 +32,14 @@ public class ACF private(root: File) : LocalFileProvider(root) {
             val v = VDF.load(mf, Charset.defaultCharset())
             val dir: File
             try {
-                dir = File(v.get("AppState", "UserConfig")!!.getValue("appinstalldir") as String)
+                dir = File(v["AppState", "UserConfig"]!!.getValue("appinstalldir") as String)
             } catch (ignored: Exception) {
-                dir = File(mf.getParentFile(), "common/" + v.get("AppState")!!.getValue("installdir"))
+                dir = File(mf.getParentFile(), "common/" + v["AppState"]!!.getValue("installdir"))
             }
 
             // TODO: gameinfo.txt
             val key = mf.getName()
-            val ref = REFERENCE_MAP.get(key)
+            val ref = REFERENCE_MAP[key]
             if (ref != null) {
                 val a = ref.get()
                 if (a != null) {
