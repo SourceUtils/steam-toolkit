@@ -1,14 +1,10 @@
 description = ''
 
-configurations {
-    antlr4 {
-        description = "ANTLR4"
-    }
-}
+configurations { antlr4 }
 
 ext.antlr = [
-        output : "${buildDir}/generated-src/antlr4",
-        version: '4.2.2'
+        output : new File(projectDir, 'src/gen/java'),
+        version: '4.5'
 ]
 
 dependencies {
@@ -26,11 +22,11 @@ task compileAntlr() {
     mkdir(antlr.output)
 
     def files = [:].withDefault { [] }
-    def base = new File(projectDir, '/src/main/antlr4');
+    def base = new File(projectDir, 'src/main/antlr4')
     base.eachFileRecurse(groovy.io.FileType.FILES) {
         if (!it.name.endsWith('.g4')) return
         def pkg = base.toURI().relativize(it.parentFile.toURI()).toString().replaceAll('/$', '').replace(File.separator, '.')
-        files[pkg].add(it.toString().replace(base.toString() + '/', ''))
+        files[pkg] << it.toString().replace(base.toString() + '/', '')
     }
     files.each { pkg, grammars ->
         doLast {
@@ -39,17 +35,12 @@ task compileAntlr() {
                 workingDir = base.toString()
                 println 'found ' + grammars
                 main = 'org.antlr.v4.Tool'
-                args = ["-o", "${antlr.output}", /*"-atn", "-visitor", "-listener",*/ "-package", pkg, grammars].flatten()
+                args = ["-o", "${antlr.output}", "-package", pkg, grammars].flatten()
             }
         }
     }
 }
 
-compileJava {
-    dependsOn compileAntlr
-    source antlr.output
-}
-
-clean {
-    delete antlr.output
-}
+compileJava.dependsOn compileAntlr
+sourceSets.main.java.srcDirs += antlr.output
+clean { delete antlr.output }

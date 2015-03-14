@@ -1,5 +1,6 @@
 /cache/
 
+src/gen/
 target/
 build/
 .gradle/
