@@ -123,7 +123,7 @@ class ManifestHeader {
 
     int check() {
         try {
-            ByteBuffer bbh = ByteBuffer.allocate(SIZE);
+            @NotNull ByteBuffer bbh = ByteBuffer.allocate(SIZE);
             bbh.order(ByteOrder.LITTLE_ENDIAN);
             bbh.putInt(headerVersion);
             bbh.putInt(applicationID);
@@ -142,7 +142,7 @@ class ManifestHeader {
             bbh.flip();
             @NotNull byte[] bytes1 = bbh.array();
             raf.seek(pos + SIZE);
-            ByteBuffer bb = ByteBuffer.allocate(binarySize);
+            @NotNull ByteBuffer bb = ByteBuffer.allocate(binarySize);
             bb.order(ByteOrder.LITTLE_ENDIAN);
             bb.put(bytes1);
             bb.put(raf.readBytes(binarySize - SIZE));

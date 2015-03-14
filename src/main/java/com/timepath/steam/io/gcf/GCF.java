@@ -205,6 +205,7 @@ public class GCF extends ExtendedVFile {
         return buf;
     }
 
+    @NotNull
     @Override
     public ExtendedVFile getRoot() {
         return directoryEntries[0];
@@ -223,6 +224,7 @@ public class GCF extends ExtendedVFile {
 
     private class GCFDirectoryEntry extends ExtendedVFile {
 
+        @NotNull
         final EnumSet<DirectoryEntryAttributes> attributes;
         /**
          * Checksum index / file ID. 0xFFFFFFFF == None.
@@ -324,7 +326,7 @@ public class GCF extends ExtendedVFile {
 
                 @Nullable
                 private ByteBuffer createBuffer() {
-                    ByteBuffer b = ByteBuffer.wrap(new byte[GCFDirectoryEntry.this.itemSize]);
+                    @NotNull ByteBuffer b = ByteBuffer.wrap(new byte[GCFDirectoryEntry.this.itemSize]);
                     b.order(ByteOrder.LITTLE_ENDIAN);
                     int idx = directoryMapEntries(index).firstBlockIndex;
                     if (idx >= blocks.length) {

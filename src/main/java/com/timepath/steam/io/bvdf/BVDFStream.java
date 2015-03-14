@@ -64,7 +64,7 @@ public class BVDFStream {
                             int appInfoState = is.readInt();
                             listener.emit("state", BVDFConstants.AppInfoState.getName(appInfoState));
                             long lastUpdated = is.readInt();
-                            String formattedDate = DateUtils.parse(lastUpdated);
+                            @NotNull String formattedDate = DateUtils.parse(lastUpdated);
                             listener.emit("lastUpdated", formattedDate);
                             long token = is.readLong();
                             listener.emit("token", token);

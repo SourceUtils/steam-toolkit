@@ -53,7 +53,7 @@ public class SteamID {
         if (!matcher.matches()) {
             return null;
         }
-        BigInteger id = new BigInteger(matcher.group(3)).multiply(BigInteger.valueOf(2)).add(new BigInteger(matcher.group(2)));
+        @NotNull BigInteger id = new BigInteger(matcher.group(3)).multiply(BigInteger.valueOf(2)).add(new BigInteger(matcher.group(2)));
         return "U:1:" + id;
     }
 
@@ -63,7 +63,7 @@ public class SteamID {
         if (!matcher.matches()) {
             return null;
         }
-        BigInteger id = new BigInteger(matcher.group(2)).add(ID_64_OFFSET);
+        @NotNull BigInteger id = new BigInteger(matcher.group(2)).add(ID_64_OFFSET);
         return id.toString();
     }
 
@@ -78,7 +78,7 @@ public class SteamID {
         if (!matcher.matches()) {
             return null;
         }
-        BigInteger id = new BigInteger(matcher.group(1)).subtract(ID_64_OFFSET);
+        @NotNull BigInteger id = new BigInteger(matcher.group(1)).subtract(ID_64_OFFSET);
         return "U:1:" + id;
     }
 
@@ -88,7 +88,7 @@ public class SteamID {
         if (!matcher.matches()) {
             return null;
         }
-        BigInteger[] id = new BigInteger(matcher.group(2)).divideAndRemainder(BigInteger.valueOf(2));
+        @NotNull BigInteger[] id = new BigInteger(matcher.group(2)).divideAndRemainder(BigInteger.valueOf(2));
         return "STEAM_0:" + id[1] + ':' + id[0];
     }
 

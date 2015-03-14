@@ -37,6 +37,7 @@ public class VPK extends ExtendedVFile {
      * Previously loaded VPKs stored as references.
      */
     private static final Map<File, Reference<VPK>> REFERENCE_MAP = new HashMap<>(0);
+    @NotNull
     private final ByteBuffer globaldata;
     @NotNull
     private final ByteBuffer[] mappings;
@@ -83,7 +84,7 @@ public class VPK extends ExtendedVFile {
             v3 = buffer.getInt();
             v4 = buffer.getInt();
         }
-        ByteBuffer directoryInfo = DataUtils.getSlice(buffer, treeLength);
+        @NotNull ByteBuffer directoryInfo = DataUtils.getSlice(buffer, treeLength);
         globaldata = DataUtils.getSlice(buffer, dataLength);
         buffer.get(new byte[v2]); // Directory
         buffer.get(new byte[v3]); // Single + Directory

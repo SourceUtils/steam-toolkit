@@ -33,7 +33,7 @@ public class MasterServer extends Server {
             l = com.timepath.steam.net.ServerListener.NULL;
         }
         @NotNull String initialAddress = "0.0.0.0:0";
-        String lastAddress = initialAddress;
+        @NotNull String lastAddress = initialAddress;
         boolean looping = true;
         while (looping) {
             LOG.log(Level.FINE, "Last address: {0}", lastAddress);
@@ -42,9 +42,9 @@ public class MasterServer extends Server {
             baos.write(r.code);
             baos.write((lastAddress + '\0').getBytes("UTF-8"));
             baos.write((filter + '\0').getBytes("UTF-8"));
-            ByteBuffer send = ByteBuffer.wrap(baos.toByteArray());
+            @NotNull ByteBuffer send = ByteBuffer.wrap(baos.toByteArray());
             send(send);
-            ByteBuffer buf = get();
+            @NotNull ByteBuffer buf = get();
             int header = buf.getInt();
             if (header != -1) {
                 LOG.log(Level.WARNING, "Invalid header {0}", header);

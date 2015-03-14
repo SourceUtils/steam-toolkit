@@ -35,7 +35,7 @@ public class SourceServer extends Server {
         baos.write(0x54);
         baos.write(("Source Engine Query" + '\0').getBytes("UTF-8"));
         send(ByteBuffer.wrap(baos.toByteArray()));
-        ByteBuffer buf = get();
+        @NotNull ByteBuffer buf = get();
         buf.order(ByteOrder.LITTLE_ENDIAN);
         int packHeader = buf.getInt();
         if (packHeader != -1) {
@@ -87,7 +87,7 @@ public class SourceServer extends Server {
             //            ByteBuffer d = buf.duplicate();
             //            d.limit(buf.position() + 8);
             //            LOG.info(DataUtils.hexDump(d.slice()));
-            BigInteger sid = BigInteger.valueOf(buf.getLong());
+            @NotNull BigInteger sid = BigInteger.valueOf(buf.getLong());
             if (sid.compareTo(BigInteger.ZERO) < 0) {
                 sid = sid.add(BigInteger.ONE.shiftLeft(64));
             }
@@ -104,7 +104,7 @@ public class SourceServer extends Server {
             listener.inform("Tags: '" + tags + '\'');
         }
         if (edfGameID) {
-            BigInteger gid = BigInteger.valueOf(buf.getLong());
+            @NotNull BigInteger gid = BigInteger.valueOf(buf.getLong());
             if (gid.compareTo(BigInteger.ZERO) < 0) {
                 gid = gid.add(BigInteger.ONE.shiftLeft(64));
             }
@@ -121,9 +121,9 @@ public class SourceServer extends Server {
         challengeOut.write(HEADER);
         challengeOut.write(0x56);
         challengeOut.write(HEADER);
-        ByteBuffer challengeSend = ByteBuffer.wrap(challengeOut.toByteArray());
+        @NotNull ByteBuffer challengeSend = ByteBuffer.wrap(challengeOut.toByteArray());
         send(challengeSend);
-        ByteBuffer challengeGet = get();
+        @NotNull ByteBuffer challengeGet = get();
         challengeGet.order(ByteOrder.LITTLE_ENDIAN);
         int challengepackHeader = challengeGet.getInt();
         if (challengepackHeader != -1) {
@@ -139,14 +139,14 @@ public class SourceServer extends Server {
         baos.write(HEADER);
         baos.write(0x56);
         baos.write(challengeKey);
-        ByteBuffer send = ByteBuffer.wrap(baos.toByteArray());
-        ByteBuffer ruleBuf = ByteBuffer.allocate(4000);
+        @NotNull ByteBuffer send = ByteBuffer.wrap(baos.toByteArray());
+        @NotNull ByteBuffer ruleBuf = ByteBuffer.allocate(4000);
         ruleBuf.order(ByteOrder.LITTLE_ENDIAN);
         int ruleCount = 0;
         while (true) {
             send.rewind();
             send(send);
-            ByteBuffer buf = get();
+            @NotNull ByteBuffer buf = get();
             buf.order(ByteOrder.LITTLE_ENDIAN);
             int packHeader = buf.getInt();
             if (packHeader != -2) {

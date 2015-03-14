@@ -66,7 +66,7 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
 
             @Override
             public void exitNode(NodeContext ctx) {
-                VDFNode current = stack.pop();
+                @NotNull VDFNode current = stack.pop();
                 stack.peek().addNode(current);
             }
 
@@ -76,6 +76,7 @@ public class VDFNode extends Node<VDFProperty, VDFNode> {
                 stack.peek().addProperty(new VDFProperty(u(ctx.key.getText()), u(ctx.value.getText()), conditional));
             }
 
+            @NotNull
             private String u(@NotNull String s) {
                 if (s.startsWith("\"")) return s.substring(1, s.length() - 1).replace("\\\"", "\"");
                 return s;

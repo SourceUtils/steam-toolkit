@@ -14,6 +14,7 @@ import java.util.Collection;
 */
 @MetaInfServices(ProviderPlugin.class)
 public class VPKPlugin implements ProviderPlugin {
+    @NotNull
     @Override
     public SimpleVFile.FileHandler register() {
         return new SimpleVFile.FileHandler() {

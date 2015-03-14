@@ -13,7 +13,7 @@ import java.util.logging.Logger;
  */
 public class VDF {
 
-    public static boolean isBinary(File f) {
+    public static boolean isBinary(@NotNull File f) {
         try {
             @NotNull RandomAccessFile rf = new RandomAccessFile(f, "r");
             rf.seek(rf.length() - 1);

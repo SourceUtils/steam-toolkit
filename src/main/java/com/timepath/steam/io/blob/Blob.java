@@ -39,7 +39,7 @@ public class Blob implements Savable {
     }
 
     private static void parsePayload(@NotNull ByteBuffer parentbuf, @NotNull BlobNode parent, boolean rawData) {
-        ByteBuffer buf = DataUtils.getSlice(parentbuf);
+        @NotNull ByteBuffer buf = DataUtils.getSlice(parentbuf);
         if (buf.remaining() < 2) {
             return;
         }
@@ -86,14 +86,14 @@ public class Blob implements Savable {
                 //                limit = Math.min(limit, buf.position() + buf.remaining()); // workaround for decompressed
                 LOG.log(Level.FINE, "limit: {0}", limit);
                 buf.limit(limit);
-                ByteBuffer payload = DataUtils.getSlice(buf);
+                @NotNull ByteBuffer payload = DataUtils.getSlice(buf);
                 // Payload
                 while (payload.remaining() > padding) {
                     @NotNull BlobNode child = new BlobNode();
                     short descLength = payload.getShort();
                     int payloadLength = payload.getInt();
-                    ByteBuffer childDesc = DataUtils.getSlice(payload, descLength);
-                    String name = DataUtils.getText(childDesc);
+                    @NotNull ByteBuffer childDesc = DataUtils.getSlice(payload, descLength);
+                    @NotNull String name = DataUtils.getText(childDesc);
                     if ("\1\0\0\0".equals(name) || "\2\0\0\0".equals(name)) {
                         childDesc.position(0);
                         child.setMeta(childDesc.getInt());
@@ -101,7 +101,7 @@ public class Blob implements Savable {
                     name = name.replaceAll("\1\0\0\0", "<Folder>");
                     name = name.replaceAll("\2\0\0\0", "<File>");
                     child.setUserObject(name);
-                    ByteBuffer childPayload = DataUtils.getSlice(payload, payloadLength);
+                    @NotNull ByteBuffer childPayload = DataUtils.getSlice(payload, payloadLength);
                     if (payloadLength == 10) {
                         continue;
                     }
@@ -179,12 +179,13 @@ public class Blob implements Savable {
      * @param originalBuffer compressed blob
      * @return the originalBufffer decompressed
      */
+    @NotNull
     private static ByteBuffer decompress(@NotNull ByteBuffer originalBuffer) {
         LOG.log(Level.INFO,
                 "Inflating a compressed binary section, initial length (including header) is {0}",
                 originalBuffer.remaining());
         @NotNull Inflater inflater = new Inflater(true);
-        ByteBuffer mybuf = DataUtils.getSlice(originalBuffer);
+        @NotNull ByteBuffer mybuf = DataUtils.getSlice(originalBuffer);
         // Includes length of magic header etc?
         int wholeLen = mybuf.getInt(); // Includes bytes starting with itself
         int compressedLen = wholeLen - 20;
@@ -213,7 +214,7 @@ public class Blob implements Savable {
         } catch (DataFormatException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-        ByteBuffer newBuf = ByteBuffer.wrap(decompressed);
+        @NotNull ByteBuffer newBuf = ByteBuffer.wrap(decompressed);
         newBuf.order(ByteOrder.LITTLE_ENDIAN);
         return newBuf;
     }

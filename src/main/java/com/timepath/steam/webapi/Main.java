@@ -84,7 +84,7 @@ public class Main {
      * @throws JSONException
      */
     @NotNull
-    private static Object[] encrypt(String username, byte... password) throws
+    private static Object[] encrypt(String username, @NotNull byte... password) throws
             MalformedURLException,
             IllegalBlockSizeException,
             InvalidKeyException,
@@ -97,10 +97,10 @@ public class Main {
         @NotNull JSONObject ret = new JSONObject(login.postget("login/getrsakey", rb.toString()));
         @NotNull BigInteger mod = new BigInteger(ret.getString("publickey_mod"), 16);
         @NotNull BigInteger exp = new BigInteger(ret.getString("publickey_exp"), 16);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        @NotNull KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         @NotNull KeySpec pubKeySpec = new RSAPublicKeySpec(mod, exp);
         Key key = keyFactory.generatePublic(pubKeySpec);
-        Cipher cipher = Cipher.getInstance("RSA");
+        @NotNull Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.ENCRYPT_MODE, key);
         return new Object[]{cipher.doFinal(password), ret.getString("timestamp")};
     }

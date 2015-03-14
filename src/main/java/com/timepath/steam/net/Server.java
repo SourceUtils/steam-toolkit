@@ -51,8 +51,9 @@ public class Server {
         return address;
     }
 
+    @NotNull
     protected ByteBuffer get() throws IOException {
-        ByteBuffer buf = ByteBuffer.allocate(1392);
+        @NotNull ByteBuffer buf = ByteBuffer.allocate(1392);
         buf.order(ByteOrder.LITTLE_ENDIAN);
         int bytesRead = chan.read(buf);
         if (bytesRead > 0) {
