@@ -216,7 +216,7 @@ public class VPK extends ExtendedVFile {
      * @return true
      */
     @Override
-    public boolean isComplete() {
+    public boolean getIsComplete() {
         return true;
     }
 
@@ -302,7 +302,7 @@ public class VPK extends ExtendedVFile {
         }
 
         @Override
-        public boolean isComplete() {
+        public boolean getIsComplete() {
             long theoretical = crc;
             long real = calculateChecksum();
             return theoretical == real;

@@ -212,7 +212,7 @@ public class GCF extends ExtendedVFile {
     }
 
     @Override
-    public boolean isComplete() {
+    public boolean getIsComplete() {
         return true;
     }
 
@@ -286,7 +286,7 @@ public class GCF extends ExtendedVFile {
         }
 
         @Override
-        public boolean isComplete() {
+        public boolean getIsComplete() {
             return (directoryMapEntries(index).firstBlockIndex < blocks.length) || (itemSize == 0);
         }
 

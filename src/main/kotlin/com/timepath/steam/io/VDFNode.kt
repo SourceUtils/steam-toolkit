@@ -142,7 +142,7 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
                     sb.append('\n')
                 }
                 if ("//" == p.getKey()) {
-                    sb.append("//").append(p.getInfo()).append('\n')
+                    sb.append("//").append(p.info).append('\n')
                 }
             }
         }
@@ -154,7 +154,7 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
                     sb.append("\t    \n")
                 } else {
                     sb.append("\t    ").append(p.getKey()).append("\t    ").append(p.getValue())
-                    if (p.getInfo() != null) sb.append(' ').append(p.getInfo())
+                    if (p.info != null) sb.append(' ').append(p.info)
                     sb.append('\n')
                 }
             }
@@ -210,7 +210,7 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
 
         override fun toString() = "'${getKey()}'${TAB}'${getValue()}'${if (conditional == null) "" else TAB + conditional}"
 
-        public fun getInfo(): String = ""
+        public val info: String = ""
 
         class object {
 
