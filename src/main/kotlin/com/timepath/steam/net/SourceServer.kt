@@ -122,7 +122,7 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
             LOG.log(Level.SEVERE, "Invalid header {0}", challengeheader)
         }
         val challengeKey = ByteArray(4)
-        challengeGet.get(challengeKey)
+        challengeGet[challengeKey]
         val baos = ByteArrayOutputStream()
         baos.write(HEADER)
         baos.write(86)
@@ -157,7 +157,7 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
             }
             LOG.log(Level.FINE, "{0} / {1}", array<Any>(id, fragments))
             val data = ByteArray(buf.remaining())
-            buf.get(data)
+            buf[data]
             ruleBuf.put(data)
             if (id == fragments) {
                 break
