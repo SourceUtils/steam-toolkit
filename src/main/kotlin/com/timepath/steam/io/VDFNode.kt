@@ -59,7 +59,7 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
     public var conditional: String? = null
 
     override fun toString(): String {
-        return super.toString() + (if (conditional == null) "" else "    " + conditional)
+        return "${super.toString()}${if (conditional == null) "" else "    " + conditional}"
     }
 
     public fun rdiff2(other: VDFNode): Diff<VDFNode> {

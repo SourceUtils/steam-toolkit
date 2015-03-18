@@ -22,7 +22,7 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
         baos.write(HEADER)
         // A2S_INFO
         baos.write(84)
-        baos.write(("Source Engine Query" + 0.toChar()).toByteArray())
+        baos.write(("Source Engine Query${0.toChar()}").toByteArray())
         send(ByteBuffer.wrap(baos.toByteArray()))
         val buf = get()
         buf.order(ByteOrder.LITTLE_ENDIAN)
@@ -35,33 +35,33 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
             LOG.log(Level.SEVERE, "Invalid header {0}", header)
         }
         val protocol = buf.get()
-        listener.inform("Protocol: " + protocol)
+        listener.inform("Protocol: $protocol")
         val name = DataUtils.getString(buf)
-        listener.inform("Name: '" + name + '\'')
+        listener.inform("Name: '$name'")
         val map = DataUtils.getString(buf)
-        listener.inform("Map: '" + map + '\'')
+        listener.inform("Map: '$map'")
         val gamedir = DataUtils.getString(buf)
-        listener.inform("Gamedir: '" + gamedir + '\'')
+        listener.inform("Gamedir: '$gamedir'")
         val game = DataUtils.getString(buf)
-        listener.inform("Game: '" + game + '\'')
+        listener.inform("Game: '$game'")
         val appID = buf.getShort()
-        listener.inform("AppID: '" + appID + '\'')
+        listener.inform("AppID: '$appID'")
         val playerCount = buf.get()
-        listener.inform("Players: '" + playerCount + '\'')
+        listener.inform("Players: '$playerCount'")
         val playerCountMax = buf.get()
-        listener.inform("Capacity: '" + playerCountMax + '\'')
+        listener.inform("Capacity: '$playerCountMax'")
         val botCount = buf.get()
-        listener.inform("Bots: '" + botCount + '\'')
+        listener.inform("Bots: '$botCount'")
         val type = ServerType[buf.get()]
-        listener.inform("Type: '" + type + '\'')
+        listener.inform("Type: '$type'")
         val env = Environment[buf.get()]
-        listener.inform("Environment: '" + env + '\'')
+        listener.inform("Environment: '$env'")
         val visibility = buf.get() == 0.toByte()
-        listener.inform("Visible: '" + visibility + '\'')
+        listener.inform("Visible: '$visibility'")
         val secure = buf.get() == 1.toByte()
-        listener.inform("VAC: '" + secure + '\'')
+        listener.inform("VAC: '$secure'")
         val version = DataUtils.getString(buf)
-        listener.inform("Version: '" + version + '\'')
+        listener.inform("Version: '$version'")
         val edf = buf.get().toInt()
         val edfPort = (edf and 0b10000000) != 0
         val edfSTV = (edf and 0b1000000) != 0
@@ -70,7 +70,7 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
         val edfGameID = (edf and 0b1) != 0
         if (edfPort) {
             val portLocal = buf.getShort()
-            listener.inform("Port: '" + portLocal + '\'')
+            listener.inform("Port: '$portLocal'")
         }
         if (edfSteamID) {
             // TODO: check
@@ -81,24 +81,24 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
             if (sid.compareTo(BigInteger.ZERO) < 0) {
                 sid = sid.add(BigInteger.ONE.shiftLeft(64))
             }
-            listener.inform("SteamID: '" + sid + '\'')
+            listener.inform("SteamID: '$sid'")
         }
         if (edfSTV) {
             val stvPort = buf.getShort()
-            listener.inform("STV Port: '" + stvPort + '\'')
+            listener.inform("STV Port: '$stvPort'")
             val stvName = DataUtils.getString(buf)
-            listener.inform("STV Name: '" + stvName + '\'')
+            listener.inform("STV Name: '$stvName'")
         }
         if (edfTags) {
             val tags = DataUtils.getString(buf)
-            listener.inform("Tags: '" + tags + '\'')
+            listener.inform("Tags: '$tags'")
         }
         if (edfGameID) {
             var gid = BigInteger.valueOf(buf.getLong())
             if (gid.compareTo(BigInteger.ZERO) < 0) {
                 gid = gid.add(BigInteger.ONE.shiftLeft(64))
             }
-            listener.inform("GameID: '" + gid + '\'')
+            listener.inform("GameID: '$gid'")
         }
     }
 
@@ -172,7 +172,7 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
             }
             val key = DataUtils.getString(ruleBuf)
             val value = DataUtils.getString(ruleBuf)
-            l.inform("[" + ruleIndex + '/' + ruleCount + "] " + '\'' + key + "' = '" + value + '\'')
+            l.inform("[$ruleIndex/$ruleCount] '$key' = '$value'")
         }
         LOG.log(Level.FINE, "Underflow: {0}", ruleBuf.remaining())
     }

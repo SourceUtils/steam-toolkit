@@ -102,9 +102,9 @@ public class Main private() {
                 array<Any>("remember_login", true),
                 // oauth: 3638BFB1, DE45CD61
                 array<Any>("oauth_client_id", "DE45CD61"),
-                array<Any>("oauth_scope", "read_profile " + "write_profile " + "read_client " + "write_client")
+                array<Any>("oauth_scope", array("read_profile", "write_profile", "read_client",  "write_client").join(" "))
         )).toString()
-        val ret = JSONObject(login.postget(mobile + "login/dologin", req1))
+        val ret = JSONObject(login.postget("${mobile}login/dologin", req1))
         if (ret.getBoolean("success")) {
             if (ret.has("oauth")) {
                 val umqid = (Math.random() * java.lang.Long.MAX_VALUE.toDouble()).toLong()
@@ -127,7 +127,7 @@ public class Main private() {
                     val keyStr = key.toString()
                     rb.append(keyStr, arr[keyStr].toString())
                 }
-                LOG.info(trans + '?' + rb)
+                LOG.info("$trans?$rb")
             }
             return true
         }
@@ -136,7 +136,7 @@ public class Main private() {
             emailsteamid = ret.getString("emailsteamid")
         } else if (ret.optBoolean("captcha_needed")) {
             gid = ret.getLong("captcha_gid")
-            val address = "https://steamcommunity.com/public/captcha.php?gid=" + gid
+            val address = "https://steamcommunity.com/public/captcha.php?gid=$gid"
             dlg.captchaLabel.setIcon(ImageIcon(ImageIO.read(URI.create(address).toURL())))
         }
         return false
