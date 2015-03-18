@@ -20,7 +20,7 @@ public class VPKPlugin implements ProviderPlugin {
             @Override
             public Collection<SimpleVFile> handle(@NotNull File file) throws IOException {
                 if (!file.getName().endsWith("_dir.vpk")) return null;
-                VPK ar = VPK.loadArchive(file);
+                @Nullable VPK ar = VPK.loadArchive(file);
                 if (ar == null) return null;
                 return ar.list();
             }

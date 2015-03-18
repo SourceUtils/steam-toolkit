@@ -63,9 +63,6 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
     }
 
     public fun rdiff2(other: VDFNode): Diff<VDFNode> {
-        val d = Diff<VDFNode>()
-        d.`in` = this
-        d.out = other
         val removed = VDFNode("Removed")
         val added = VDFNode("Added")
         val potential = VDFNode("Potential")
@@ -114,8 +111,8 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
                 same.addNode(v)
             }
         }
-        Node.debug<VDFProperty, VDFNode>(d.`in`, d.out, removed, added)
-        return d
+        Node.debug<VDFProperty, VDFNode>(this, other, removed, added)
+        throw UnsupportedOperationException("Not yet implemented")
     }
 
     /**
@@ -165,9 +162,6 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
      * @return
      */
     override fun rdiff(other: VDFNode): Diff<VDFNode> {
-        val d = Diff<VDFNode>()
-        d.`in` = this
-        d.out = other
         val removed = VDFNode("Removed")
         val added = VDFNode("Added")
         val same = VDFNode("Same")
@@ -194,11 +188,14 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
             //    }
             //}
         }
-        d.removed = Arrays.asList<VDFNode>(removed)
-        d.same = Arrays.asList<VDFNode>(same)
-        d.added = Arrays.asList<VDFNode>(added)
-        //        d.modified = Arrays.asList(modified.getChildren())
-        return d
+//        val d = Diff<VDFNode>()
+//        d.`in` = this
+//        d.out = other
+//        d.removed = Arrays.asList<VDFNode>(removed)
+//        d.same = Arrays.asList<VDFNode>(same)
+//        d.added = Arrays.asList<VDFNode>(added)
+//        d.modified = Arrays.asList<VDFNode>(modified)
+        throw UnsupportedOperationException("Not yet implemented")
     }
 
     public class VDFProperty(key: String, value: Any, public var conditional: String? = null) : Pair<String, Any>(key, value) {
