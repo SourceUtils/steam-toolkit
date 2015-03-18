@@ -134,10 +134,7 @@ public object SteamUtils {
      * @return Path to {@code user}'s {@code userdata}, or null
      * @throws IllegalArgumentException If {@code user} is null
      */
-    public fun getUserData(user: SteamID?): File? {
-        if (user == null) {
-            throw IllegalArgumentException("User cannot be null")
-        }
+    public fun getUserData(user: SteamID): File? {
         val steam = getSteam()
         if (steam == null) {
             return null
@@ -148,5 +145,5 @@ public object SteamUtils {
     /**
      * @return Path to {@link #getUser()}'s {@code userdata}
      */
-    public fun getUserData(): File? = getUserData(getUser())
+    public fun getUserData(): File? = getUserData(getUser()!!)
 }
