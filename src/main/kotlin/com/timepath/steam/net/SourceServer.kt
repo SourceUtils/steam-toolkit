@@ -52,9 +52,9 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
         listener.inform("Capacity: '" + playerCountMax + '\'')
         val botCount = buf.get()
         listener.inform("Bots: '" + botCount + '\'')
-        val type = ServerType.valueFor(buf.get())
+        val type = ServerType[buf.get()]
         listener.inform("Type: '" + type + '\'')
-        val env = Environment.valueFor(buf.get())
+        val env = Environment[buf.get()]
         listener.inform("Environment: '" + env + '\'')
         val visibility = buf.get() == 0.toByte()
         listener.inform("Visible: '" + visibility + '\'')
@@ -182,15 +182,11 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
         LISTEN : ServerType('l')
         SOURCE_TV : ServerType('p')
 
-        val code: Byte
-
-        {
-            $code = code.toByte()
-        }
+        val code: Byte = code.toByte()
 
         class object {
-            fun valueFor(b: Byte) = ServerType.values().firstOrNull { it.code == b }
-
+            private val vals = values()
+            fun get(b: Byte) = vals.firstOrNull { it.code == b }
         }
     }
 
@@ -198,14 +194,11 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
         WINDOWS : Environment('w')
         LINUX : Environment('l')
 
-        val code: Byte
-
-        {
-            $code = code.toByte()
-        }
+        val code: Byte = code.toByte()
 
         class object {
-            fun valueFor(b: Byte) = Environment.values().firstOrNull { it.code == b }
+            private val vals = values()
+            fun get(b: Byte) = vals.firstOrNull { it.code == b }
         }
     }
 

@@ -31,13 +31,12 @@ public object SteamUtils {
         try {
             val username = VDF.load(autoLogin)["SteamAppData"]!!.getValue("AutoLoginUser") as String
             val id64 = VDF.load(config)["InstallConfigStore", "Software", "Valve", "Steam", "Accounts", username]!!.getValue("SteamID") as String
-            val uid = SteamID.ID64toUID(id64)
-            val sid = SteamID.UIDtoID32(uid!!)
-            return SteamID(username, id64, uid, sid!!)
+            val uid = SteamID.ID64toUID(id64)!!
+            val sid = SteamID.UIDtoID32(uid)!!
+            return SteamID(username, id64, uid, sid)
         } catch (ex: IOException) {
             LOG.log(Level.SEVERE, null, ex)
         }
-
         return null
     }
 
@@ -52,7 +51,7 @@ public object SteamUtils {
     }
 
     private fun getSteamLinux(): File {
-        val linReg = File(System.getenv("HOME") + "/.steam/registry.vdf")
+        val linReg = File(System.getenv("HOME"), ".steam/registry.vdf")
         try {
             val VDFNode = VDF.load(linReg)
             val installPath = VDFNode["Registry", "HKLM", "Software", "Valve", "Steam"]!!
@@ -62,8 +61,7 @@ public object SteamUtils {
         } catch (ex: IOException) {
             LOG.log(Level.SEVERE, null, ex)
         }
-
-        return File(System.getenv("HOME") + "/.steam/steam") // TODO: Shouldn't this be correct regardess?
+        return File(System.getenv("HOME"), ".steam/steam") // TODO: Shouldn't this be correct regardess?
     }
 
     private fun getSteamOSX(): File {
@@ -75,7 +73,6 @@ public object SteamUtils {
         } catch (ex: IOException) {
             LOG.log(Level.SEVERE, null, ex)
         }
-
         return File("~/Library/Application Support/Steam")
     }
 
@@ -145,13 +142,11 @@ public object SteamUtils {
         if (steam == null) {
             return null
         }
-        return File(steam, "userdata/" + user.UID.split(":")[2])
+        return File(steam, "userdata/${user.UID.split(":")[2]}")
     }
 
     /**
      * @return Path to {@link #getUser()}'s {@code userdata}
      */
-    public fun getUserData(): File? {
-        return getUserData(getUser())
-    }
+    public fun getUserData(): File? = getUserData(getUser())
 }

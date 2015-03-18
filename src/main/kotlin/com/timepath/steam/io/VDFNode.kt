@@ -12,7 +12,6 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker
 
 import java.io.IOException
 import java.io.InputStream
-import java.io.InputStreamReader
 import java.nio.charset.Charset
 import java.util.Comparator
 import java.util.LinkedList
@@ -26,35 +25,31 @@ import java.util.Arrays
  */
 
 throws(javaClass<IOException>())
-public fun VDFNode(`is`: InputStream, c: Charset, self: VDFNode = VDFNode()): VDFNode = with(self) {
-    val lexer = VDFLexer(ANTLRInputStream(InputStreamReader(`is`, c)))
-    val tokens = CommonTokenStream(lexer)
-    val parser = VDFParser(tokens)
+public fun VDFNode(input: InputStream, charset: Charset = Charsets.UTF_8, self: VDFNode = VDFNode()): VDFNode = with(self) {
+    val lexer = input.reader(charset).let { ANTLRInputStream(it) }.let { VDFLexer(it) }
+    val parser = lexer.let { CommonTokenStream(it) }.let { VDFParser(it) }
     val stack = LinkedList<VDFNode>()
     stack.push(this)
     ParseTreeWalker.DEFAULT.walk(object : VDFBaseListener() {
-        override fun enterNode(ctx: NodeContext) {
-            val conditional = if (ctx.conditional != null) ctx.conditional.getText() else null
-            stack.push(VDFNode(u(ctx.name.getText())))
-            stack.peek().conditional = conditional
-        }
+        override fun enterNode(ctx: NodeContext) = stack.push(VDFNode(ctx.name.getText().unquote()).let {
+            it.conditional = ctx.conditional?.getText()
+            it
+        })
 
-        override fun exitNode(ctx: NodeContext) {
-            val current = stack.pop()
-            stack.peek().addNode(current)
-        }
+        override fun exitNode(ctx: NodeContext) = stack.pop().let { stack.peek().addNode(it) }
 
-        override fun exitPair(ctx: PairContext) {
-            val conditional = when {
-                ctx.conditional != null -> ctx.conditional.getText()
-                else -> null
-            }
-            stack.peek().addProperty(VDFProperty(u(ctx.key.getText()), u(ctx.value.getText()), conditional))
-        }
+        override fun exitPair(ctx: PairContext) = stack.peek().addProperty(VDFProperty(
+                key = ctx.key.getText().unquote(),
+                value = ctx.value.getText().unquote(),
+                conditional = when {
+                    ctx.conditional != null -> ctx.conditional.getText()
+                    else -> null
+                }
+        ))
 
-        private fun u(s: String) = when {
-            s.startsWith("\"") -> s.substring(1, s.length() - 1).replace("\\\"", "\"")
-            else -> s
+        private fun String.unquote() = when {
+            startsWith("\"") -> substring(1, length() - 1).replace("\\\"", "\"")
+            else -> this
         }
     }, parser.parse())
     this
@@ -202,11 +197,11 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
         d.removed = Arrays.asList<VDFNode>(removed)
         d.same = Arrays.asList<VDFNode>(same)
         d.added = Arrays.asList<VDFNode>(added)
-//        d.modified = Arrays.asList(modified.getChildren())
+        //        d.modified = Arrays.asList(modified.getChildren())
         return d
     }
 
-    public class VDFProperty(key: String, `val`: Any, public var conditional: String? = null) : Pair<String, Any>(key, `val`) {
+    public class VDFProperty(key: String, value: Any, public var conditional: String? = null) : Pair<String, Any>(key, value) {
 
         override fun toString() = "'${getKey()}'${TAB}'${getValue()}'${if (conditional == null) "" else TAB + conditional}"
 

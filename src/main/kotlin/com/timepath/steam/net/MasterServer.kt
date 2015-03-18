@@ -3,7 +3,6 @@ package com.timepath.steam.net
 import com.timepath.DataUtils
 import com.timepath.Utils
 
-import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.logging.Level
@@ -16,64 +15,69 @@ import java.util.logging.Logger
 public class MasterServer(hostname: String, port: Int) : Server(hostname, port) {
 
     throws(javaClass<IOException>())
-    public fun query(r: Region, filter: String = "", l: com.timepath.steam.net.ServerListener = ServerListener.NULL) {
+    public fun query(region: Region, filter: String = "", listener: ServerListener = ServerListener.NULL) {
         val initialAddress = "0.0.0.0:0"
-        var lastAddress = initialAddress
-        var looping = true
-        while (looping) {
-            LOG.log(Level.FINE, "Last address: {0}", lastAddress)
-            val baos = ByteArrayOutputStream()
-            baos.write(0x31)
-            baos.write(r.code.toInt())
-            baos.write((lastAddress + 0.toChar()).toByteArray())
-            baos.write((filter + 0.toChar()).toByteArray())
-            val send = ByteBuffer.wrap(baos.toByteArray())
-            send(send)
-            val buf = get()
-            val header = buf.getInt()
+        val filterBytes = filter.toByteArray()
+        val write = ByteBuffer.allocate(0
+                + /* header */ 1
+                + /* region */ 4
+                + /* ip - arbitrary */ 30
+                + /* filter */ (filterBytes.size() + 1)
+        )
+        var address = initialAddress
+        @outer while (true) {
+            LOG.log(Level.FINE, "Last address: {0}", address)
+            with(write) {
+                reset()
+                put(0x31)
+                putInt(region.code.toInt())
+                put(address.toByteArray())
+                put(0)
+                put(filterBytes)
+                put(0)
+                flip()
+            }
+            send(write)
+            val recv = get()
+            val header = recv.getInt()
             if (header != -1) {
                 LOG.log(Level.WARNING, "Invalid header {0}", header)
                 break
             }
-            val head = buf.get()
+            val head = recv.get()
             if (head.toInt() != 0x66) {
                 LOG.log(Level.WARNING, "Unknown header {0}", head)
-                val rec = DataUtils.hexDump(buf)
+                val rec = DataUtils.hexDump(recv)
                 LOG.log(Level.WARNING, "Received {0}", rec)
-                l.inform(rec)
+                listener.inform(rec)
                 break
             }
-            val newline = buf.get()
+            val newline = recv.get()
             if (newline.toInt() != 0x0A) {
                 LOG.log(Level.WARNING, "Malformed byte {0}", newline)
                 break
             }
-            val octet = IntArray(4)
             do {
-                octet[0] = buf.get().toInt() and 0xFF
-                octet[1] = buf.get().toInt() and 0xFF
-                octet[2] = buf.get().toInt() and 0xFF
-                octet[3] = buf.get().toInt() and 0xFF
-                val serverPort = buf.getShort().toInt() and 0xFFFF
-                lastAddress = "${octet[0]}.${octet[1]}.${octet[2]}.${octet[3]}:${serverPort}"
-                (initialAddress != lastAddress).let {
-                    looping = it
-                    if (it) {
-                        l.inform(lastAddress)
-                    }
+                val o0 = recv.get().toInt() and 0xFF
+                val o1 = recv.get().toInt() and 0xFF
+                val o2 = recv.get().toInt() and 0xFF
+                val o3 = recv.get().toInt() and 0xFF
+                val port = recv.getShort().toInt() and 0xFFFF
+                address = "$o0.$o1.$o2.$o3:$port"
+                if (address == initialAddress) {
+                    break@outer
                 }
-            } while (buf.remaining() >= 6)
-            if (buf.remaining() > 0) {
-                val under = ByteArray(buf.remaining())
-                if (under.size() > 0) {
-                    LOG.log(Level.WARNING, "{0} byte underflow: {0}", array<Any>(buf.remaining(), Utils.hex(*under)))
-                }
+                listener.inform(address)
+            } while (recv.remaining() >= 6)
+            if (recv.capacity() - recv.position() > 0) {
+                val under = recv.slice()
+                LOG.log(Level.WARNING, "{0} byte underflow: {0}", array(recv.remaining(), Utils.hex(*under.array())))
             }
         }
     }
 
     public enum class Region private(val code: Byte) {
-        ALL : Region(255.toByte())
+        ALL : Region(0xFF.toByte())
         US_EAST : Region(0)
         US_WEST : Region(1)
         SOUTH_AMERICA : Region(2)
