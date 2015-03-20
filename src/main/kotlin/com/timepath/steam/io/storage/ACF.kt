@@ -15,7 +15,7 @@ import java.util.HashMap
  * @author TimePath
  */
 public class ACF private(root: File) : LocalFileProvider(root) {
-    class object {
+    companion object {
         private val REFERENCE_MAP: MutableMap<String, Reference<ACF>> = HashMap()
 
         throws(javaClass<IOException>())

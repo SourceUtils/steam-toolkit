@@ -88,7 +88,7 @@ public class MasterServer(hostname: String, port: Int) : Server(hostname, port) 
         AFRICA : Region(7)
     }
 
-    class object {
+    companion object {
         public val SOURCE: MasterServer = MasterServer("hl2master.steampowered.com", 27011)
         private val LOG = Logger.getLogger(javaClass<MasterServer>().getName())
     }

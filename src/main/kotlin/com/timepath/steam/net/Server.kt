@@ -45,7 +45,7 @@ public open class Server(hostname: String, port: Int) {
         }
     }
 
-    class object {
+    companion object {
 
         private val LEVEL_SEND = Level.FINE
         private val LEVEL_GET = Level.FINE

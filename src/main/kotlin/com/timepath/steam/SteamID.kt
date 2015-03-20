@@ -21,7 +21,7 @@ public data class SteamID(public var user: String?,
                           public val ID32: String,
                           public val UID: String) {
 
-    class object {
+    companion object {
 
         /** Steam_# 0 from HL to TF2, 1 from L4D to CS:GO */
         private val ID32 = "STEAM_([0-9]):([0-9]):([0-9]{4,})".toRegex()

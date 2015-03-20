@@ -10,7 +10,7 @@ import java.io.File
  */
 public class NCF(f: File) : LocalFileProvider(f) {
 
-    {
+    init {
         throw UnsupportedOperationException("Not supported yet.")
     }
 }

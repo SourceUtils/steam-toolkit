@@ -142,7 +142,7 @@ public class Main private() {
         return false
     }
 
-    class object {
+    companion object {
 
         private val LOG = Logger.getLogger(javaClass<Main>().getName())
         private val LOG_CONNECTION = Logger.getLogger(javaClass<Connection>().getName())

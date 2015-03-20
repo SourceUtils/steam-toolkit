@@ -184,7 +184,7 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
 
         val code: Byte = code.toByte()
 
-        class object {
+        companion object {
             private val vals = values()
             fun get(b: Byte) = vals.firstOrNull { it.code == b }
         }
@@ -196,13 +196,13 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
 
         val code: Byte = code.toByte()
 
-        class object {
+        companion object {
             private val vals = values()
             fun get(b: Byte) = vals.firstOrNull { it.code == b }
         }
     }
 
-    class object {
+    companion object {
 
         private val LOG = Logger.getLogger(javaClass<SourceServer>().getName())
         private val HEADER = byteArray(

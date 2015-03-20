@@ -204,14 +204,14 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
 
         public val info: String = ""
 
-        class object {
+        companion object {
 
             private val LOG = Logger.getLogger(javaClass<VDFProperty>().getName())
             private val TAB = "    "
         }
     }
 
-    class object {
+    companion object {
 
         private val COMPARATOR_KEY = object : Comparator<VDFProperty> {
             override fun compare(o1: VDFProperty, o2: VDFProperty): Int {

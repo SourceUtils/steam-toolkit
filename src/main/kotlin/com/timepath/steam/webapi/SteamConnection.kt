@@ -24,7 +24,7 @@ public class SteamConnection : Connection() {
 
     override fun mindelay() = 1000L
 
-    class object {
+    companion object {
 
         private val LOG = Logger.getLogger(javaClass<SteamConnection>().getName())
     }

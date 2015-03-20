@@ -34,7 +34,7 @@ protected(parent: Frame?, modal: Boolean) : JDialog(parent, modal) {
     public var userInput: JTextField
         private set
 
-    {
+    init {
         val jPanel6 = JPanel()
         val jPanel7 = JPanel()
         val jPanel4 = JPanel()
@@ -92,7 +92,7 @@ protected(parent: Frame?, modal: Boolean) : JDialog(parent, modal) {
 
     public abstract fun login()
 
-    class object {
+    companion object {
 
         /**
          * @param args the command line arguments
