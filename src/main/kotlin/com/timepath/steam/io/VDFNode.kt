@@ -165,7 +165,7 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
         val removed = VDFNode("Removed")
         val added = VDFNode("Added")
         val same = VDFNode("Same")
-        val modified = VDFNode("Modified")
+//        val modified = VDFNode("Modified")
         for (v in getNodes()) {
             val match = other[v.getCustom()]
             if (match == null) {

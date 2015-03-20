@@ -84,9 +84,9 @@ public object SteamUtils {
             LOG.log(Level.WARNING, "Windows registry read failed", ex)
         }
 
-        if (reg != null) {
-            LOG.log(Level.FINE, "Steam directory read from registry: {0}", reg)
-            return File(reg)
+        reg?.let {
+            LOG.log(Level.FINE, "Steam directory read from registry: {0}", it)
+            return File(it)
         }
         var programFiles: String? = System.getenv("PROGRAMFILES(x86)")
         if (programFiles == null) {

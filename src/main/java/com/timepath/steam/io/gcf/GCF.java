@@ -20,10 +20,8 @@ import java.util.logging.Logger;
  * http://wiki.singul4rity.com/steam:filestructures:gcf
  *
  * @author TimePath
- * @deprecated GCF files no longer in use
  */
 @SuppressWarnings("FieldCanBeLocal")
-@Deprecated
 public class GCF extends ExtendedVFile {
 
     private static final Logger LOG = Logger.getLogger(GCF.class.getName());

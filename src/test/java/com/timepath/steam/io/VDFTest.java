@@ -30,7 +30,7 @@ public class VDFTest {
     public void testLoad() throws Exception {
         int max = 10;
         try {
-            @Nullable ACF a = ACF.OBJECT$.fromManifest(440);
+            @Nullable ACF a = ACF.Companion.fromManifest(440);
             PrintStream original = System.err;
             @NotNull List<String> warnings = new LinkedList<>();
             for (@NotNull String s : new String[]{".res", ".vdf"}) {
