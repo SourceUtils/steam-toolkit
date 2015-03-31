@@ -1,9 +1,7 @@
 package com.timepath.steam.webapi
 
 import com.timepath.web.api.base.Connection
-
 import java.net.HttpURLConnection
-import java.util.logging.Logger
 
 /**
  * http://api.steampowered.com/ISteamWebAPIUtil/GetSupportedAPIList/v1/
@@ -14,18 +12,13 @@ import java.util.logging.Logger
  *
  * @author TimePath
  */
-public class SteamConnection : Connection() {
+public class SteamConnection(val base: String) : Connection() {
 
-    override fun getBaseUrl() = "https://steamcommunity.com/"
+    override fun getBaseUrl() = base
 
-    override fun getUserAgent() = "Java steam wrapper"
+    override fun getUserAgent() = "Mozilla/5.0 (Android; Mobile)"
 
     override fun onConnect(con: HttpURLConnection) = Unit
 
     override fun mindelay() = 1000L
-
-    companion object {
-
-        private val LOG = Logger.getLogger(javaClass<SteamConnection>().getName())
-    }
 }
