@@ -1,8 +1,8 @@
 package com.timepath.steam.net
 
 import com.timepath.DataUtils
-
 import java.io.IOException
+import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -10,7 +10,6 @@ import java.nio.channels.DatagramChannel
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.properties.Delegates
-import java.net.InetAddress
 
 /**
  * @author TimePath

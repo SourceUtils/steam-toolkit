@@ -3,8 +3,8 @@ package com.timepath.steam
 
 import java.math.BigInteger
 import java.util.logging.Logger
-import kotlin.math.times
 import kotlin.math.plus
+import kotlin.math.times
 
 /**
  * Utility class for converting Steam IDs

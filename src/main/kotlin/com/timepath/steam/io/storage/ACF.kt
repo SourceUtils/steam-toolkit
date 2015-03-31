@@ -3,8 +3,6 @@ package com.timepath.steam.io.storage
 import com.timepath.steam.SteamUtils
 import com.timepath.steam.io.VDF
 import com.timepath.vfs.provider.local.LocalFileProvider
-import java.nio.charset.Charset
-
 import java.io.File
 import java.io.IOException
 import java.lang.ref.Reference

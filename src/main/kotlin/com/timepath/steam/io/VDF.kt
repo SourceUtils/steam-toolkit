@@ -3,7 +3,6 @@ package com.timepath.steam.io
 
 import java.io.*
 import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
 import java.util.logging.Level
 import java.util.logging.Logger
 

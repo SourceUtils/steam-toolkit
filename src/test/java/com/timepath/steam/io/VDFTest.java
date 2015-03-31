@@ -2,7 +2,6 @@ package com.timepath.steam.io;
 
 import com.timepath.steam.io.storage.ACF;
 import com.timepath.vfs.VFile;
-import java.nio.charset.Charset;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.After;
@@ -11,6 +10,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
 

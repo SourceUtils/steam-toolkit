@@ -9,14 +9,12 @@ import com.timepath.steam.io.VDFParser.PairContext
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker
-
 import java.io.IOException
 import java.io.InputStream
 import java.nio.charset.Charset
 import java.util.Comparator
 import java.util.LinkedList
 import java.util.logging.Logger
-import java.util.Arrays
 
 /**
  * Standard KeyValues format loader

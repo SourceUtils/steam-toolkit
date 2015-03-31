@@ -2,12 +2,13 @@ package com.timepath.steam.io.storage;
 
 import com.timepath.vfs.SimpleVFile;
 import com.timepath.vfs.provider.ProviderPlugin;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.kohsuke.MetaInfServices;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
 
 @MetaInfServices(ProviderPlugin.class)
 public class VPKPlugin implements ProviderPlugin {

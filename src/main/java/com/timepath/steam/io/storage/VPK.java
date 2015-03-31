@@ -4,8 +4,8 @@ import com.timepath.DataUtils;
 import com.timepath.StringUtils;
 import com.timepath.io.ByteBufferInputStream;
 import com.timepath.io.struct.StructField;
-import com.timepath.vfs.provider.ExtendedVFile;
 import com.timepath.vfs.SimpleVFile;
+import com.timepath.vfs.provider.ExtendedVFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
