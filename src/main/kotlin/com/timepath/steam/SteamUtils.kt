@@ -122,11 +122,15 @@ public object SteamUtils {
             return null
         }
         // TODO: libraries: Steam/config/config.vdf:InstallConfigStore/Software/Valve/Steam/BaseInstallFolder_X
-        return when (OS.get()) {
-            OS.Linux, OS.OSX -> File(steam, "SteamApps")
-            OS.Windows -> File(steam, "steamapps")
-            else -> null
+        val locations = listOf("steamapps", "SteamApps")
+        locations.forEach {
+            File(steam, it).let {
+                if (it.exists()) {
+                    return it
+                }
+            }
         }
+        return null
     }
 
     /**
