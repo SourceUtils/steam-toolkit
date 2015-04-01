@@ -143,7 +143,7 @@ public object SteamUtils {
         if (steam == null) {
             return null
         }
-        return File(steam, "userdata/${user.UID.split(":")[2]}")
+        return File(steam, "userdata/${user.ID32.split(":")[2]}")
     }
 
     /**
