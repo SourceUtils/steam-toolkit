@@ -1,3 +1,5 @@
+apply from: 'https://raw.githubusercontent.com/SourceUtils/super/0cd495b8b8/common.gradle'
+
 buildscript {
     ext.kotlin_version = '0.11.91'
     repositories {
@@ -24,9 +26,9 @@ dependencies {
 
     compile "org.antlr:antlr4-runtime:${antlr.version}"
     compile 'org.json:json:20140107'
-    compile project(':java-xplaf')
-    compile project(':java-vfs:core')
-    compile project(':web-api-base')
+    compile 'com.timepath:java-xplaf:1.0-SNAPSHOT'
+    compile 'com.timepath:java-vfs:1.0-SNAPSHOT'
+    compile 'com.timepath:web-api-base:1.0-SNAPSHOT'
 }
 
 task compileAntlr() {
