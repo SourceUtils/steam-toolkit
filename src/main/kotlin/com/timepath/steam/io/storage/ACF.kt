@@ -12,14 +12,14 @@ import java.util.HashMap
 /**
  * @author TimePath
  */
-public class ACF private(root: File) : LocalFileProvider(root) {
+public class ACF private constructor(root: File) : LocalFileProvider(root) {
     companion object {
         private val REFERENCE_MAP: MutableMap<String, Reference<ACF>> = HashMap()
 
-        throws(javaClass<IOException>())
+        throws(IOException::class)
         public fun fromManifest(appID: Int): ACF = fromManifest(File(SteamUtils.getSteamApps(), "appmanifest_$appID.acf"))
 
-        throws(javaClass<IOException>())
+        throws(IOException::class)
         private fun fromManifest(mf: File): ACF {
             val vdf = VDF.load(mf)
             val dir: File

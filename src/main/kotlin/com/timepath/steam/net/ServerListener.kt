@@ -3,7 +3,7 @@ package com.timepath.steam.net
 /**
  * @author TimePath
  */
-public trait ServerListener {
+public interface ServerListener {
 
     /**
      * @param update

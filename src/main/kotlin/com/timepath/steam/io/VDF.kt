@@ -21,10 +21,10 @@ object VDF {
         false
     }
 
-    throws(javaClass<IOException>())
+    throws(IOException::class)
     public fun load(file: File, charset: Charset = Charsets.UTF_8): VDFNode = load(FileInputStream(file), charset)
 
-    throws(javaClass<IOException>())
+    throws(IOException::class)
     public fun load(input: InputStream, charset: Charset = Charsets.UTF_8): VDFNode = VDFNode(input, charset)
 
 }

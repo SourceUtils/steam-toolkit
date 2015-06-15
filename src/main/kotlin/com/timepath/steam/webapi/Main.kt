@@ -36,7 +36,7 @@ public class Main {
             LOG.info("Logging in")
             val user = userInput.getText()
             val pass = String(passInput.getPassword()).toByteArray()
-            val retry = prevUser?.let { it.equalsIgnoreCase(user) } ?: false
+            val retry = prevUser?.let { it.equals(user, ignoreCase = true) } ?: false
             if (!retry) {
                 prevUser = user
                 val enc = encrypt(user, pass)
@@ -91,7 +91,7 @@ public class Main {
         val LOG_CONNECTION = Logger.getLogger(javaClass<Connection>().getName())
 
         fun encrypt(username: String, password: ByteArray): Pair<ByteArray, String> {
-            val ret = RequestBuilder.fromArray(array(array("username", username))).let {
+            val ret = RequestBuilder.fromArray(arrayOf(arrayOf("username", username))).let {
                 Endpoint.COMMUNITY.postget("login/getrsakey", it.toString())
             }.let {
                 JSONObject(it)

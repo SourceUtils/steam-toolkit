@@ -24,9 +24,9 @@ public data class SteamID(public var user: String?,
     companion object {
 
         /** Steam_# 0 from HL to TF2, 1 from L4D to CS:GO */
-        private val ID32 = "STEAM_([0-9]):([0-9]):([0-9]{4,})".toRegex()
-        private val ID64 = "([0-9]{17,})".toRegex()
-        private val UID = "U:([0-9]):([0-9]{4,})".toRegex()
+        private val ID32 = "STEAM_([0-9]):([0-9]):([0-9]{4,})".toPattern()
+        private val ID64 = "([0-9]{17,})".toPattern()
+        private val UID = "U:([0-9]):([0-9]{4,})".toPattern()
         private val LOG = Logger.getLogger(javaClass<SteamID>().getName())
         /** The 4 is because hexadecimal; sqrt 16? 2^4 = 16? Probably that */
         private val ID_64_OFFSET = BigInteger.valueOf(0x01100001).shiftLeft(8 * 4)

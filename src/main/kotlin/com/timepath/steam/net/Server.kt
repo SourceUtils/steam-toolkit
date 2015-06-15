@@ -24,20 +24,20 @@ public open class Server(hostname: String, port: Int) {
         }
     }
 
-    throws(javaClass<IOException>())
+    throws(IOException::class)
     protected fun send(buf: ByteBuffer) {
-        LOG.log(LEVEL_SEND, "Sending {0} bytes\nPayload: {1}\nAddress: {2}", array(buf.limit(), DataUtils.hexDump(buf), address))
+        LOG.log(LEVEL_SEND, "Sending {0} bytes\nPayload: {1}\nAddress: {2}", arrayOf(buf.limit(), DataUtils.hexDump(buf), address))
         chan.write(buf)
     }
 
-    throws(javaClass<IOException>())
+    throws(IOException::class)
     protected fun get(): ByteBuffer {
         val buf = ByteBuffer.allocate(1392).let {
             it.order(ByteOrder.LITTLE_ENDIAN)
             it
         }
         val bytesRead = chan.read(buf)
-        LOG.log(LEVEL_GET, "Receiving {0} bytes\nPayload: {1}\nAddress: {2}", array(bytesRead, DataUtils.hexDump(buf), address))
+        LOG.log(LEVEL_GET, "Receiving {0} bytes\nPayload: {1}\nAddress: {2}", arrayOf(bytesRead, DataUtils.hexDump(buf), address))
         return buf.let {
             it.flip()
             it

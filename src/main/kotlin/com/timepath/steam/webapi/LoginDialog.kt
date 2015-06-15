@@ -16,7 +16,7 @@ public abstract class LoginDialog
  * @param parent
  * @param modal
  */
-protected(parent: Frame?, modal: Boolean) : JDialog(parent, modal) {
+protected constructor(parent: Frame?, modal: Boolean) : JDialog(parent, modal) {
 
     public val captchaInput: JTextField = JTextField().let {
         it.setMinimumSize(Dimension(120, 28))

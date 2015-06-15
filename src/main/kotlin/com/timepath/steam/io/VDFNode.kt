@@ -22,7 +22,7 @@ import java.util.logging.Logger
  * @author TimePath
  */
 
-throws(javaClass<IOException>())
+throws(IOException::class)
 public fun VDFNode(input: InputStream, charset: Charset = Charsets.UTF_8, self: VDFNode = VDFNode()): VDFNode = with(self) {
     val lexer = input.reader(charset).let { ANTLRInputStream(it) }.let { VDFLexer(it) }
     val parser = lexer.let { CommonTokenStream(it) }.let { VDFParser(it) }

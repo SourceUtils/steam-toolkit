@@ -38,24 +38,24 @@ fun dologin(username: String,
             emailsteamid: String,
             eauth: String,
             captchagid: Long,
-            captcha: String): JSONObject = RequestBuilder.fromArray(array(
+            captcha: String): JSONObject = RequestBuilder.fromArray(arrayOf(
         // Credentials
-        array("username", username),
-        array("password", DatatypeConverter.printBase64Binary(cipherData)),
-        array("rsatimestamp", rsatimestamp),
+        arrayOf("username", username),
+        arrayOf("password", DatatypeConverter.printBase64Binary(cipherData)),
+        arrayOf("rsatimestamp", rsatimestamp),
         // Steamguard
-        array("emailauth", eauth),
-        array("emailsteamid", emailsteamid),
+        arrayOf("emailauth", eauth),
+        arrayOf("emailsteamid", emailsteamid),
         // Captcha
-        array("captchagid", captchagid),
-        array("captcha_text", captcha),
+        arrayOf("captchagid", captchagid),
+        arrayOf("captcha_text", captcha),
         // User preferences
-        array("loginfriendlyname", "TimePath java test"),
-        array("remember_login", true),
+        arrayOf("loginfriendlyname", "TimePath java test"),
+        arrayOf("remember_login", true),
         // Required
-        array("oauth_client_id", CLIENTID),
-        array("oauth_scope", array("read_profile", "write_profile", "read_client", "write_client").join(" ")),
-        array("donotcache", System.currentTimeMillis())
+        arrayOf("oauth_client_id", CLIENTID),
+        arrayOf("oauth_scope", arrayOf("read_profile", "write_profile", "read_client", "write_client").join(" ")),
+        arrayOf("donotcache", System.currentTimeMillis())
 )).let {
     Endpoint.COMMUNITY.postget("mobilelogin/dologin", it.toString())
 }.let { JSONObject(it) }
@@ -74,10 +74,10 @@ class Logon(val json: Map<String, *>) {
     val push by Delegates.mapVal<Int>(json)
 }
 
-fun logon(token: String): Logon = RequestBuilder.fromArray(array(
-        array("access_token", token),
-        array("umqid", umqid),
-        array("ui_mode", "web")
+fun logon(token: String): Logon = RequestBuilder.fromArray(arrayOf(
+        arrayOf("access_token", token),
+        arrayOf("umqid", umqid),
+        arrayOf("ui_mode", "web")
 )).let {
     Endpoint.API.postget("ISteamWebUserPresenceOAuth/Logon/v0001", it.toString())
 }.let {
@@ -113,12 +113,12 @@ class Poll(val json: Map<String, *>) {
     val error by Delegates.mapVal<String>(json)
 }
 
-fun poll(token: String, lmid: Int) = RequestBuilder.fromArray(array(
-        array("access_token", token),
-        array("umqid", umqid),
-        array("message", lmid),
-        array("sectimeout", 30),
-        array("secidletime", 0) // AWAY: 600+, SNOOZE: 8000+
+fun poll(token: String, lmid: Int) = RequestBuilder.fromArray(arrayOf(
+        arrayOf("access_token", token),
+        arrayOf("umqid", umqid),
+        arrayOf("message", lmid),
+        arrayOf("sectimeout", 30),
+        arrayOf("secidletime", 0) // AWAY: 600+, SNOOZE: 8000+
 )).let {
     Endpoint.API.postget("ISteamWebUserPresenceOAuth/Poll/v0001", it.toString())
 }.let {

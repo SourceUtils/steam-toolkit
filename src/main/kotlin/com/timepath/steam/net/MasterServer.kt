@@ -14,7 +14,7 @@ import java.util.logging.Logger
  */
 public class MasterServer(hostname: String, port: Int) : Server(hostname, port) {
 
-    throws(javaClass<IOException>())
+    throws(IOException::class)
     public fun query(region: Region, filter: String = "", listener: ServerListener = ServerListener.NULL) {
         val initialAddress = "0.0.0.0:0"
         val filterBytes = filter.toByteArray()
@@ -25,7 +25,8 @@ public class MasterServer(hostname: String, port: Int) : Server(hostname, port) 
                 + /* filter */ (filterBytes.size() + 1)
         )
         var address = initialAddress
-        @outer while (true) {
+        outer@
+        while (true) {
             LOG.log(Level.FINE, "Last address: {0}", address)
             with(write) {
                 reset()
@@ -71,21 +72,21 @@ public class MasterServer(hostname: String, port: Int) : Server(hostname, port) 
             } while (recv.remaining() >= 6)
             if (recv.capacity() - recv.position() > 0) {
                 val under = recv.slice()
-                LOG.log(Level.WARNING, "{0} byte underflow: {0}", array(recv.remaining(), Utils.hex(*under.array())))
+                LOG.log(Level.WARNING, "{0} byte underflow: {0}", arrayOf(recv.remaining(), Utils.hex(*under.array())))
             }
         }
     }
 
-    public enum class Region private(val code: Byte) {
-        ALL : Region(0xFF.toByte())
-        US_EAST : Region(0)
-        US_WEST : Region(1)
-        SOUTH_AMERICA : Region(2)
-        EUROPE : Region(3)
-        ASIA : Region(4)
-        AUSTRALIA : Region(5)
-        MIDDLE_EAST : Region(6)
-        AFRICA : Region(7)
+    public enum class Region private constructor(val code: Byte) {
+        ALL(0xFF.toByte()),
+        US_EAST(0),
+        US_WEST(1),
+        SOUTH_AMERICA(2),
+        EUROPE(3),
+        ASIA(4),
+        AUSTRALIA(5),
+        MIDDLE_EAST(6),
+        AFRICA(7)
     }
 
     companion object {

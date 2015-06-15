@@ -16,7 +16,7 @@ import java.util.logging.Logger
  */
 public class SourceServer(hostname: String, port: Int) : Server(hostname, port) {
 
-    throws(javaClass<IOException>())
+    throws(IOException::class)
     public fun getInfo(listener: ServerListener = ServerListener.NULL) {
         val baos = ByteArrayOutputStream()
         baos.write(HEADER)
@@ -102,7 +102,7 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
         }
     }
 
-    throws(javaClass<IOException>())
+    throws(IOException::class)
     public fun getRules(l: com.timepath.steam.net.ServerListener = ServerListener.NULL) {
         // Get a challenge key
         val challengeOut = ByteArrayOutputStream()
@@ -155,7 +155,7 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
                 }
                 ruleCount = buf.getShort().toInt()
             }
-            LOG.log(Level.FINE, "{0} / {1}", array<Any>(id, fragments))
+            LOG.log(Level.FINE, "{0} / {1}", arrayOf(id, fragments))
             val data = ByteArray(buf.remaining())
             buf[data]
             ruleBuf.put(data)
@@ -178,9 +178,9 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
     }
 
     enum class ServerType(code: Char) {
-        DEDICATED : ServerType('d')
-        LISTEN : ServerType('l')
-        SOURCE_TV : ServerType('p')
+        DEDICATED('d'),
+        LISTEN('l'),
+        SOURCE_TV('p');
 
         val code: Byte = code.toByte()
 
@@ -191,8 +191,8 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
     }
 
     enum class Environment(code: Char) {
-        WINDOWS : Environment('w')
-        LINUX : Environment('l')
+        WINDOWS('w'),
+        LINUX('l');
 
         val code: Byte = code.toByte()
 
@@ -205,7 +205,7 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
     companion object {
 
         private val LOG = Logger.getLogger(javaClass<SourceServer>().getName())
-        private val HEADER = byteArray(
+        private val HEADER = byteArrayOf(
                 0xFF.toByte(),
                 0xFF.toByte(),
                 0xFF.toByte(),

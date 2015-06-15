@@ -101,11 +101,11 @@ public object SteamUtils {
         LOG.log(Level.WARNING, "Steam directory not found, trying alternate detection methods")
         var sourcesdk: String? = System.getenv("sourcesdk")
         if (sourcesdk != null) {
-            sourcesdk = sourcesdk!!.toLowerCase()
+            sourcesdk = sourcesdk.toLowerCase()
             val scan = "steam"
-            val idx = sourcesdk!!.indexOf(scan)
+            val idx = sourcesdk.indexOf(scan)
             if (idx != -1) {
-                val ret = File(sourcesdk!!.substring(0, idx + scan.length()))
+                val ret = File(sourcesdk.substring(0, idx + scan.length()))
                 LOG.log(Level.INFO, "Found steam via sourcesdk env var: {0}", ret)
                 return ret
             }
@@ -143,7 +143,7 @@ public object SteamUtils {
         if (steam == null) {
             return null
         }
-        return File(steam, "userdata/${user.ID32.split(":")[2]}")
+        return File(steam, "userdata/${user.ID32.splitBy(":")[2]}")
     }
 
     /**
