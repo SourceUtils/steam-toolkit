@@ -21,7 +21,7 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
         val baos = ByteArrayOutputStream()
         baos.write(HEADER)
         // A2S_INFO
-        baos.write(84)
+        baos.write('T'.toInt())
         baos.write(("Source Engine Query${0.toChar()}").toByteArray())
         send(ByteBuffer.wrap(baos.toByteArray()))
         val buf = get()
@@ -31,7 +31,7 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
             LOG.log(Level.SEVERE, "Invalid packet header {0}", packHeader)
         }
         val header = buf.get().toInt()
-        if (header != 0x49) {
+        if (header != 'I'.toInt()) {
             LOG.log(Level.SEVERE, "Invalid header {0}", header)
         }
         val protocol = buf.get()
@@ -103,11 +103,11 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
     }
 
     throws(IOException::class)
-    public fun getRules(l: com.timepath.steam.net.ServerListener = ServerListener.NULL) {
+    public fun getRules(l: ServerListener = ServerListener.NULL) {
         // Get a challenge key
         val challengeOut = ByteArrayOutputStream()
         challengeOut.write(HEADER)
-        challengeOut.write(86)
+        challengeOut.write('V'.toInt())
         challengeOut.write(HEADER)
         val challengeSend = ByteBuffer.wrap(challengeOut.toByteArray())
         send(challengeSend)
@@ -125,7 +125,7 @@ public class SourceServer(hostname: String, port: Int) : Server(hostname, port) 
         challengeGet[challengeKey]
         val baos = ByteArrayOutputStream()
         baos.write(HEADER)
-        baos.write(86)
+        baos.write('V'.toInt())
         baos.write(challengeKey)
         val send = ByteBuffer.wrap(baos.toByteArray())
         val ruleBuf = ByteBuffer.allocate(4000)
