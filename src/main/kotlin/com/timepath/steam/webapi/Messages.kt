@@ -1,10 +1,10 @@
 package com.timepath.steam.webapi
 
+import com.timepath.Logger
 import com.timepath.web.api.base.RequestBuilder
 import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.reflect.Field
-import java.util.logging.Logger
 import javax.xml.bind.DatatypeConverter
 import kotlin.properties.Delegates
 
@@ -22,7 +22,7 @@ fun JSONObject.toMap() = javaClass.getDeclaredField("map").getPrivate(this) as M
 
 fun JSONArray.toList() = javaClass.getDeclaredField("myArrayList").getPrivate(this) as List<*>
 
-val LOG = Logger.getLogger(javaClass<Main>().getName())
+val LOG = Logger()
 
 object Endpoint {
     val API = SteamConnection("https://api.steampowered.com/")
@@ -122,6 +122,6 @@ fun poll(token: String, lmid: Int) = RequestBuilder.fromArray(arrayOf(
 )).let {
     Endpoint.API.postget("ISteamWebUserPresenceOAuth/Poll/v0001", it.toString())
 }.let {
-    LOG.info(it)
+    LOG.info { it!! }
     Poll(JSONObject(it).toMap())
 }

@@ -9,9 +9,6 @@ import java.lang.ref.Reference
 import java.lang.ref.SoftReference
 import java.util.HashMap
 
-/**
- * @author TimePath
- */
 public class ACF private constructor(root: File) : LocalFileProvider(root) {
     companion object {
         private val REFERENCE_MAP: MutableMap<String, Reference<ACF>> = HashMap()

@@ -1,6 +1,7 @@
 package com.timepath.steam.io
 
 import com.timepath.Diff
+import com.timepath.Logger
 import com.timepath.Node
 import com.timepath.Pair
 import com.timepath.steam.io.VDFNode.VDFProperty
@@ -14,12 +15,9 @@ import java.io.InputStream
 import java.nio.charset.Charset
 import java.util.Comparator
 import java.util.LinkedList
-import java.util.logging.Logger
 
 /**
  * Standard KeyValues format loader
- *
- * @author TimePath
  */
 
 throws(IOException::class)
@@ -204,7 +202,6 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
 
         companion object {
 
-            private val LOG = Logger.getLogger(javaClass<VDFProperty>().getName())
             private val TAB = "    "
         }
     }
@@ -221,6 +218,5 @@ public open class VDFNode(name: Any = "VDF") : Node<VDFProperty, VDFNode>(name) 
                 return o1.getValue().hashCode() - o2.getValue().hashCode()
             }
         }
-        private val LOG = Logger.getLogger(javaClass<VDFNode>().getName())
     }
 }

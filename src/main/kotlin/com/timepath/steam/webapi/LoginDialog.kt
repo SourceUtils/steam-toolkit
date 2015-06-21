@@ -6,16 +6,7 @@ import java.awt.Frame
 import java.awt.event.ActionListener
 import javax.swing.*
 
-/**
- * @author TimePath
- */
 public abstract class LoginDialog
-/**
- * Creates new form LoginDialog
- *
- * @param parent
- * @param modal
- */
 protected constructor(parent: Frame?, modal: Boolean) : JDialog(parent, modal) {
 
     public val captchaInput: JTextField = JTextField().let {

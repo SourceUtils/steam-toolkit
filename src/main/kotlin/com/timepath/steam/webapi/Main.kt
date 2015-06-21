@@ -1,5 +1,6 @@
 package com.timepath.steam.webapi
 
+import com.timepath.Logger
 import com.timepath.web.api.base.Connection
 import com.timepath.web.api.base.RequestBuilder
 import org.json.JSONObject
@@ -8,7 +9,6 @@ import java.net.URI
 import java.security.KeyFactory
 import java.security.spec.RSAPublicKeySpec
 import java.util.logging.Level
-import java.util.logging.Logger
 import javax.crypto.Cipher
 import javax.imageio.ImageIO
 import javax.swing.ImageIcon
@@ -16,11 +16,10 @@ import javax.swing.SwingUtilities
 import javax.swing.WindowConstants
 import kotlin.platform.platformStatic
 import kotlin.properties.Delegates
+import java.util.logging.Logger as JLogger
 
 /**
  * http://code.google.com/p/pidgin-opensteamworks/source/browse/trunk/steam-mobile
- *
- * @author TimePath
  */
 public class Main {
 
@@ -33,7 +32,7 @@ public class Main {
 
 
         override fun login() {
-            LOG.info("Logging in")
+            LOG.info { "Logging in" }
             val user = userInput.getText()
             val pass = String(passInput.getPassword()).toByteArray()
             val retry = prevUser?.let { it.equals(user, ignoreCase = true) } ?: false
@@ -44,11 +43,11 @@ public class Main {
                 rsatimestamp = enc.second
                 pass.fill(0)
             }
-            LOG_CONNECTION.setLevel(Level.WARNING)
+            JLogger.getLogger(javaClass<Connection>().getName()).setLevel(Level.WARNING)
             dologin(user, cipherData, rsatimestamp,
                     emailsteamid, steamguardInput.getText(),
                     gid, captchaInput.getText()).let {
-                LOG.info(it.toString())
+                LOG.info { it.toString() }
 
                 if (!it.getBoolean("success") || !it.has("oauth")) {
                     messageLabel.setText(it.getString("message"))
@@ -59,7 +58,7 @@ public class Main {
                         val address = "https://steamcommunity.com/public/captcha.php?gid=$gid"
                         captchaLabel.setIcon(ImageIcon(ImageIO.read(URI.create(address).toURL())))
                     }
-                    LOG.info("Login failed")
+                    LOG.info { "Login failed" }
                     return
                 }
 
@@ -67,13 +66,17 @@ public class Main {
                 run {
                     val token = it.getString("oauth").let { JSONObject(it) }.getString("oauth_token")
                     logon(token).let {
-                        if (it.error != "OK") { println(it.error) }
-                        LOG.info(it.toString())
+                        if (it.error != "OK") {
+                            println(it.error)
+                        }
+                        LOG.info { it.toString() }
                         var lmid = it.message
                         while (true) {
                             Thread.sleep(1000)
                             poll(token, lmid).let {
-                                if (it.error != "OK") { println(it.error) }
+                                if (it.error != "OK") {
+                                    println(it.error)
+                                }
                                 lmid = it.messagelast
                                 it.messages.forEach {
                                     println(it)
@@ -87,8 +90,7 @@ public class Main {
     }
 
     companion object {
-        val LOG = Logger.getLogger(javaClass<Main>().getName())
-        val LOG_CONNECTION = Logger.getLogger(javaClass<Connection>().getName())
+        val LOG = Logger()
 
         fun encrypt(username: String, password: ByteArray): Pair<ByteArray, String> {
             val ret = RequestBuilder.fromArray(arrayOf(arrayOf("username", username))).let {

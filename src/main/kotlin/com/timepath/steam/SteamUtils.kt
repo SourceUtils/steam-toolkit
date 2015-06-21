@@ -12,8 +12,6 @@ import kotlin.platform.platformStatic
 
 /**
  * Utility class for accessing local steam file locations
- *
- * @author TimePath
  */
 public object SteamUtils {
 
@@ -117,10 +115,7 @@ public object SteamUtils {
      * @return Path to /Steam/SteamApps/
      */
     public platformStatic fun getSteamApps(): File? {
-        val steam = getSteam()
-        if (steam == null) {
-            return null
-        }
+        val steam = getSteam() ?: return null
         // TODO: libraries: Steam/config/config.vdf:InstallConfigStore/Software/Valve/Steam/BaseInstallFolder_X
         val locations = listOf("steamapps", "SteamApps")
         locations.forEach {
@@ -139,10 +134,7 @@ public object SteamUtils {
      * @throws IllegalArgumentException If {@code user} is null
      */
     public fun getUserData(user: SteamID): File? {
-        val steam = getSteam()
-        if (steam == null) {
-            return null
-        }
+        val steam = getSteam() ?: return null
         return File(steam, "userdata/${user.ID32.splitBy(":")[2]}")
     }
 

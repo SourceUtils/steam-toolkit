@@ -9,8 +9,6 @@ import java.net.HttpURLConnection
  * https://steamcommunity.com/public/javascript/login.js
  * https://github.com/Jessecar96/SteamBot/blob/a7ef3f402f5b7e2527b6be82d9e8c770d43eb5a0/SteamTrade/SteamWeb.cs
  * https://github.com/echeese/TradeOfferLib/blob/master/TradeOfferLib/src/main/java/com/ryanspeets/tradeoffer/TradeUser.java
- *
- * @author TimePath
  */
 public class SteamConnection(val base: String) : Connection() {
 

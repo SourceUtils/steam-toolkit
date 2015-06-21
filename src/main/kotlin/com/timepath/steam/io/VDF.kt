@@ -6,9 +6,6 @@ import java.nio.charset.Charset
 import java.util.logging.Level
 import java.util.logging.Logger
 
-/**
- * @author TimePath
- */
 object VDF {
 
     public fun isBinary(f: File): Boolean = try {

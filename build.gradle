@@ -26,6 +26,7 @@ dependencies {
 
     compile "org.antlr:antlr4-runtime:${antlr.version}"
     compile 'org.json:json:20140107'
+    compile 'com.timepath:commons:1.0-SNAPSHOT'
     compile 'com.timepath:java-xplaf:1.0-SNAPSHOT'
     compile 'com.timepath:java-vfs:1.0-SNAPSHOT'
     compile 'com.timepath:web-api-base:1.0-SNAPSHOT'

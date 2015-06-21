@@ -1,15 +1,14 @@
 package com.timepath.steam.net
 
 import com.timepath.DataUtils
+import com.timepath.Logger
 import com.timepath.Utils
 
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.logging.Level
-import java.util.logging.Logger
 
 /**
- * @author TimePath
  * @see <a>https://developer.valvesoftware.com/wiki/Master_Server_Query_Protocol</a>
  */
 public class MasterServer(hostname: String, port: Int) : Server(hostname, port) {
@@ -27,7 +26,7 @@ public class MasterServer(hostname: String, port: Int) : Server(hostname, port) 
         var address = initialAddress
         outer@
         while (true) {
-            LOG.log(Level.FINE, "Last address: {0}", address)
+            LOG.log(Level.FINE, { "Last address: ${address}" })
             with(write) {
                 reset()
                 put(0x31)
@@ -42,20 +41,20 @@ public class MasterServer(hostname: String, port: Int) : Server(hostname, port) 
             val recv = get()
             val header = recv.getInt()
             if (header != -1) {
-                LOG.log(Level.WARNING, "Invalid header {0}", header)
+                LOG.log(Level.WARNING, { "Invalid header ${header}" })
                 break
             }
             val head = recv.get()
             if (head.toInt() != 0x66) {
-                LOG.log(Level.WARNING, "Unknown header {0}", head)
+                LOG.log(Level.WARNING, { "Unknown header ${head}" })
                 val rec = DataUtils.hexDump(recv)
-                LOG.log(Level.WARNING, "Received {0}", rec)
+                LOG.log(Level.WARNING, { "Received ${rec}" })
                 listener.inform(rec)
                 break
             }
             val newline = recv.get()
             if (newline.toInt() != 0x0A) {
-                LOG.log(Level.WARNING, "Malformed byte {0}", newline)
+                LOG.log(Level.WARNING, { "Malformed byte ${newline}" })
                 break
             }
             do {
@@ -72,7 +71,7 @@ public class MasterServer(hostname: String, port: Int) : Server(hostname, port) 
             } while (recv.remaining() >= 6)
             if (recv.capacity() - recv.position() > 0) {
                 val under = recv.slice()
-                LOG.log(Level.WARNING, "{0} byte underflow: {0}", arrayOf(recv.remaining(), Utils.hex(*under.array())))
+                LOG.log(Level.WARNING, { "${recv.remaining()} byte underflow: ${Utils.hex(*under.array())}" })
             }
         }
     }
@@ -91,6 +90,6 @@ public class MasterServer(hostname: String, port: Int) : Server(hostname, port) 
 
     companion object {
         public val SOURCE: MasterServer = MasterServer("hl2master.steampowered.com", 27011)
-        private val LOG = Logger.getLogger(javaClass<MasterServer>().getName())
+        private val LOG = Logger()
     }
 }

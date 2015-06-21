@@ -1,6 +1,7 @@
 package com.timepath.steam.net
 
 import com.timepath.DataUtils
+import com.timepath.Logger
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -8,12 +9,8 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.DatagramChannel
 import java.util.logging.Level
-import java.util.logging.Logger
 import kotlin.properties.Delegates
 
-/**
- * @author TimePath
- */
 public open class Server(hostname: String, port: Int) {
     public val address: InetAddress = InetAddress.getByName(hostname)
     public var port: Int = port
@@ -26,7 +23,7 @@ public open class Server(hostname: String, port: Int) {
 
     throws(IOException::class)
     protected fun send(buf: ByteBuffer) {
-        LOG.log(LEVEL_SEND, "Sending {0} bytes\nPayload: {1}\nAddress: {2}", arrayOf(buf.limit(), DataUtils.hexDump(buf), address))
+        LOG.log(LEVEL_SEND, { "Sending ${buf.limit()} bytes\nPayload: ${DataUtils.hexDump(buf)}\nAddress: ${address}" })
         chan.write(buf)
     }
 
@@ -37,7 +34,7 @@ public open class Server(hostname: String, port: Int) {
             it
         }
         val bytesRead = chan.read(buf)
-        LOG.log(LEVEL_GET, "Receiving {0} bytes\nPayload: {1}\nAddress: {2}", arrayOf(bytesRead, DataUtils.hexDump(buf), address))
+        LOG.log(LEVEL_GET, { "Receiving ${bytesRead} bytes\nPayload: ${DataUtils.hexDump(buf)}\nAddress: ${address}" })
         return buf.let {
             it.flip()
             it
@@ -48,6 +45,6 @@ public open class Server(hostname: String, port: Int) {
 
         private val LEVEL_SEND = Level.FINE
         private val LEVEL_GET = Level.FINE
-        private val LOG = Logger.getLogger(javaClass<Server>().getName())
+        private val LOG = Logger()
     }
 }
