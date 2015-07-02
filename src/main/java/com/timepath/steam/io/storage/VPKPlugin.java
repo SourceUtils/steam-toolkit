@@ -17,11 +17,10 @@ public class VPKPlugin implements ProviderPlugin {
     @Override
     public SimpleVFile.FileHandler register() {
         return new SimpleVFile.FileHandler() {
-            @Nullable
             @Override
             public Collection<SimpleVFile> handle(@NotNull File file) throws IOException {
                 if (!file.getName().endsWith("_dir.vpk")) return null;
-                @Nullable VPK ar = VPK.loadArchive(file);
+                VPK ar = VPK.Companion.loadArchive(file);
                 if (ar == null) return null;
                 return ar.list();
             }
