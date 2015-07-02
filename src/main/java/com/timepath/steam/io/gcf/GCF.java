@@ -256,7 +256,7 @@ public class GCF extends ExtendedVFile {
             nameOffset = raf.readULEInt();
             itemSize = raf.readULEInt();
             checksumIndex = raf.readULEInt();
-            attributes = EnumFlags.decode(raf.readULEInt(), DirectoryEntryAttributes.class);
+            attributes = EnumFlags.INSTANCE$.decode(raf.readULEInt(), DirectoryEntryAttributes.class);
             parentIndex = raf.readULEInt();
             nextIndex = raf.readULEInt();
             firstChildIndex = raf.readULEInt();
