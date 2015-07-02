@@ -127,7 +127,7 @@ constructor(`in`: InputStream, private val listener: BVDFListener) {
         }
     }
 
-    private enum class ValueType(vararg sig: Int) {
+    enum class ValueType(vararg sig: Int) {
         TYPE_NONE(0), TYPE_STRING(1), TYPE_INT(2), TYPE_FLOAT(3), TYPE_PTR(4), TYPE_WSTRING(5), TYPE_COLOR(6),
         TYPE_UINT64(7), TYPE_NUMTYPES(8),
         TYPE_APPINFO(0x26, 0x44, 0x56, 0x07),
