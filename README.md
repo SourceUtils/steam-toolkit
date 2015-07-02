@@ -1,7 +1,8 @@
 steam-toolkit
 =============
 
-[![Build Status](https://travis-ci.org/SourceUtils/hl2-hud-editor.svg?branch=master)](https://travis-ci.org/SourceUtils/hl2-hud-editor)
+[![Build Status](https://travis-ci.org/SourceUtils/steam-toolkit.svg?branch=master)]
+(https://travis-ci.org/SourceUtils/steam-toolkit)
 
 ## DESCRIPTION
 
